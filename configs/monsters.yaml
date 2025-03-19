@@ -1,0 +1,27 @@
+monsters:
+  - id: book
+    name: Livre Ensorcelé
+    baseHealth: 20
+    baseDamage: 5
+    range: 150
+    speed: 100
+    size: 30
+    color: "#9B59B6"
+    
+  - id: pencil
+    name: Crayon Maléfique
+    baseHealth: 15
+    baseDamage: 8
+    range: 180
+    speed: 120
+    size: 25
+    color: "#E74C3C"
+    
+  - id: calculator
+    name: Calculatrice Démoniaque
+    baseHealth: 30
+    baseDamage: 4
+    range: 120
+    speed: 80
+    size: 35
+    color: "#3498DB"

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #3f51b5;
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        .login-container { 
+            text-align: center; 
+            margin-top: 50px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .welcome-box { 
+            background-color: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .game-button { 
+            background-color: #3f51b5; 
+            padding: 15px 30px; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            transition: background-color 0.3s;
+        }
+        .game-button:hover {
+            background-color: #303f9f;
+        }
+        .input-field {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 250px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-box {
+            text-align: center;
+            padding: 15px;
+            background-color: #e8eaf6;
+            border-radius: 5px;
+            width: 30%;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3f51b5;
+        }
+        #onboarding-area, #game-area {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Ascension</h1>
+            <p>La quête du savoir commence ici</p>
+        </div>
+        
+        <div id="login-area" class="login-container">
+            <h2>Commencer l'aventure</h2>
+            <p>Entrez votre pseudo pour rejoindre le monde d'Ascension</p>
+            <div>
+                <input type="text" id="username" class="input-field" placeholder="Votre pseudo">
+                <button class="game-button" onclick="login()">Jouer</button>
+            </div>
+        </div>
+        
+        <div id="onboarding-area" class="login-container">
+            <h2>Bienvenue dans l'aventure !</h2>
+            <p>Comment s'appelle votre héros ?</p>
+            <input type="text" id="hero-name" class="input-field" placeholder="Nom du héros">
+            <button class="game-button" onclick="saveHeroName()">Commencer</button>
+        </div>
+        
+        <div id="game-area">
+            <div class="welcome-box">
+                <h2>Bienvenue <span id="player-name">Aventurier</span> !</h2>
+                
+                <div class="stats">
+                    <div class="stat-box">
+                        <div>Meilleur Score</div>
+                        <div class="stat-value" id="best-score">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div>Niveau</div>
+                        <div class="stat-value">1</div>
+                    </div>
+                    <div class="stat-box">
+                        <div>Progression</div>
+                        <div class="stat-value">Débutant</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <button class="game-button" onclick="startGame()">Jouer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Connexion simple avec un pseudo
+        function login() {
+            const username = document.getElementById('username').value;
+            if (!username) {
+                alert('Veuillez entrer un pseudo');
+                return;
+            }
+            
+            fetch('/api/auth/simple', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username })
+            })
+            .then(res => res.json())
+            .then(data => {
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', username);
+                
+                // Si nouvel utilisateur, afficher l'onboarding
+                if (data.isNewUser) {
+                    document.getElementById('login-area').style.display = 'none';
+                    document.getElementById('onboarding-area').style.display = 'block';
+                } else {
+                    // Sinon charger les données utilisateur
+                    loadUserData();
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur de connexion. Veuillez réessayer.');
+            });
+        }
+        
+        // Sauvegarder le nom du héros
+        function saveHeroName() {
+            const heroName = document.getElementById('hero-name').value;
+            if (!heroName) {
+                alert('Veuillez entrer un nom pour votre héros');
+                return;
+            }
+            
+            fetch('/api/user', {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                body: JSON.stringify({ heroName: heroName })
+            })
+            .then(res => res.json())
+            .then(() => {
+                document.getElementById('onboarding-area').style.display = 'none';
+                loadUserData();
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur de sauvegarde. Veuillez réessayer.');
+            });
+        }
+        
+        // Charger les données utilisateur
+        function loadUserData() {
+            fetch('/api/user', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('login-area').style.display = 'none';
+                document.getElementById('onboarding-area').style.display = 'none';
+                document.getElementById('game-area').style.display = 'block';
+                document.getElementById('player-name').textContent = data.heroName || localStorage.getItem('username');
+                document.getElementById('best-score').textContent = data.bestScore || 0;
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                // En cas d'erreur d'authentification, revenir à l'écran de login
+                localStorage.removeItem('token');
+                document.getElementById('login-area').style.display = 'block';
+                document.getElementById('onboarding-area').style.display = 'none';
+                document.getElementById('game-area').style.display = 'none';
+            });
+        }
+        
+        // Démarrer le jeu
+        function startGame() {
+            window.location.href = '/game.html';
+        }
+        
+        // Vérifier si déjà connecté au chargement
+        window.onload = function() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                loadUserData();
+            }
+        };
+    </script>
+</body>
+</html>

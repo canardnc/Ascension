@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension - Jeu</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+        #game-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #ui-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+            pointer-events: none;
+        }
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            display: none;
+        }
+        .button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #3f51b5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .button:hover {
+            background-color: #303f9f;
+        }
+        #controls-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="ui-container">
+            <div>PV: <span id="health-display">100</span></div>
+            <div>Score: <span id="score-display">0</span></div>
+            <div>Vague: <span id="wave-display">1</span></div>
+        </div>
+        <div id="controls-hint">Utilisez les flèches du clavier pour vous déplacer</div>
+        <div id="game-over">
+            <h2>Fin de partie !</h2>
+            <div>Score final: <span id="final-score">0</span></div>
+            <button id="restart-button" class="button">Rejouer</button>
+            <button id="home-button" class="button">Menu principal</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration du jeu
+        const config = {
+            mapWidth: 3000,     // Largeur de la carte (10x la taille de l'écran)
+            mapHeight: 3000,    // Hauteur de la carte
+            playerSpeed: 200,   // Vitesse du joueur en pixels par seconde
+            playerHealth: 100,  // Points de vie du joueur
+            playerSize: 40,     // Taille du joueur
+            playerRange: 200,   // Portée de tir du joueur
+            playerDamage: 10,   // Dégâts du joueur
+            playerFireRate: 1,  // Tir par seconde
+            
+            monsterCount: 10,   // Nombre de monstres
+            monsterHealth: 20,  // Points de vie des monstres
+            monsterSize: 30,    // Taille des monstres
+            monsterSpeed: 100,  // Vitesse des monstres
+            monsterRange: 150,  // Portée de tir des monstres
+            monsterDamage: 5,   // Dégâts des monstres
+            monsterFireRate: 1, // Tir par seconde
+            
+            healthScaling: 0.1, // Augmentation des PV des monstres par vague
+            damageScaling: 0.1, // Augmentation des dégâts des monstres par vague
+            
+            projectileSpeed: 300, // Vitesse des projectiles
+            projectileSize: 8,    // Taille des projectiles
+        };
+
+        // Obtenir le canvas et le contexte
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Redimensionner le canvas pour qu'il corresponde à la taille de la fenêtre
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Classe de jeu principale
+        class Game {
+            constructor() {
+                this.player = new Player(
+                    config.mapWidth / 2, 
+                    config.mapHeight / 2, 
+                    config.playerSize,
+                    config.playerHealth
+                );
+                
+                this.monsters = [];
+                this.projectiles = [];
+                this.monsterProjectiles = [];
+                this.score = 0;
+                this.wave = 1;
+                this.gameOver = false;
+                this.gameTime = 0;
+                this.camera = {
+                    x: this.player.x - canvas.width / 2,
+                    y: this.player.y - canvas.height / 2
+                };
+                
+                // Spawn initial des monstres
+                for (let i = 0; i < config.monsterCount; i++) {
+                    this.spawnMonster();
+                }
+                
+                // Gestionnaire d'entrée
+                this.keys = {
+                    ArrowUp: false,
+                    ArrowDown: false,
+                    ArrowLeft: false,
+                    ArrowRight: false
+                };
+                
+                window.addEventListener('keydown', (e) => {
+                    if (this.keys.hasOwnProperty(e.key)) {
+                        this.keys[e.key] = true;
+                    }
+                });
+                
+                window.addEventListener('keyup', (e) => {
+                    if (this.keys.hasOwnProperty(e.key)) {
+                        this.keys[e.key] = false;
+                    }
+                });
+                
+                // Ajouter le contrôle tactile
+                this.touchControls = { active: false, dx: 0, dy: 0 };
+                this.setupTouchControls();
+                
+                // Timing pour les tirs
+                this.lastPlayerShot = 0;
+                this.monsterLastShots = {};
+                
+                // Commencer la boucle de jeu
+                this.lastTime = 0;
+                requestAnimationFrame(this.gameLoop.bind(this));
+            }
+            
+            setupTouchControls() {
+                const touchStart = (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    this.touchControls.startX = touch.clientX;
+                    this.touchControls.startY = touch.clientY;
+                    this.touchControls.active = true;
+                };
+                
+                const touchMove = (e) => {
+                    if (!this.touchControls.active) return;
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    this.touchControls.dx = touch.clientX - this.touchControls.startX;
+                    this.touchControls.dy = touch.clientY - this.touchControls.startY;
+                };
+                
+                const touchEnd = (e) => {
+                    e.preventDefault();
+                    this.touchControls.active = false;
+                    this.touchControls.dx = 0;
+                    this.touchControls.dy = 0;
+                };
+                
+                canvas.addEventListener('touchstart', touchStart, { passive: false });
+                canvas.addEventListener('touchmove', touchMove, { passive: false });
+                canvas.addEventListener('touchend', touchEnd, { passive: false });
+            }
+            
+            spawnMonster() {
+                // Calculer la position aléatoire éloignée du joueur
+                let x, y;
+                do {
+                    x = Math.random() * config.mapWidth;
+                    y = Math.random() * config.mapHeight;
+                } while (Math.hypot(x - this.player.x, y - this.player.y) < 300);
+                
+                // Calculer les stats du monstre avec scaling basé sur la vague
+                const healthModifier = 1 + (config.healthScaling * (this.wave - 1));
+                const damageModifier = 1 + (config.damageScaling * (this.wave - 1));
+                
+                const health = Math.floor(config.monsterHealth * healthModifier);
+                const damage = Math.floor(config.monsterDamage * damageModifier);
+                
+                this.monsters.push(new Monster(x, y, config.monsterSize, health, damage));
+            }
+            
+            update(deltaTime) {
+                if (this.gameOver) return;
+                
+                // Mettre à jour le temps de jeu
+                this.gameTime += deltaTime;
+                
+                // Mise à jour du joueur
+                const playerSpeed = config.playerSpeed * deltaTime;
+                
+                if (this.keys.ArrowUp) {
+                    this.player.y -= playerSpeed;
+                }
+                if (this.keys.ArrowDown) {
+                    this.player.y += playerSpeed;
+                }
+                if (this.keys.ArrowLeft) {
+                    this.player.x -= playerSpeed;
+                }
+                if (this.keys.ArrowRight) {
+                    this.player.x += playerSpeed;
+                }
+                
+                // Mouvement via contrôles tactiles
+                if (this.touchControls.active) {
+                    const touchMagnitude = Math.hypot(this.touchControls.dx, this.touchControls.dy);
+                    if (touchMagnitude > 20) {  // Zone morte
+                        const normalizedDx = this.touchControls.dx / touchMagnitude;
+                        const normalizedDy = this.touchControls.dy / touchMagnitude;
+                        this.player.x += normalizedDx * playerSpeed;
+                        this.player.y += normalizedDy * playerSpeed;
+                    }
+                }
+                
+                // Limiter le joueur à la taille de la carte
+                this.player.x = Math.max(this.player.size, Math.min(config.mapWidth - this.player.size, this.player.x));
+                this.player.y = Math.max(this.player.size, Math.min(config.mapHeight - this.player.size, this.player.y));
+                
+                // Mettre à jour la caméra pour suivre le joueur
+                this.camera.x = this.player.x - canvas.width / 2;
+                this.camera.y = this.player.y - canvas.height / 2;
+                
+                // Mettre à jour les monstres
+                for (let i = this.monsters.length - 1; i >= 0; i--) {
+                    const monster = this.monsters[i];
+                    
+                    // Mouvement de poursuite
+                    const dx = this.player.x - monster.x;
+                    const dy = this.player.y - monster.y;
+                    const dist = Math.hypot(dx, dy);
+                    
+                    if (dist > 0) {
+                        const speed = config.monsterSpeed * deltaTime;
+                        monster.x += (dx / dist) * speed;
+                        monster.y += (dy / dist) * speed;
+                    }
+                    
+                    // Vérifier si le monstre peut tirer
+                    const now = Date.now();
+                    if (dist <= config.monsterRange && (!this.monsterLastShots[i] || now - this.monsterLastShots[i] >= 1000 / config.monsterFireRate)) {
+                        this.monsterLastShots[i] = now;
+                        this.monsterProjectiles.push(new Projectile(
+                            monster.x, monster.y,
+                            this.player.x, this.player.y,
+                            config.projectileSize,
+                            monster.damage,
+                            'red'
+                        ));
+                    }
+                    
+                    // Vérifier si le joueur peut tirer sur ce monstre
+                    const playerDist = Math.hypot(this.player.x - monster.x, this.player.y - monster.y);
+                    if (playerDist <= config.playerRange && now - this.lastPlayerShot >= 1000 / config.playerFireRate) {
+                        this.lastPlayerShot = now;
+                        this.projectiles.push(new Projectile(
+                            this.player.x, this.player.y,
+                            monster.x, monster.y,
+                            config.projectileSize,
+                            config.playerDamage,
+                            'blue'
+                        ));
+                    }
+                }
+                
+                // Mettre à jour les projectiles du joueur
+                for (let i = this.projectiles.length - 1; i >= 0; i--) {
+                    const proj = this.projectiles[i];
+                    proj.update(deltaTime);
+                    
+                    // Vérifier les collisions avec les monstres
+                    for (let j = this.monsters.length - 1; j >= 0; j--) {
+                        const monster = this.monsters[j];
+                        if (proj.checkCollision(monster)) {
+                            monster.health -= proj.damage;
+                            this.projectiles.splice(i, 1);
+                            
+                            // Vérifier si le monstre est mort
+                            if (monster.health <= 0) {
+                                this.monsters.splice(j, 1);
+                                this.score++;
+                                this.wave = Math.floor(this.score / 10) + 1;
+                                this.spawnMonster();
+                                
+                                // Mettre à jour l'UI
+                                document.getElementById('score-display').textContent = this.score;
+                                document.getElementById('wave-display').textContent = this.wave;
+                            }
+                            
+                            break;
+                        }
+                    }
+                    
+                    // Supprimer les projectiles hors de la carte
+                    if (proj.x < 0 || proj.x > config.mapWidth || 
+                        proj.y < 0 || proj.y > config.mapHeight) {
+                        this.projectiles.splice(i, 1);
+                    }
+                }
+                
+                // Mettre à jour les projectiles des monstres
+                for (let i = this.monsterProjectiles.length - 1; i >= 0; i--) {
+                    const proj = this.monsterProjectiles[i];
+                    proj.update(deltaTime);
+                    
+                    // Vérifier la collision avec le joueur
+                    if (proj.checkCollision(this.player)) {
+                        this.player.health -= proj.damage;
+                        this.monsterProjectiles.splice(i, 1);
+                        
+                        // Mettre à jour l'affichage de la santé
+                        document.getElementById('health-display').textContent = Math.max(0, this.player.health);
+                        
+                        // Vérifier si le joueur est mort
+                        if (this.player.health <= 0) {
+                            this.endGame();
+                        }
+                    }
+                    
+                    // Supprimer les projectiles hors de la carte
+                    else if (proj.x < 0 || proj.x > config.mapWidth || 
+                             proj.y < 0 || proj.y > config.mapHeight) {
+                        this.monsterProjectiles.splice(i, 1);
+                    }
+                }
+            }
+            
+            endGame() {
+                this.gameOver = true;
+                document.getElementById('final-score').textContent = this.score;
+                document.getElementById('game-over').style.display = 'flex';
+                
+                // Envoyer le score au serveur
+                if (localStorage.getItem('token')) {
+                    fetch('/api/scores', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + localStorage.getItem('token')
+                        },
+                        body: JSON.stringify({
+                            score: this.score,
+                            duration: Math.floor(this.gameTime)
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.isNewBest) {
+                            alert('Nouveau record !');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                    });
+                }
+            }
+            
+            render() {
+                // Effacer le canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Dessiner l'arrière-plan (cour d'école stylisée)
+                this.drawBackground();
+                
+                // Dessiner les projectiles du joueur
+                for (const proj of this.projectiles) {
+                    proj.draw(ctx, this.camera);
+                }
+                
+                // Dessiner les projectiles des monstres
+                for (const proj of this.monsterProjectiles) {
+                    proj.draw(ctx, this.camera);
+                }
+                
+                // Dessiner les monstres
+                for (const monster of this.monsters) {
+                    monster.draw(ctx, this.camera);
+                }
+                
+                // Dessiner le cercle de portée du joueur
+                ctx.beginPath();
+                ctx.arc(
+                    this.x - camera.x + this.size * 0.2,
+                    this.y - camera.y - this.size * 0.2,
+                    this.size * 0.15,
+                    0, Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Sourire
+                ctx.strokeStyle = '#FFF';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(
+                    this.x - camera.x,
+                    this.y - camera.y + this.size * 0.1,
+                    this.size * 0.3,
+                    0.1 * Math.PI, 0.9 * Math.PI
+                );
+                ctx.stroke();
+                
+                // Barre de vie au-dessus du joueur
+                const healthBarWidth = this.size * 2;
+                const healthBarHeight = 8;
+                const healthPercent = Math.max(0, this.health) / config.playerHealth;
+                
+                // Fond de la barre de vie
+                ctx.fillStyle = '#555';
+                ctx.fillRect(
+                    this.x - camera.x - healthBarWidth / 2,
+                    this.y - camera.y - this.size - 15,
+                    healthBarWidth,
+                    healthBarHeight
+                );
+                
+                // Barre de vie
+                ctx.fillStyle = healthPercent > 0.5 ? '#2ECC71' : healthPercent > 0.25 ? '#F39C12' : '#E74C3C';
+                ctx.fillRect(
+                    this.x - camera.x - healthBarWidth / 2,
+                    this.y - camera.y - this.size - 15,
+                    healthBarWidth * healthPercent,
+                    healthBarHeight
+                );
+            }
+        }
+
+        // Classe Monstre
+        class Monster {
+            constructor(x, y, size, health, damage) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.health = health;
+                this.maxHealth = health;
+                this.damage = damage;
+            }
+            
+            draw(ctx, camera) {
+                // Corps du monstre (livre ensorcelé)
+                ctx.fillStyle = '#9B59B6';
+                
+                // Dessiner un livre
+                ctx.save();
+                ctx.translate(this.x - camera.x, this.y - camera.y);
+                
+                // Couverture du livre
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                
+                // Pages du livre (bord blanc)
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(-this.size / 2 + 3, -this.size / 2 + 3, this.size - 6, this.size - 6);
+                
+                // Texte simulé
+                ctx.fillStyle = '#000';
+                for (let i = 0; i < 5; i++) {
+                    ctx.fillRect(-this.size / 2 + 8, -this.size / 2 + 10 + i * 6, this.size - 16, 2);
+                }
+                
+                // Yeux menaçants
+                ctx.fillStyle = '#E74C3C';
+                ctx.beginPath();
+                ctx.arc(-this.size / 4, -this.size / 6, this.size / 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(this.size / 4, -this.size / 6, this.size / 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+                
+                // Dessiner le cercle de portée
+                ctx.beginPath();
+                ctx.arc(
+                    this.x - camera.x,
+                    this.y - camera.y,
+                    config.monsterRange,
+                    0, Math.PI * 2
+                );
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.2)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Barre de vie
+                const healthBarWidth = this.size * 2;
+                const healthBarHeight = 6;
+                const healthPercent = this.health / this.maxHealth;
+                
+                ctx.fillStyle = '#555';
+                ctx.fillRect(
+                    this.x - camera.x - healthBarWidth / 2,
+                    this.y - camera.y - this.size - 10,
+                    healthBarWidth,
+                    healthBarHeight
+                );
+                
+                ctx.fillStyle = healthPercent > 0.5 ? '#2ECC71' : healthPercent > 0.25 ? '#F39C12' : '#E74C3C';
+                ctx.fillRect(
+                    this.x - camera.x - healthBarWidth / 2,
+                    this.y - camera.y - this.size - 10,
+                    healthBarWidth * healthPercent,
+                    healthBarHeight
+                );
+            }
+        }
+
+        // Classe Projectile
+        class Projectile {
+            constructor(x, y, targetX, targetY, size, damage, color) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.damage = damage;
+                this.color = color;
+                
+                // Calculer la direction
+                const dx = targetX - x;
+                const dy = targetY - y;
+                const dist = Math.hypot(dx, dy);
+                
+                this.vx = dx / dist * config.projectileSpeed;
+                this.vy = dy / dist * config.projectileSpeed;
+            }
+            
+            update(deltaTime) {
+                this.x += this.vx * deltaTime;
+                this.y += this.vy * deltaTime;
+            }
+            
+            draw(ctx, camera) {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(
+                    this.x - camera.x,
+                    this.y - camera.y,
+                    this.size,
+                    0, Math.PI * 2
+                );
+                ctx.fill();
+            }
+            
+            checkCollision(entity) {
+                const dx = this.x - entity.x;
+                const dy = this.y - entity.y;
+                const distance = Math.hypot(dx, dy);
+                
+                return distance < this.size + entity.size;
+            }
+        }
+
+        // Variables globales
+        let game;
+        
+        // Fonction de redémarrage
+        function startGame() {
+            game = new Game();
+            document.getElementById('game-over').style.display = 'none';
+        }
+        
+        // Initialiser le jeu
+        startGame();
+        
+        // Ajouter les événements pour les boutons
+        document.getElementById('restart-button').addEventListener('click', function() {
+            startGame();
+        });
+        
+        document.getElementById('home-button').addEventListener('click', function() {
+            window.location.href = '/';
+        });
+        
+        // Vérifier l'authentification
+        window.onload = function() {
+            if (!localStorage.getItem('token')) {
+                alert('Veuillez vous connecter pour jouer');
+                window.location.href = '/';
+                return;
+            }
+        };
+    </script>
+</body>
+</html>.arc(
+                    this.player.x - this.camera.x,
+                    this.player.y - this.camera.y,
+                    config.playerRange,
+                    0, Math.PI * 2
+                );
+                ctx.strokeStyle = 'rgba(0, 100, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Dessiner le joueur
+                this.player.draw(ctx, this.camera);
+            }
+            
+            drawBackground() {
+                // Dessiner la cour d'école stylisée
+                
+                // Dessiner l'herbe de base
+                ctx.fillStyle = '#7EC850';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Dessiner les chemins
+                const pathColor = '#D9C27E';
+                
+                // Chemins horizontaux et verticaux
+                for (let x = 0; x < config.mapWidth; x += 500) {
+                    // Chemin horizontal
+                    ctx.fillStyle = pathColor;
+                    ctx.fillRect(
+                        x - this.camera.x,
+                        config.mapHeight / 2 - 50 - this.camera.y,
+                        500,
+                        100
+                    );
+                    
+                    // Chemin vertical
+                    if (x % 1000 === 0) {
+                        ctx.fillRect(
+                            x + 200 - this.camera.x,
+                            0 - this.camera.y,
+                            100,
+                            config.mapHeight
+                        );
+                    }
+                }
+                
+                // Dessiner des arbres
+                const treePositions = [
+                    {x: 200, y: 200},
+                    {x: 600, y: 400},
+                    {x: 1200, y: 300},
+                    {x: 1800, y: 500},
+                    {x: 2200, y: 800},
+                    {x: 400, y: 1500},
+                    {x: 800, y: 2200},
+                    {x: 1600, y: 1800},
+                    {x: 2400, y: 1200},
+                    {x: 2600, y: 2600}
+                ];
+                
+                for (const pos of treePositions) {
+                    this.drawTree(pos.x - this.camera.x, pos.y - this.camera.y);
+                }
+                
+                // Dessiner une structure pour l'école
+                ctx.fillStyle = '#D98E7E';
+                ctx.fillRect(
+                    config.mapWidth / 2 - 300 - this.camera.x,
+                    config.mapHeight / 2 - 200 - this.camera.y,
+                    600,
+                    400
+                );
+                
+                // Toit de l'école
+                ctx.fillStyle = '#8E3B24';
+                ctx.beginPath();
+                ctx.moveTo(config.mapWidth / 2 - 350 - this.camera.x, config.mapHeight / 2 - 200 - this.camera.y);
+                ctx.lineTo(config.mapWidth / 2 + 350 - this.camera.x, config.mapHeight / 2 - 200 - this.camera.y);
+                ctx.lineTo(config.mapWidth / 2 - this.camera.x, config.mapHeight / 2 - 350 - this.camera.y);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Fenêtres
+                ctx.fillStyle = '#87CEEB';
+                for (let x = 0; x < 5; x++) {
+                    for (let y = 0; y < 2; y++) {
+                        ctx.fillRect(
+                            config.mapWidth / 2 - 250 + x * 125 - this.camera.x,
+                            config.mapHeight / 2 - 150 + y * 150 - this.camera.y,
+                            75,
+                            75
+                        );
+                    }
+                }
+                
+                // Porte
+                ctx.fillStyle = '#8E3B24';
+                ctx.fillRect(
+                    config.mapWidth / 2 - 50 - this.camera.x,
+                    config.mapHeight / 2 + 100 - this.camera.y,
+                    100,
+                    100
+                );
+            }
+            
+            drawTree(x, y) {
+                // Tronc
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(x - 10, y - 10, 20, 80);
+                
+                // Feuillage
+                ctx.fillStyle = '#2E8B57';
+                ctx.beginPath();
+                ctx.arc(x, y - 50, 50, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            gameLoop(timestamp) {
+                // Calculer le deltaTime (en secondes)
+                const deltaTime = (timestamp - this.lastTime) / 1000;
+                this.lastTime = timestamp;
+                
+                // Mettre à jour et dessiner le jeu
+                this.update(deltaTime);
+                this.render();
+                
+                // Continuer la boucle de jeu
+                requestAnimationFrame(this.gameLoop.bind(this));
+            }
+        }
+
+        // Classe Joueur
+        class Player {
+            constructor(x, y, size, health) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.health = health;
+            }
+            
+            draw(ctx, camera) {
+                // Corps du joueur
+                ctx.fillStyle = '#3498DB';
+                ctx.beginPath();
+                ctx.arc(
+                    this.x - camera.x,
+                    this.y - camera.y,
+                    this.size,
+                    0, Math.PI * 2
+                );
+                ctx.fill();
+                
+                // Visage stylisé
+                ctx.fillStyle = '#FFF';
+                ctx.beginPath();
+                ctx.arc(
+                    this.x - camera.x - this.size * 0.2,
+                    this.y - camera.y - this.size * 0.2,
+                    this.size * 0.15,
+                    0, Math.PI * 2
+                );
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx
