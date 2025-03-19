@@ -83,7 +83,25 @@
             font-weight: bold;
             color: #3f51b5;
         }
-        #onboarding-area, #game-area {
+        #onboarding-area, #game-area, #loading-area {
+            display: none;
+        }
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3f51b5;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-message {
+            color: #e74c3c;
+            margin-top: 10px;
             display: none;
         }
     </style>
@@ -102,6 +120,12 @@
                 <input type="text" id="username" class="input-field" placeholder="Votre pseudo">
                 <button class="game-button" onclick="login()">Jouer</button>
             </div>
+            <div id="login-error" class="error-message">Erreur de connexion. Veuillez réessayer.</div>
+        </div>
+        
+        <div id="loading-area" class="login-container">
+            <h2>Chargement en cours...</h2>
+            <div class="loading-spinner"></div>
         </div>
         
         <div id="onboarding-area" class="login-container">
@@ -109,6 +133,7 @@
             <p>Comment s'appelle votre héros ?</p>
             <input type="text" id="hero-name" class="input-field" placeholder="Nom du héros">
             <button class="game-button" onclick="saveHeroName()">Commencer</button>
+            <div id="hero-error" class="error-message">Erreur de sauvegarde. Veuillez réessayer.</div>
         </div>
         
         <div id="game-area">
@@ -122,11 +147,11 @@
                     </div>
                     <div class="stat-box">
                         <div>Niveau</div>
-                        <div class="stat-value">1</div>
+                        <div class="stat-value" id="player-level">1</div>
                     </div>
                     <div class="stat-box">
                         <div>Progression</div>
-                        <div class="stat-value">Débutant</div>
+                        <div class="stat-value" id="player-rank">Débutant</div>
                     </div>
                 </div>
                 
@@ -138,6 +163,16 @@
     </div>
     
     <script>
+        // Cacher tous les écrans sauf celui de login
+        function showScreen(screenId) {
+            document.getElementById('login-area').style.display = 'none';
+            document.getElementById('loading-area').style.display = 'none';
+            document.getElementById('onboarding-area').style.display = 'none';
+            document.getElementById('game-area').style.display = 'none';
+            
+            document.getElementById(screenId).style.display = 'block';
+        }
+        
         // Connexion simple avec un pseudo
         function login() {
             const username = document.getElementById('username').value;
@@ -146,20 +181,30 @@
                 return;
             }
             
+            // Afficher l'écran de chargement
+            showScreen('loading-area');
+            
+            // Cacher les messages d'erreur
+            document.getElementById('login-error').style.display = 'none';
+            
             fetch('/api/auth/simple', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: username })
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Réponse réseau non valide');
+                }
+                return res.json();
+            })
             .then(data => {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('username', username);
                 
                 // Si nouvel utilisateur, afficher l'onboarding
                 if (data.isNewUser) {
-                    document.getElementById('login-area').style.display = 'none';
-                    document.getElementById('onboarding-area').style.display = 'block';
+                    showScreen('onboarding-area');
                 } else {
                     // Sinon charger les données utilisateur
                     loadUserData();
@@ -167,7 +212,8 @@
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('Erreur de connexion. Veuillez réessayer.');
+                document.getElementById('login-error').style.display = 'block';
+                showScreen('login-area');
             });
         }
         
@@ -179,6 +225,12 @@
                 return;
             }
             
+            // Afficher l'écran de chargement
+            showScreen('loading-area');
+            
+            // Cacher les messages d'erreur
+            document.getElementById('hero-error').style.display = 'none';
+            
             fetch('/api/user', {
                 method: 'PUT',
                 headers: { 
@@ -187,38 +239,72 @@
                 },
                 body: JSON.stringify({ heroName: heroName })
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Réponse réseau non valide');
+                }
+                return res.json();
+            })
             .then(() => {
-                document.getElementById('onboarding-area').style.display = 'none';
                 loadUserData();
             })
             .catch(error => {
                 console.error('Erreur:', error);
-                alert('Erreur de sauvegarde. Veuillez réessayer.');
+                document.getElementById('hero-error').style.display = 'block';
+                showScreen('onboarding-area');
             });
         }
         
         // Charger les données utilisateur
         function loadUserData() {
+            // Afficher l'écran de chargement
+            showScreen('loading-area');
+            
             fetch('/api/user', {
                 headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error('Réponse réseau non valide');
+                }
+                return res.json();
+            })
             .then(data => {
-                document.getElementById('login-area').style.display = 'none';
-                document.getElementById('onboarding-area').style.display = 'none';
-                document.getElementById('game-area').style.display = 'block';
+                // Mise à jour des données du joueur
                 document.getElementById('player-name').textContent = data.heroName || localStorage.getItem('username');
                 document.getElementById('best-score').textContent = data.bestScore || 0;
+                
+                // Calculer le niveau et le rang basé sur le score
+                const level = calculateLevel(data.bestScore);
+                const rank = calculateRank(level);
+                
+                document.getElementById('player-level').textContent = level;
+                document.getElementById('player-rank').textContent = rank;
+                
+                // Afficher l'écran de jeu
+                showScreen('game-area');
             })
             .catch(error => {
                 console.error('Erreur:', error);
                 // En cas d'erreur d'authentification, revenir à l'écran de login
                 localStorage.removeItem('token');
-                document.getElementById('login-area').style.display = 'block';
-                document.getElementById('onboarding-area').style.display = 'none';
-                document.getElementById('game-area').style.display = 'none';
+                showScreen('login-area');
             });
+        }
+        
+        // Calculer le niveau du joueur basé sur son score
+        function calculateLevel(score) {
+            if (!score) return 1;
+            return Math.floor(Math.sqrt(score) / 2) + 1;
+        }
+        
+        // Déterminer le rang du joueur basé sur son niveau
+        function calculateRank(level) {
+            if (level >= 20) return "Érudit";
+            if (level >= 15) return "Maestro";
+            if (level >= 10) return "Expert";
+            if (level >= 5) return "Adepte";
+            return "Débutant";
         }
         
         // Démarrer le jeu
@@ -231,6 +317,8 @@
             const token = localStorage.getItem('token');
             if (token) {
                 loadUserData();
+            } else {
+                showScreen('login-area');
             }
         };
     </script>
