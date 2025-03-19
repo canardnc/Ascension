@@ -1,0 +1,35 @@
+# Ignorer le répertoire bin
+/bin/
+/bin/*
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de configuration
+*.log
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dépendances
+/node_modules/
+/vendor/
+
+# Fichiers de build
+/build/
+/dist/
+/out/
+
+# Fichiers de cache
+.cache/
+.npm/
+.eslintcache
+
+# Fichiers IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
