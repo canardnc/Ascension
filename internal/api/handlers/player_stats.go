@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -395,10 +396,11 @@ func StartBattle(w http.ResponseWriter, r *http.Request) {
 
 // CompleteBattleRequest représente une demande de fin de combat
 type CompleteBattleRequest struct {
-	LevelID   int  `json:"levelId"`
-	Success   bool `json:"success"`
-	Score     int  `json:"score"`
-	TimeSpent int  `json:"timeSpent"` // en secondes
+	LevelID    int  `json:"levelId"`
+	Success    bool `json:"success"`
+	Score      int  `json:"score"`
+	StarsCount int  `json:"starsCount"`
+	TimeSpent  int  `json:"timeSpent"` // en secondes
 }
 
 // CompleteBattle enregistre le résultat d'un combat et débloque éventuellement le niveau suivant
@@ -412,67 +414,80 @@ func CompleteBattle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if request.LevelID <= 0 || request.Score < 0 || request.TimeSpent <= 0 {
+	if request.LevelID <= 0 || request.Score < 0 || request.TimeSpent <= 0 || request.StarsCount < 0 || request.StarsCount > 3 {
 		middleware.RespondWithError(w, http.StatusBadRequest, "Paramètres invalides")
 		return
 	}
 
-	// Si le combat est réussi, on peut débloquer le niveau suivant
-	if request.Success {
-		// Créer un nouveau score
-		score := models.Score{
-			UserID:   userId,
-			Score:    request.Score,
-			Duration: request.TimeSpent,
-		}
+	// Enregistrement des logs pour le debug
+	log.Printf("CompleteBattle - UserID: %d, LevelID: %d, Success: %v, Stars: %d",
+		userId, request.LevelID, request.Success, request.StarsCount)
 
-		// Enregistrer le score
-		if err := score.Create(); err != nil {
-			middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de l'enregistrement du score")
-			return
-		}
+	// Créer un nouveau score
+	score := models.Score{
+		UserID:   userId,
+		Score:    request.Score,
+		Duration: request.TimeSpent,
+	}
 
-		// Vérifier si c'est un nouveau record
-		isNewBest, err := score.IsNewBestScore()
-		if err != nil {
-			middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la vérification du score")
-			return
-		}
+	// Enregistrer le score
+	if err := score.Create(); err != nil {
+		log.Printf("Erreur lors de l'enregistrement du score: %v", err)
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de l'enregistrement du score")
+		return
+	}
 
-		// Débloquer le niveau suivant si ce n'est pas déjà fait
+	// Vérifier si c'est un nouveau record
+	isNewBest, err := score.IsNewBestScore()
+	if err != nil {
+		log.Printf("Erreur lors de la vérification du score: %v", err)
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la vérification du score")
+		return
+	}
+
+	var nextLevelUnlocked bool = false
+
+	// Si le joueur a obtenu 3 étoiles (terminé toutes les vagues), débloquer le niveau suivant
+	if request.StarsCount == 3 {
 		nextLevel := request.LevelID + 1
-		if nextLevel <= 5 { // Assumer que le niveau maximum est 5
+
+		log.Printf("Niveau %d terminé avec 3 étoiles. Tentative de débloquage du niveau %d",
+			request.LevelID, nextLevel)
+
+		// Vérifier le nombre maximum de niveaux (à ajuster selon votre jeu)
+		maxLevel := 5
+		if nextLevel <= maxLevel {
 			if err := models.UnlockLevel(userId, nextLevel); err != nil {
+				log.Printf("Erreur lors du déblocage du niveau %d: %v", nextLevel, err)
 				middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors du déblocage du niveau suivant")
 				return
 			}
+			nextLevelUnlocked = true
+			log.Printf("Niveau %d débloqué avec succès", nextLevel)
 		}
+	}
 
-		// Mettre à jour le niveau du joueur si nécessaire
-		user, err := models.GetUserByID(userId)
-		if err != nil {
-			middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération du joueur")
+	// Mettre à jour les étoiles pour ce niveau
+	currentStars, err := models.GetLevelStars(userId, request.LevelID)
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("Erreur lors de la récupération des étoiles: %v", err)
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des étoiles")
+		return
+	}
+
+	// Mettre à jour seulement si le résultat est meilleur
+	if request.StarsCount > currentStars {
+		if err := models.UpdateLevelStars(userId, request.LevelID, request.StarsCount); err != nil {
+			log.Printf("Erreur lors de la mise à jour des étoiles: %v", err)
+			middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la mise à jour des étoiles")
 			return
 		}
-
-		if request.LevelID > user.Level {
-			user.Level = request.LevelID
-			if err := user.Update(); err != nil {
-				middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la mise à jour du niveau")
-				return
-			}
-		}
-
-		middleware.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
-			"success":           true,
-			"isNewBest":         isNewBest,
-			"nextLevelUnlocked": nextLevel <= 5,
-		})
-	} else {
-		// Si le combat est perdu, on ne fait rien de spécial
-		middleware.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
-			"success": true,
-			"message": "Combat terminé sans succès",
-		})
+		log.Printf("Étoiles mises à jour pour le niveau %d: %d", request.LevelID, request.StarsCount)
 	}
+
+	middleware.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"success":           true,
+		"isNewBest":         isNewBest,
+		"nextLevelUnlocked": nextLevelUnlocked,
+	})
 }

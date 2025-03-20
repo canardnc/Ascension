@@ -9,6 +9,9 @@ import (
 
 // SetupRoutes configure les routes de l'API
 func SetupRoutes(mux *http.ServeMux) {
+	configsDir := http.FileServer(http.Dir("./web/public/configs"))
+	mux.Handle("/configs/", http.StripPrefix("/configs/", configsDir))
+
 	// Routes publiques
 	mux.HandleFunc("/api/auth/simple", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {

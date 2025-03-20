@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"time"
 
 	"github.com/canardnc/Ascension/internal/db"
@@ -8,43 +9,43 @@ import (
 
 // PlayerStats représente les statistiques principales d'un joueur
 type PlayerStats struct {
-	ID                    int       `json:"id"`
-	UserID                int       `json:"userId"`
-	Strength              int       `json:"strength"`
-	Endurance             int       `json:"endurance"`
-	Recovery              int       `json:"recovery"`
-	Agility               int       `json:"agility"`
-	AvailableStrengthPoints int     `json:"availableStrengthPoints"`
-	AvailableEndurancePoints int    `json:"availableEndurancePoints"`
-	AvailableRecoveryPoints int     `json:"availableRecoveryPoints"`
-	AvailableAgilityPoints int      `json:"availableAgilityPoints"`
-	UpdatedAt             time.Time `json:"updatedAt"`
+	ID                       int       `json:"id"`
+	UserID                   int       `json:"userId"`
+	Strength                 int       `json:"strength"`
+	Endurance                int       `json:"endurance"`
+	Recovery                 int       `json:"recovery"`
+	Agility                  int       `json:"agility"`
+	AvailableStrengthPoints  int       `json:"availableStrengthPoints"`
+	AvailableEndurancePoints int       `json:"availableEndurancePoints"`
+	AvailableRecoveryPoints  int       `json:"availableRecoveryPoints"`
+	AvailableAgilityPoints   int       `json:"availableAgilityPoints"`
+	UpdatedAt                time.Time `json:"updatedAt"`
 }
 
 // PlayerSubStats représente les sous-statistiques d'un joueur
 type PlayerSubStats struct {
-	ID         int       `json:"id"`
-	UserID     int       `json:"userId"`
-	Attack     int       `json:"attack"`
-	Precision  int       `json:"precision"`
-	Critical   int       `json:"critical"`
-	Health     int       `json:"health"`
-	Armor      int       `json:"armor"`
-	Dodge      int       `json:"dodge"`
-	Regen      int       `json:"regen"`
-	Lifesteal  int       `json:"lifesteal"`
-	Range      int       `json:"range"`
-	Speed      int       `json:"speed"`
-	UpdatedAt  time.Time `json:"updatedAt"`
+	ID        int       `json:"id"`
+	UserID    int       `json:"userId"`
+	Attack    int       `json:"attack"`
+	Precision int       `json:"precision"`
+	Critical  int       `json:"critical"`
+	Health    int       `json:"health"`
+	Armor     int       `json:"armor"`
+	Dodge     int       `json:"dodge"`
+	Regen     int       `json:"regen"`
+	Lifesteal int       `json:"lifesteal"`
+	Range     int       `json:"range"`
+	Speed     int       `json:"speed"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 // PlayerEnergy représente l'énergie d'un joueur
 type PlayerEnergy struct {
-	ID          int       `json:"id"`
-	UserID      int       `json:"userId"`
-	CurrentEnergy int     `json:"currentEnergy"`
-	MaxEnergy   int       `json:"maxEnergy"`
-	LastRefresh time.Time `json:"lastRefresh"`
+	ID            int       `json:"id"`
+	UserID        int       `json:"userId"`
+	CurrentEnergy int       `json:"currentEnergy"`
+	MaxEnergy     int       `json:"maxEnergy"`
+	LastRefresh   time.Time `json:"lastRefresh"`
 }
 
 // UnlockedLevel représente un niveau débloqué par le joueur
@@ -124,7 +125,7 @@ func GetPlayerEnergyByUserID(userID int) (*PlayerEnergy, error) {
 
 	var energy PlayerEnergy
 	err := db.DB.QueryRow(query, userID).Scan(
-		&energy.ID, &energy.UserID, &energy.CurrentEnergy, 
+		&energy.ID, &energy.UserID, &energy.CurrentEnergy,
 		&energy.MaxEnergy, &energy.LastRefresh,
 	)
 	if err != nil {
@@ -135,29 +136,29 @@ func GetPlayerEnergyByUserID(userID int) (*PlayerEnergy, error) {
 	now := time.Now()
 	elapsed := now.Sub(energy.LastRefresh).Minutes()
 	energyRegenRate := 1 // 1 point d'énergie toutes les 5 minutes
-	
+
 	if elapsed >= 5 {
 		minutesPassed := int(elapsed)
 		energyToRegen := (minutesPassed / 5) * energyRegenRate
-		
+
 		if energyToRegen > 0 {
 			// Mettre à jour l'énergie
 			newEnergy := energy.CurrentEnergy + energyToRegen
 			if newEnergy > energy.MaxEnergy {
 				newEnergy = energy.MaxEnergy
 			}
-			
+
 			updateQuery := `
 				UPDATE player_energy
 				SET current_energy = $1, last_refresh = $2
 				WHERE user_id = $3
 			`
-			
+
 			_, err := db.DB.Exec(updateQuery, newEnergy, now, userID)
 			if err != nil {
 				return nil, err
 			}
-			
+
 			energy.CurrentEnergy = newEnergy
 			energy.LastRefresh = now
 		}
@@ -259,14 +260,40 @@ func RecordTrainingCompletion(userID int, category, exerciseName string, difficu
 
 // UnlockLevel débloque un niveau pour un joueur
 func UnlockLevel(userID, levelID int) error {
+	// Vérifier d'abord si le niveau est déjà débloqué
 	query := `
-		INSERT INTO unlocked_levels (user_id, level_id)
-		VALUES ($1, $2)
-		ON CONFLICT (user_id, level_id) DO NOTHING
-	`
+        SELECT COUNT(*) 
+        FROM unlocked_levels 
+        WHERE user_id = $1 AND level_id = $2
+    `
 
-	_, err := db.DB.Exec(query, userID, levelID)
-	return err
+	var count int
+	err := db.DB.QueryRow(query, userID, levelID).Scan(&count)
+	if err != nil {
+		log.Printf("Erreur lors de la vérification du niveau débloqué: %v", err)
+		return err
+	}
+
+	// Si le niveau est déjà débloqué, rien à faire
+	if count > 0 {
+		log.Printf("Le niveau %d est déjà débloqué pour l'utilisateur %d", levelID, userID)
+		return nil
+	}
+
+	// Insérer le nouveau niveau débloqué
+	insertQuery := `
+        INSERT INTO unlocked_levels (user_id, level_id)
+        VALUES ($1, $2)
+    `
+
+	_, err = db.DB.Exec(insertQuery, userID, levelID)
+	if err != nil {
+		log.Printf("Erreur lors de l'insertion du niveau débloqué: %v", err)
+		return err
+	}
+
+	log.Printf("Niveau %d débloqué avec succès pour l'utilisateur %d", levelID, userID)
+	return nil
 }
 
 // UseEnergy consomme de l'énergie pour un joueur

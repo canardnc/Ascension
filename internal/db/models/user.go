@@ -97,3 +97,30 @@ func (u *User) GetBestScore() (int, error) {
 
 	return bestScore, nil
 }
+
+// GetLevelStars récupère le nombre d'étoiles pour un niveau donné
+func GetLevelStars(userID, levelID int) (int, error) {
+	query := `
+        SELECT stars
+        FROM level_progress
+        WHERE user_id = $1 AND level_id = $2
+    `
+
+	var stars int
+	err := db.DB.QueryRow(query, userID, levelID).Scan(&stars)
+	return stars, err
+}
+
+// UpdateLevelStars met à jour le nombre d'étoiles pour un niveau
+func UpdateLevelStars(userID, levelID, stars int) error {
+	query := `
+        INSERT INTO level_progress (user_id, level_id, stars)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id, level_id)
+        DO UPDATE SET stars = EXCLUDED.stars
+        WHERE level_progress.stars < EXCLUDED.stars
+    `
+
+	_, err := db.DB.Exec(query, userID, levelID, stars)
+	return err
+}

@@ -1,0 +1,85 @@
+{
+    "levels": [
+        {
+            "id": 1,
+            "name": "La Cour d'École",
+            "description": "Un niveau débutant avec des monstres faibles",
+            "tiles": {
+                "base": "iso_dirt",
+                "special": [
+                    {
+                        "type": "zone",
+                        "tile": "iso_stone",
+                        "centerX": 0.5,
+                        "centerY": 0.5,
+                        "radius": 0.25
+                    },
+                    {
+                        "type": "random",
+                        "tile": "iso_dry",
+                        "count": 5,
+                        "radius": 3
+                    }
+                ]
+            },
+            "monsters": [
+                {
+                    "type": "slime",
+                    "count": 10,
+                    "health": 3,
+                    "speed": 50,
+                    "damage": 1
+                }
+            ],
+            "obstacles": []
+        },
+        {
+            "id": 2,
+            "name": "La Bibliothèque",
+            "description": "Un niveau plus difficile avec plus de monstres",
+            "tiles": {
+                "base": "iso_stone",
+                "special": [
+                    {
+                        "type": "zone",
+                        "tile": "iso_dry",
+                        "centerX": 0.3,
+                        "centerY": 0.7,
+                        "radius": 0.15
+                    },
+                    {
+                        "type": "random",
+                        "tile": "iso_dirt",
+                        "count": 3,
+                        "radius": 4
+                    }
+                ]
+            },
+            "monsters": [
+                {
+                    "type": "slime",
+                    "count": 15,
+                    "health": 5,
+                    "speed": 70,
+                    "damage": 1.5
+                },
+                {
+                    "type": "book",
+                    "count": 5,
+                    "health": 8,
+                    "speed": 40,
+                    "damage": 2
+                }
+            ],
+            "obstacles": [
+                {
+                    "type": "bookshelf",
+                    "x": 10,
+                    "y": 10,
+                    "width": 3,
+                    "height": 1
+                }
+            ]
+        }
+    ]
+}
