@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #1f1f3a;
+            color: #fff;
+            background-image: url('/assets/images/background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
+        }
+        
+        .profile-section {
+            background-color: rgba(31, 31, 58, 0.85);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(101, 66, 254, 0.3);
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #6542fe;
+            margin-right: 20px;
+            box-shadow: 0 0 15px rgba(101, 66, 254, 0.8);
+        }
+        
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-info h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+        
+        .user-info .rank {
+            color: #6542fe;
+            font-weight: 600;
+            font-size: 18px;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: rgba(47, 47, 77, 0.6);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(101, 66, 254, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(101, 66, 254, 0.4);
+        }
+        
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #6542fe;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .label {
+            font-size: 14px;
+            color: #a9a9c9;
+        }
+        
+        .stats-details {
+            margin-top: 30px;
+        }
+        
+        .points-available {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background-color: rgba(47, 47, 77, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(101, 66, 254, 0.3);
+        }
+        
+        .points-badge {
+            background-color: rgba(101, 66, 254, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #a16bff;
+        }
+        
+        .main-stat {
+            background-color: rgba(47, 47, 77, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(101, 66, 254, 0.1);
+        }
+        
+        .main-stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(101, 66, 254, 0.1);
+        }
+        
+        .sub-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .sub-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(47, 47, 77, 0.6);
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+        
+        .sub-stat-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ccc;
+        }
+        
+        .sub-stat-controls {
+            display: flex;
+            align-items: center;
+        }
+        
+        .sub-stat-value {
+            padding: 0 10px;
+            font-weight: 700;
+            color: #a16bff;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        .point-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background-color: rgba(101, 66, 254, 0.3);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .point-btn:hover {
+            background-color: rgba(101, 66, 254, 0.8);
+        }
+        
+        .point-btn.minus {
+            background-color: rgba(255, 66, 66, 0.3);
+        }
+        
+        .point-btn.minus:hover {
+            background-color: rgba(255, 66, 66, 0.8);
+        }
+        
+        .points-save-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        #save-points-btn {
+            background: linear-gradient(45deg, #6542fe, #a16bff);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(101, 66, 254, 0.4);
+        }
+        
+        #save-points-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(101, 66, 254, 0.6);
+        }
+        
+        .play-section {
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        
+        .play-button {
+            background: linear-gradient(45deg, #6542fe, #a16bff);
+            border: none;
+            color: white;
+            padding: 15px 60px;
+            font-size: 20px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(101, 66, 254, 0.4);
+            display: flex;
+            align-items: center;
+        }
+        
+        .play-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(101, 66, 254, 0.6);
+        }
+        
+        .energy-info {
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+        }
+        
+        .energy-icon {
+            margin-right: 5px;
+            color: #ffcc00;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .avatar {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .main-stat-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .stat-item {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+            
+            .points-badge {
+                margin: 10px 0;
+            }
+            
+            .sub-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .play-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">ASCENSION</div>
+            <div class="menu-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </div>
+        </header>
+        
+        <section class="profile-section">
+            <div class="profile-header">
+                <div class="avatar">
+                    <img src="/icons/icon-192.png" alt="Avatar du héros">                <div class="user-info">
+                    <h2 id="hero-name">Héros Invincible</h2>
+                    <div class="rank">Adepte · Niveau 7</div>
+                </div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="value">1245</div>
+                    <div class="label">Points de compétence</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">7</div>
+                    <div class="label">Niveau maximum atteint</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">12</div>
+                    <div class="label">Victoires consécutives</div>
+                </div>
+            </div>
+            
+            <div class="stats-details">
+                <div class="points-available">
+                    <h3>Statistiques du héros</h3>
+                </div>
+                
+                <!-- FORCE -->
+                <div class="main-stat">
+                    <div class="main-stat-header">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                                    <line x1="6" y1="1" x2="6" y2="4"></line>
+                                    <line x1="10" y1="1" x2="10" y2="4"></line>
+                                    <line x1="14" y1="1" x2="14" y2="4"></line>
+                                </svg>
+                            </div>
+                            <div class="stat-name">Force</div>
+                            <div class="stat-value">28</div>
+                        </div>
+                        <div class="points-badge">Points disponibles: <span id="strength-points-available">5</span></div>
+                        <button class="stat-upgrade" onclick="navigateToTraining('strength')">Améliorer</button>
+                    </div>
+                    
+                    <div class="sub-stats">
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Attaque</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('attack', -1)">-</button>
+                                <div class="sub-stat-value" id="attack-points">8</div>
+                                <button class="point-btn plus" onclick="adjustPoints('attack', 1)">+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Précision</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('precision', -1)">-</button>
+                                <div class="sub-stat-value" id="precision-points">5</div>
+                                <button class="point-btn plus" onclick="adjustPoints('precision', 1)">+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Dégâts critiques</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('critical', -1)">-</button>
+                                <div class="sub-stat-value" id="critical-points">3</div>
+                                <button class="point-btn plus" onclick="adjustPoints('critical', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ENDURANCE -->
+                <div class="main-stat">
+                    <div class="main-stat-header">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-name">Endurance</div>
+                            <div class="stat-value">35</div>
+                        </div>
+                        <div class="points-badge">Points disponibles: <span id="endurance-points-available">4</span></div>
+                        <button class="stat-upgrade" onclick="navigateToTraining('endurance')">Améliorer</button>
+                    </div>
+                    
+                    <div class="sub-stats">
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Vie</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('health', -1)">-</button>
+                                <div class="sub-stat-value" id="health-points">10</div>
+                                <button class="point-btn plus" onclick="adjustPoints('health', 1)">+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Armure</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('armor', -1)">-</button>
+                                <div class="sub-stat-value" id="armor-points">7</div>
+                                <button class="point-btn plus" onclick="adjustPoints('armor', 1)">+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Esquive</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('dodge', -1)">-</button>
+                                <div class="sub-stat-value" id="dodge-points">4</div>
+                                <button class="point-btn plus" onclick="adjustPoints('dodge', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- RÉCUPÉRATION -->
+                <div class="main-stat">
+                    <div class="main-stat-header">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4.5 9.5V4.5H9.5"></path>
+                                    <path d="M19.5 14.5v5h-5"></path>
+                                    <path d="M4.5 4.5L9 9"></path>
+                                    <path d="M15 15l4.5 4.5"></path>
+                                    <path d="M4 12a8 8 0 0 1 8-8"></path>
+                                    <path d="M12 20a8 8 0 0 0 8-8"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-name">Récupération</div>
+                            <div class="stat-value">22</div>
+                        </div>
+                        <div class="points-badge">Points disponibles: <span id="recovery-points-available">3</span></div>
+                        <button class="stat-upgrade" onclick="navigateToTraining('recovery')">Améliorer</button>
+                    </div>
+                    
+                    <div class="sub-stats">
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Régénération</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('regen', -1)">-</button>
+                                <div class="sub-stat-value" id="regen-points">6</div>
+                                <button class="point-btn plus" onclick="adjustPoints('regen', 1)">+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Vol de vie</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('lifesteal', -1)">-</button>
+                                <div class="sub-stat-value" id="lifesteal-points">4</div>
+                                <button class="point-btn plus" onclick="adjustPoints('lifesteal', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AGILITÉ -->
+                <div class="main-stat">
+                    <div class="main-stat-header">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                                </svg>
+                            </div>
+                            <div class="stat-name">Agilité</div>
+                            <div class="stat-value">19</div>
+                        </div>
+                        <div class="points-badge">Points disponibles: <span id="agility-points-available">3</span></div>
+                        <button class="stat-upgrade" onclick="navigateToTraining('agility')">Améliorer</button>
+                    </div>
+                    
+                    <div class="sub-stats">
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Portée</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('range', -1)">-</button>
+                                <div class="sub-stat-value" id="range-points">5</div>
+                                <button class="point-btn plus" onclick="adjustPoints('range', 1)">+</button>
+                            </div>
+                        </div>
+                        
+                        <div class="sub-stat">
+                            <div class="sub-stat-name">Vitesse</div>
+                            <div class="sub-stat-controls">
+                                <button class="point-btn minus" onclick="adjustPoints('speed', -1)">-</button>
+                                <div class="sub-stat-value" id="speed-points">6</div>
+                                <button class="point-btn plus" onclick="adjustPoints('speed', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="points-save-container">
+                    <button id="save-points-btn" onclick="savePointsDistribution()">Sauvegarder les points</button>
+                </div>
+            </div>
+        </section>
+        
+        <div class="play-section">
+            <button class="play-button" onclick="navigateToBattle()">
+                JOUER
+                <div class="energy-info">
+                    <span class="energy-icon">⚡</span>
+                    <span>12/20</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Données des statistiques
+        const statsData = {
+            mainStats: {
+                strength: { available: 5 },
+                endurance: { available: 4 },
+                recovery: { available: 3 },
+                agility: { available: 3 }
+            },
+            subStats: {
+                attack: 8,
+                precision: 5,
+                critical: 3,
+                health: 10,
+                armor: 7,
+                dodge: 4,
+                regen: 6,
+                lifesteal: 4,
+                range: 5,
+                speed: 6
+            },
+            // Points initiaux, utilisés pour calculer la différence
+            initialSubStats: {
+                attack: 8,
+                precision: 5,
+                critical: 3,
+                health: 10,
+                armor: 7,
+                dodge: 4,
+                regen: 6,
+                lifesteal: 4,
+                range: 5,
+                speed: 6
+            }
+        };
+        
+        // Mapping des sous-statistiques à leur catégorie principale
+        const statCategories = {
+            attack: 'strength',
+            precision: 'strength',
+            critical: 'strength',
+            health: 'endurance',
+            armor: 'endurance',
+            dodge: 'endurance',
+            regen: 'recovery',
+            lifesteal: 'recovery',
+            range: 'agility',
+            speed: 'agility'
+        };
+        
+        // Fonction pour ajuster les points
+        function adjustPoints(stat, amount) {
+            const category = statCategories[stat];
+            
+            // Vérifier si l'on peut retirer des points (minimum 0)
+            if (amount < 0 && statsData.subStats[stat] <= 0) {
+                return;
+            }
+            
+            // Vérifier si l'on a assez de points disponibles pour ajouter
+            if (amount > 0 && statsData.mainStats[category].available <= 0) {
+                alert(`Vous n'avez plus de points disponibles pour la catégorie ${category} !`);
+                return;
+            }
+            
+            // Ajuster les points
+            statsData.subStats[stat] += amount;
+            statsData.mainStats[category].available -= amount;
+            
+            // Mettre à jour l'affichage
+            updateStatsDisplay();
+        }
+        
+        // Mettre à jour l'affichage des statistiques
+        function updateStatsDisplay() {
+            // Mettre à jour les points disponibles pour chaque catégorie
+            for (const category in statsData.mainStats) {
+                document.getElementById(`${category}-points-available`).textContent = 
+                    statsData.mainStats[category].available;
+            }
+            
+            // Mettre à jour chaque sous-statistique
+            for (const stat in statsData.subStats) {
+                const element = document.getElementById(`${stat}-points`);
+                if (element) {
+                    element.textContent = statsData.subStats[stat];
+                }
+            }
+            
+            // Mettre à jour les totaux des catégories principales
+            updateMainStatTotals();
+            
+            // Désactiver les boutons si nécessaire
+            updateButtonStates();
+        }
+        
+        // Mettre à jour les totaux des catégories principales
+        function updateMainStatTotals() {
+            const mainStats = {
+                strength: 0,
+                endurance: 0,
+                recovery: 0,
+                agility: 0
+            };
+            
+            // Calculer les totaux pour chaque catégorie
+            for (const stat in statsData.subStats) {
+                const category = statCategories[stat];
+                mainStats[category] += statsData.subStats[stat];
+            }
+            
+            // Mettre à jour l'affichage des totaux
+            document.querySelectorAll('.stat-item').forEach(item => {
+                const statName = item.querySelector('.stat-name').textContent.toLowerCase();
+                let categoryKey;
+                
+                switch (statName) {
+                    case 'force': categoryKey = 'strength'; break;
+                    case 'endurance': categoryKey = 'endurance'; break;
+                    case 'récupération': categoryKey = 'recovery'; break;
+                    case 'agilité': categoryKey = 'agility'; break;
+                }
+                
+                if (categoryKey && mainStats[categoryKey]) {
+                    item.querySelector('.stat-value').textContent = mainStats[categoryKey];
+                }
+            });
+        }
+        
+        // Désactiver les boutons si nécessaire
+        function updateButtonStates() {
+            // Pour chaque sous-statistique
+            for (const stat in statsData.subStats) {
+                const category = statCategories[stat];
+                const availablePoints = statsData.mainStats[category].available;
+                
+                // Trouver les boutons + et - pour cette statistique
+                const plusButton = document.querySelector(`.point-btn.plus[onclick="adjustPoints('${stat}', 1)"]`);
+                const minusButton = document.querySelector(`.point-btn.minus[onclick="adjustPoints('${stat}', -1)"]`);
+                
+                if (plusButton) {
+                    const disabled = availablePoints <= 0;
+                    plusButton.disabled = disabled;
+                    plusButton.style.opacity = disabled ? '0.5' : '1';
+                    plusButton.style.cursor = disabled ? 'not-allowed' : 'pointer';
+                }
+                
+                if (minusButton) {
+                    const disabled = statsData.subStats[stat] <= 0;
+                    minusButton.disabled = disabled;
+                    minusButton.style.opacity = disabled ? '0.5' : '1';
+                    minusButton.style.cursor = disabled ? 'not-allowed' : 'pointer';
+                }
+            }
+        }
+        
+        // Sauvegarder la distribution des points
+        function savePointsDistribution() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Vous devez être connecté pour sauvegarder vos statistiques');
+        return;
+    }
+    
+    // Récupérer les statistiques par catégorie
+    const categories = ['strength', 'endurance', 'recovery', 'agility'];
+    
+    // Pour chaque catégorie, envoyer une mise à jour séparée
+    let updatesCompleted = 0;
+    
+    categories.forEach(category => {
+        // Préparer les sous-statistiques de cette catégorie
+        const subStats = {};
+        
+        switch(category) {
+            case 'strength':
+                subStats.attack = statsData.subStats.attack;
+                subStats.precision = statsData.subStats.precision;
+                subStats.critical = statsData.subStats.critical;
+                break;
+            case 'endurance':
+                subStats.health = statsData.subStats.health;
+                subStats.armor = statsData.subStats.armor;
+                subStats.dodge = statsData.subStats.dodge;
+                break;
+            case 'recovery':
+                subStats.regen = statsData.subStats.regen;
+                subStats.lifesteal = statsData.subStats.lifesteal;
+                break;
+            case 'agility':
+                subStats.range = statsData.subStats.range;
+                subStats.speed = statsData.subStats.speed;
+                break;
+        }
+        
+        // Envoyer la mise à jour au serveur
+        fetch('/api/player/stats', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({
+                category: category,
+                subStats: subStats
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            updatesCompleted++;
+            
+            // Si toutes les mises à jour sont terminées, afficher un message
+            if (updatesCompleted === categories.length) {
+                alert('Statistiques sauvegardées avec succès !');
+                // Mettre à jour les statistiques initiales
+                Object.assign(statsData.initialSubStats, statsData.subStats);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors de la sauvegarde des statistiques: ' + category);
+        });
+    });
+}
+        
+        // Charger les données utilisateur au chargement de la page
+        window.onload = function() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+
+    // Récupérer les informations de l'utilisateur
+    fetch('/api/user', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Erreur d\'authentification');
+        }
+        return res.json();
+    })
+    .then(data => {
+        // Mettre à jour le nom du héros
+        document.getElementById('hero-name').textContent = data.heroName || 'Héros sans nom';
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        localStorage.removeItem('token');
+        window.location.href = '/';
+    });
+
+    // Récupérer les statistiques du joueur
+    fetch('/api/player/stats', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Erreur lors de la récupération des statistiques');
+        }
+        return res.json();
+    })
+    .then(data => {
+        // Mettre à jour les stats principales
+        statsData.mainStats = {
+            strength: { available: data.availableStrengthPoints },
+            endurance: { available: data.availableEndurancePoints },
+            recovery: { available: data.availableRecoveryPoints },
+            agility: { available: data.availableAgilityPoints }
+        };
+
+        // Mettre à jour les sous-statistiques
+        statsData.subStats = {
+            attack: data.attack,
+            precision: data.precision,
+            critical: data.critical,
+            health: data.health,
+            armor: data.armor,
+            dodge: data.dodge,
+            regen: data.regen,
+            lifesteal: data.lifesteal,
+            range: data.range,
+            speed: data.speed
+        };
+        // Ajouter cette ligne après la mise à jour des statistiques
+document.querySelector('.energy-info span:last-child').textContent = `${data.currentEnergy}/${data.maxEnergy}`;
+
+        // Mettre à jour l'affichage
+        updateStatsDisplay();
+    })
+    fetch('/api/player/stats', {
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+})
+.then(res => res.text())  // Récupérer le texte brut au lieu de JSON
+.then(text => console.log(text))
+.catch(error => console.error('Erreur:', error));
+    /*.catch(error => {
+        console.error('Erreur:', error);
+    });*/
+};
+        
+        // Naviguer vers la page d'entraînement
+        function navigateToTraining(type) {
+            window.location.href = `/training.html?type=${type}`;
+        }
+        
+        // Naviguer vers la page de combat
+        function navigateToBattle() {
+            window.location.href = '/battle.html';
+        }
+    </script>

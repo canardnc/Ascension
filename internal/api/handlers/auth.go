@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"time"
 
 	"github.com/canardnc/Ascension/internal/db/models"
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -18,7 +18,7 @@ const tokenDuration = 72 * time.Hour
 
 // AuthRequest représente une demande d'authentification
 type AuthRequest struct {
-	Username string `json:"username" binding:"required"`
+	Username string `json:"username"`
 }
 
 // AuthResponse représente la réponse à une demande d'authentification
@@ -28,50 +28,59 @@ type AuthResponse struct {
 }
 
 // SimpleAuth authentifie un utilisateur avec un pseudo simple
-func SimpleAuth(c *gin.Context) {
+func SimpleAuth(w http.ResponseWriter, r *http.Request) {
 	var request AuthRequest
-	
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Pseudo requis"})
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		http.Error(w, "Pseudo requis", http.StatusBadRequest)
 		return
 	}
-	
+
+	if request.Username == "" {
+		http.Error(w, "Pseudo ne peut pas être vide", http.StatusBadRequest)
+		return
+	}
+
 	// Vérifier si l'utilisateur existe
 	user, err := models.GetUserByUsername(request.Username)
 	isNewUser := false
-	
+
 	if err == sql.ErrNoRows {
 		// Créer un nouvel utilisateur
 		user = &models.User{
 			Username: request.Username,
 		}
-		
+
 		if err := user.Create(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la création du compte"})
+			http.Error(w, "Erreur lors de la création du compte", http.StatusInternalServerError)
 			return
 		}
-		
+
 		isNewUser = true
 	} else if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur lors de la vérification du compte"})
+		http.Error(w, "Erreur lors de la vérification du compte", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Générer un token JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
+		"user_id":  user.ID,
 		"username": user.Username,
-		"exp": time.Now().Add(tokenDuration).Unix(),
+		"exp":      time.Now().Add(tokenDuration).Unix(),
 	})
-	
+
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur de génération du token"})
+		http.Error(w, "Erreur de génération du token", http.StatusInternalServerError)
 		return
 	}
-	
-	c.JSON(http.StatusOK, AuthResponse{
-		Token: tokenString,
+
+	response := AuthResponse{
+		Token:     tokenString,
 		IsNewUser: isNewUser,
-	})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }

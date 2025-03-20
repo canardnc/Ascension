@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension - Combat</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #1f1f3a;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-top: 20px;
+            z-index: 10;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-button svg {
+            margin-right: 5px;
+        }
+        
+        .battle-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            position: relative;
+            z-index: 5;
+        }
+        
+        .battle-level-selector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .level-arrow {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 30px;
+            cursor: pointer;
+            margin: 0 20px;
+            transition: transform 0.3s;
+        }
+        
+        .level-arrow:hover {
+            transform: scale(1.2);
+        }
+        
+        .level-display {
+            background-color: rgba(101, 66, 254, 0.2);
+            border: 2px solid #6542fe;
+            border-radius: 10px;
+            padding: 10px 30px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            min-width: 150px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(101, 66, 254, 0.4);
+        }
+        
+        .battle-image-container {
+            width: 70%;
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .battle-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            transition: all 0.5s ease;
+        }
+        
+        .battle-image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(31, 31, 58, 0.3), rgba(31, 31, 58, 0.7));
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 30px;
+        }
+        
+        .battle-name {
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            margin-bottom: 10px;
+        }
+        
+        .battle-description {
+            font-size: 18px;
+            max-width: 80%;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+        
+        .start-battle-btn {
+            background: linear-gradient(45deg, #6542fe, #a16bff);
+            border: none;
+            color: white;
+            padding: 15px 60px;
+            font-size: 20px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(101, 66, 254, 0.4);
+            margin-top: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .start-battle-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(101, 66, 254, 0.6);
+        }
+        
+        .energy-required {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #ffcc00;
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 16px;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .energy-icon {
+            margin-right: 5px;
+        }
+        
+        .player-stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 50px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background-color: rgba(101, 66, 254, 0.2);
+            border-radius: 10px;
+            padding: 10px 20px;
+            text-align: center;
+            border: 1px solid rgba(101, 66, 254, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #6542fe;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #a9a9c9;
+        }
+        
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.3;
+            transition: all 0.5s ease;
+            z-index: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .battle-image-container {
+                width: 90%;
+                height: 50vh;
+            }
+            
+            .player-stats {
+                flex-wrap: wrap;
+                gap: 10px;
+                padding: 0 20px;
+            }
+            
+            .stat-item {
+                flex: 1 0 40%;
+            }
+            
+            .battle-name {
+                font-size: 28px;
+            }
+            
+            .battle-description {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-image" id="background-image"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="logo">ASCENSION</div>
+            <button class="back-button" onclick="window.location.href='/home.html'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5"></path>
+                    <path d="M12 19l-7-7 7-7"></path>
+                </svg>
+                Retour
+            </button>
+        </header>
+        
+        <div class="battle-content">
+            <div class="battle-level-selector">
+                <button class="level-arrow" onclick="changeLevel(-1)">&#10094;</button>
+                <div class="level-display">Niveau <span id="current-level">1</span></div>
+                <button class="level-arrow" onclick="changeLevel(1)">&#10095;</button>
+            </div>
+            
+            <div class="battle-image-container">
+                <img src="/assets/images/level1.jpg" alt="Image du niveau" class="battle-image" id="battle-image" onerror="this.src='/icons/icon-512.png'">
+                <div class="battle-image-overlay">
+                    <div class="battle-name" id="battle-name">La Cour d'École</div>
+                    <div class="battle-description" id="battle-description">Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.</div>
+                    <div class="energy-required">
+                        <span class="energy-icon">⚡</span>
+                        <span id="energy-cost">5 énergie requise</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="player-stats">
+                <div class="stat-item">
+                    <div class="stat-value">28</div>
+                    <div class="stat-label">Force</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">35</div>
+                    <div class="stat-label">Endurance</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">22</div>
+                    <div class="stat-label">Récupération</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">19</div>
+                    <div class="stat-label">Agilité</div>
+                </div>
+            </div>
+            
+            <button class="start-battle-btn" onclick="startBattle()">COMMENCER</button>
+        </div>
+    </div>
+
+    <script>
+        // Données des niveaux
+        const levels = [
+            {
+                id: 1,
+                name: "La Cour d'École",
+                description: "Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.",
+                image: "/assets/images/level1.jpg",
+                background: "/assets/images/bg1.jpg",
+                energyCost: 5
+            },
+            {
+                id: 2,
+                name: "La Bibliothèque Hantée",
+                description: "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+                image: "/assets/images/level2.jpg",
+                background: "/assets/images/bg2.jpg",
+                energyCost: 8
+            },
+            {
+                id: 3,
+                name: "Le Laboratoire de Sciences",
+                description: "Formules, équations et réactions chimiques prennent vie dans ce laboratoire. Attention aux explosions de connaissances!",
+                image: "/assets/images/level3.jpg",
+                background: "/assets/images/bg3.jpg",
+                energyCost: 10
+            },
+            {
+                id: 4,
+                name: "L'Amphithéâtre du Savoir",
+                description: "Le lieu où les plus grands savants ont partagé leurs théories. Préparez-vous à affronter des connaissances de niveau universitaire.",
+                image: "/assets/images/level4.jpg",
+                background: "/assets/images/bg4.jpg",
+                energyCost: 12
+            },
+            {
+                id: 5,
+                name: "La Tour de l'Érudition",
+                description: "Au sommet de cette tour se trouve le savoir ultime. Seuls les plus déterminés pourront gravir ses étages et affronter le gardien des connaissances.",
+                image: "/assets/images/level5.jpg",
+                background: "/assets/images/bg5.jpg",
+                energyCost: 15
+            }
+        ];
+        
+        // Variables pour gérer le niveau actuel et le niveau maximum débloqué
+        let currentLevelIndex = 0;
+        let maxUnlockedLevel = 3; // Simuler que le joueur a débloqué jusqu'au niveau 3
+        
+        // Changer de niveau
+        function changeLevel(direction) {
+            const newIndex = currentLevelIndex + direction;
+            
+            // Vérifier si le nouveau niveau est valide
+            if (newIndex >= 0 && newIndex < levels.length && levels[newIndex].id <= maxUnlockedLevel) {
+                currentLevelIndex = newIndex;
+                updateLevelDisplay();
+            }
+        }
+        
+        // Mettre à jour l'affichage du niveau
+        function updateLevelDisplay() {
+            const level = levels[currentLevelIndex];
+            
+            document.getElementById('current-level').textContent = level.id;
+            document.getElementById('battle-name').textContent = level.name;
+            document.getElementById('battle-description').textContent = level.description;
+            document.getElementById('energy-cost').textContent = `${level.energyCost} énergie requise`;
+            
+            // Gérer les erreurs d'image avec fallback
+            const battleImage = document.getElementById('battle-image');
+            battleImage.src = level.image;
+            battleImage.onerror = function() {
+                this.src = '/icons/icon-512.png';
+            };
+            
+            const backgroundImage = document.getElementById('background-image');
+            backgroundImage.style.backgroundImage = `url('${level.background}')`;
+            
+            // Mettre à jour l'accessibilité des flèches
+            const leftArrow = document.querySelectorAll('.level-arrow')[0];
+            const rightArrow = document.querySelectorAll('.level-arrow')[1];
+            
+            leftArrow.style.opacity = currentLevelIndex > 0 ? '1' : '0.3';
+            leftArrow.style.cursor = currentLevelIndex > 0 ? 'pointer' : 'not-allowed';
+            
+            const isMaxLevel = currentLevelIndex >= levels.length - 1 || levels[currentLevelIndex + 1].id > maxUnlockedLevel;
+            rightArrow.style.opacity = isMaxLevel ? '0.3' : '1';
+            rightArrow.style.cursor = isMaxLevel ? 'not-allowed' : 'pointer';
+        }
+        
+        // Lancer le combat
+        function startBattle() {
+    const level = levels[currentLevelIndex];
+    console.log(`Démarrage du combat niveau ${level.id}: ${level.name}`);
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Vous devez être connecté pour démarrer un combat');
+        return;
+    }
+    
+    // Vérifier si le joueur a assez d'énergie et démarrer le combat
+    fetch('/api/battle/start', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+            levelId: level.id
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(data => {
+                throw new Error(data.error || 'Erreur serveur');
+            });
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            // Rediriger vers la page de jeu avec les paramètres du niveau
+            window.location.href = `/game.html?level=${level.id}`;
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        // Gérer les différentes erreurs possibles
+        if (error.message.includes('énergie')) {
+            alert("Vous n'avez pas assez d'énergie pour ce niveau!");
+        } else if (error.message.includes('niveau')) {
+            alert("Ce niveau n'est pas encore débloqué!");
+        } else {
+            alert("Erreur lors du démarrage du combat: " + error.message);
+        }
+    });
+}
+        
+        // Initialiser la page
+        window.onload = function() {
+    // Vérifier l'authentification
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    // Récupérer les statistiques du joueur
+    fetch('/api/player/stats', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        // Mettre à jour le niveau maximum débloqué
+        maxUnlockedLevel = Math.max(...data.unlockedLevels);
+        updateLevelDisplay();
+        
+        // Mettre à jour les statistiques affichées
+        document.querySelectorAll('.stat-item').forEach(item => {
+            const label = item.querySelector('.stat-label').textContent.toLowerCase();
+            
+            switch (label) {
+                case 'force':
+                    item.querySelector('.stat-value').textContent = data.strength;
+                    break;
+                case 'endurance':
+                    item.querySelector('.stat-value').textContent = data.endurance;
+                    break;
+                case 'récupération':
+                    item.querySelector('.stat-value').textContent = data.recovery;
+                    break;
+                case 'agilité':
+                    item.querySelector('.stat-value').textContent = data.agility;
+                    break;
+            }
+        });
+    })
+    .catch(error => console.error('Erreur:', error));
+    
+    updateLevelDisplay();
+};
+
+function completeBattle(success, score, timeSpent) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    // Récupérer le niveau depuis l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const levelId = parseInt(urlParams.get('level') || '1');
+    
+    // Envoyer le résultat au serveur
+    fetch('/api/battle/complete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+            levelId: levelId,
+            success: success,
+            score: score,
+            timeSpent: timeSpent
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            if (data.isNewBest) {
+                alert('Nouveau record !');
+            }
+            
+            if (data.nextLevelUnlocked) {
+                alert('Niveau suivant débloqué !');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+    });
+}
+    </script>
+</body>
+</html>

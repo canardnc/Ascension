@@ -257,40 +257,29 @@
         
         // Charger les données utilisateur
         function loadUserData() {
-            // Afficher l'écran de chargement
-            showScreen('loading-area');
-            
-            fetch('/api/user', {
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Réponse réseau non valide');
-                }
-                return res.json();
-            })
-            .then(data => {
-                // Mise à jour des données du joueur
-                document.getElementById('player-name').textContent = data.heroName || localStorage.getItem('username');
-                document.getElementById('best-score').textContent = data.bestScore || 0;
-                
-                // Calculer le niveau et le rang basé sur le score
-                const level = calculateLevel(data.bestScore);
-                const rank = calculateRank(level);
-                
-                document.getElementById('player-level').textContent = level;
-                document.getElementById('player-rank').textContent = rank;
-                
-                // Afficher l'écran de jeu
-                showScreen('game-area');
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                // En cas d'erreur d'authentification, revenir à l'écran de login
-                localStorage.removeItem('token');
-                showScreen('login-area');
-            });
+    // Afficher l'écran de chargement
+    showScreen('loading-area');
+    
+    fetch('/api/user', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Réponse réseau non valide');
         }
+        return res.json();
+    })
+    .then(data => {
+        // Redirection vers la nouvelle page d'accueil
+        window.location.href = '/home.html';
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        // En cas d'erreur d'authentification, revenir à l'écran de login
+        localStorage.removeItem('token');
+        showScreen('login-area');
+    });
+}
         
         // Calculer le niveau du joueur basé sur son score
         function calculateLevel(score) {
@@ -309,18 +298,18 @@
         
         // Démarrer le jeu
         function startGame() {
-            window.location.href = '/game.html';
-        }
+    window.location.href = '/battle.html';
+}
         
         // Vérifier si déjà connecté au chargement
         window.onload = function() {
-            const token = localStorage.getItem('token');
-            if (token) {
-                loadUserData();
-            } else {
-                showScreen('login-area');
-            }
-        };
+    const token = localStorage.getItem('token');
+    if (token) {
+        window.location.href = '/home.html';
+    } else {
+        showScreen('login-area');
+    }
+};
     </script>
 </body>
 </html>

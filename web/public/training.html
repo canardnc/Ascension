@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension - Entraînement</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #1f1f3a;
+            color: #fff;
+            background-image: url('/assets/images/strength-bg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-button svg {
+            margin-right: 5px;
+        }
+        
+        .training-section {
+            background-color: rgba(31, 31, 58, 0.85);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(101, 66, 254, 0.3);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            justify-content: space-between;
+        }
+        
+        .category-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .category-icon {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(101, 66, 254, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            box-shadow: 0 0 15px rgba(101, 66, 254, 0.4);
+        }
+        
+        .category-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: #6542fe;
+        }
+        
+        .category-details h2 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+        
+        .category-progress {
+            display: flex;
+            align-items: center;
+        }
+        
+        .progress-bar {
+            width: 200px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #6542fe, #a16bff);
+            width: 65%; /* Ajustez selon la progression réelle */
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            color: #a9a9c9;
+        }
+        
+        .category-switcher {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .category-button {
+            padding: 8px 15px;
+            background-color: rgba(101, 66, 254, 0.2);
+            border: 1px solid rgba(101, 66, 254, 0.4);
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-button.active {
+            background-color: #6542fe;
+        }
+        
+        .category-button:hover {
+            background-color: rgba(101, 66, 254, 0.4);
+        }
+        
+        .exercises-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .exercise-card {
+            background-color: rgba(47, 47, 77, 0.6);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(101, 66, 254, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .exercise-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(101, 66, 254, 0.4);
+        }
+        
+        .exercise-image {
+            width: 100%;
+            height: 160px;
+            background-color: #2a2a4a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6542fe;
+            font-size: 24px;
+        }
+        
+        .exercise-content {
+            padding: 15px;
+        }
+        
+        .exercise-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .exercise-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .difficulty {
+            display: flex;
+        }
+        
+        .difficulty-star {
+            color: #6542fe;
+            margin-right: 2px;
+        }
+        
+        .difficulty-star.inactive {
+            color: rgba(101, 66, 254, 0.3);
+        }
+        
+        .points {
+            background-color: rgba(101, 66, 254, 0.2);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #6542fe;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            .exercises-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .category-switcher {
+                margin-top: 20px;
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .category-info {
+                width: 100%;
+            }
+            
+            .progress-bar {
+                width: 100%;
+            }
+        }
+        
+        /* Styles spécifiques pour chaque catégorie */
+        body.strength {
+            background-image: url('/assets/images/strength-bg.jpg');
+        }
+        
+        body.endurance {
+            background-image: url('/assets/images/endurance-bg.jpg');
+        }
+        
+        body.recovery {
+            background-image: url('/assets/images/recovery-bg.jpg');
+        }
+        
+        body.agility {
+            background-image: url('/assets/images/agility-bg.jpg');
+        }
+    </style>
+</head>
+<body class="strength">
+    <div class="container">
+        <header class="header">
+            <div class="logo">ASCENSION</div>
+            <button class="back-button" onclick="window.location.href='/home.html'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5"></path>
+                    <path d="M12 19l-7-7 7-7"></path>
+                </svg>
+                Retour
+            </button>
+        </header>
+        
+        <section class="training-section">
+            <div class="category-header">
+                <div class="category-info">
+                    <div class="category-icon" id="category-icon">
+                        <!-- Icon will be set by JavaScript -->
+                    </div>
+                    <div class="category-details">
+                        <h2 id="category-name">Force</h2>
+                        <div class="category-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <div class="progress-text">65/100 points</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="category-switcher">
+                    <button class="category-button" onclick="switchCategory('strength')">Force</button>
+                    <button class="category-button" onclick="switchCategory('endurance')">Endurance</button>
+                    <button class="category-button" onclick="switchCategory('recovery')">Récupération</button>
+                    <button class="category-button" onclick="switchCategory('agility')">Agilité</button>
+                </div>
+            </div>
+            
+            <div class="exercises-grid" id="exercises-container">
+                <!-- Exercises will be generated by JavaScript -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Données des catégories
+        const categories = {
+            strength: {
+                name: "Force",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                    <line x1="6" y1="1" x2="6" y2="4"></line>
+                    <line x1="10" y1="1" x2="10" y2="4"></line>
+                    <line x1="14" y1="1" x2="14" y2="4"></line>
+                </svg>`,
+                exercises: [
+                    { title: "Exercice de calcul mental", difficulty: 1, points: 5 },
+                    { title: "Problèmes mathématiques", difficulty: 2, points: 10 },
+                    { title: "Équations complexes", difficulty: 3, points: 15 },
+                    { title: "Quiz de connaissances générales", difficulty: 1, points: 5 },
+                    { title: "Test de logique", difficulty: 2, points: 10 },
+                    { title: "Défi de mémorisation", difficulty: 3, points: 15 }
+                ]
+            },
+            endurance: {
+                name: "Endurance",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>`,
+                exercises: [
+                    { title: "Épreuve d'endurance mentale", difficulty: 1, points: 5 },
+                    { title: "Tests de résistance", difficulty: 2, points: 10 },
+                    { title: "Défis de longue durée", difficulty: 3, points: 15 },
+                    { title: "Exercice de concentration continue", difficulty: 1, points: 5 },
+                    { title: "Tâches répétitives complexes", difficulty: 2, points: 10 },
+                    { title: "Marathon d'épreuves", difficulty: 3, points: 15 }
+                ]
+            },
+            recovery: {
+                name: "Récupération",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4.5 9.5V4.5H9.5"></path>
+                    <path d="M19.5 14.5v5h-5"></path>
+                    <path d="M4.5 4.5L9 9"></path>
+                    <path d="M15 15l4.5 4.5"></path>
+                    <path d="M4 12a8 8 0 0 1 8-8"></path>
+                    <path d="M12 20a8 8 0 0 0 8-8"></path>
+                </svg>`,
+                exercises: [
+                    { title: "Exercices de relaxation", difficulty: 1, points: 5 },
+                    { title: "Techniques de méditation", difficulty: 2, points: 10 },
+                    { title: "Défi de concentration prolongée", difficulty: 3, points: 15 },
+                    { title: "Jeux de mémoire", difficulty: 1, points: 5 },
+                    { title: "Tests de récupération cognitive", difficulty: 2, points: 10 },
+                    { title: "Épreuves de régénération", difficulty: 3, points: 15 }
+                ]
+            },
+            agility: {
+                name: "Agilité",
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>`,
+                exercises: [
+                    { title: "Réactions rapides", difficulty: 1, points: 5 },
+                    { title: "Jeu d'actions rapides", difficulty: 2, points: 10 },
+                    { title: "Test de réflexes", difficulty: 3, points: 15 },
+                    { title: "Exercice de frappes rapides", difficulty: 1, points: 5 },
+                    { title: "Séquence de combinaisons", difficulty: 2, points: 10 },
+                    { title: "Course contre la montre", difficulty: 3, points: 15 }
+                ]
+            }
+        };
+        
+        // Récupérer le type d'entraînement depuis l'URL
+        function getTrainingType() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const type = urlParams.get('type');
+            return categories[type] ? type : 'strength';
+        }
+        
+        // Générer les exercices pour la catégorie sélectionnée
+        function generateExercises(type) {
+            const container = document.getElementById('exercises-container');
+            container.innerHTML = '';
+            
+            categories[type].exercises.forEach(exercise => {
+                const card = document.createElement('div');
+                card.className = 'exercise-card';
+                card.onclick = () => startExercise(type, exercise);
+                
+                // Créer les étoiles pour la difficulté
+                let stars = '';
+                for (let i = 0; i < 3; i++) {
+                    const starClass = i < exercise.difficulty ? 'difficulty-star' : 'difficulty-star inactive';
+                    stars += `<div class="${starClass}">★</div>`;
+                }
+                
+                card.innerHTML = `
+                    <div class="exercise-image">
+                        <span>Exercice</span>
+                    </div>
+                    <div class="exercise-content">
+                        <div class="exercise-title">${exercise.title}</div>
+                        <div class="exercise-info">
+                            <div class="difficulty">${stars}</div>
+                            <div class="points">+${exercise.points} pts</div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+        
+        // Lancer un exercice
+        function startExercise(type, exercise) {
+    console.log(`Démarrage de l'exercice : ${exercise.title} (${type})`);
+    
+    // Vérifier si l'utilisateur a suffisamment d'énergie (simulation)
+    const token = localStorage.getItem('token');
+    fetch('/api/player/stats', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        // Vérifier l'énergie (coût: 1 par exercice)
+        if (data.currentEnergy < 1) {
+            alert("Vous n'avez pas assez d'énergie pour démarrer cet exercice.");
+            return;
+        }
+        
+        // Rediriger vers la page du mini-jeu avec les paramètres
+        window.location.href = `/minigame.html?type=${type}&difficulty=${exercise.difficulty}&title=${encodeURIComponent(exercise.title)}&points=${exercise.points}`;
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert("Erreur lors de la vérification de l'énergie");
+    });
+}
+        
+        // Changer de catégorie
+        function switchCategory(type) {
+            if (!categories[type]) return;
+            
+            // Mettre à jour le corps de la page
+            document.body.className = type;
+            
+            // Mettre à jour l'icône et le nom
+            document.getElementById('category-icon').innerHTML = categories[type].icon;
+            document.getElementById('category-name').textContent = categories[type].name;
+            
+            // Mettre à jour les exercices
+            generateExercises(type);
+            
+            // Mettre à jour les boutons de catégorie
+            const buttons = document.querySelectorAll('.category-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+                if (button.onclick.toString().includes(type)) {
+                    button.classList.add('active');
+                }
+            });
+            
+            // Mettre à jour l'URL sans recharger la page
+            history.pushState(null, '', `?type=${type}`);
+        }
+        
+        // Initialiser la page
+        window.onload = function() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/';
+        return;
+    }
+    
+    const type = getTrainingType();
+    document.body.className = type;
+    document.getElementById('category-icon').innerHTML = categories[type].icon;
+    document.getElementById('category-name').textContent = categories[type].name;
+    
+    // Récupérer les statistiques du joueur pour afficher la progression
+    fetch('/api/player/stats', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(data => {
+        // Mettre à jour la barre de progression en fonction de la catégorie
+        let categoryValue = 0;
+        let maxValue = 100; // Valeur maximale par défaut
+        
+        switch(type) {
+            case 'strength':
+                categoryValue = data.strength;
+                break;
+            case 'endurance':
+                categoryValue = data.endurance;
+                break;
+            case 'recovery':
+                categoryValue = data.recovery;
+                break;
+            case 'agility':
+                categoryValue = data.agility;
+                break;
+        }
+        
+        // Mettre à jour la barre de progression
+        const progressFill = document.querySelector('.progress-fill');
+        const progressText = document.querySelector('.progress-text');
+        
+        // Calculer le pourcentage (limité à 100%)
+        const percentage = Math.min((categoryValue / maxValue) * 100, 100);
+        progressFill.style.width = `${percentage}%`;
+        progressText.textContent = `${categoryValue}/${maxValue} points`;
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+    });
+    
+    // Activer le bouton de catégorie correspondant
+    const buttons = document.querySelectorAll('.category-button');
+    buttons.forEach(button => {
+        if (button.onclick.toString().includes(type)) {
+            button.classList.add('active');
+        }
+    });
+    
+    generateExercises(type);
+};
+    </script>
+</body>
+</html>
