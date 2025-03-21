@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -44,224 +45,10 @@ type StatsResponse struct {
 	UnlockedLevels []int `json:"unlockedLevels"`
 }
 
-// GetPlayerStats récupère toutes les statistiques d'un joueur
-func GetPlayerStats(w http.ResponseWriter, r *http.Request) {
-	// Récupérer l'ID utilisateur depuis le contexte
-	userId := r.Context().Value("userId").(int)
-	log.Printf("GET player stats is called for user %d", userId)
-
-	// Récupérer les statistiques principales
-	stats, err := models.GetPlayerStatsByUserID(userId)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des statistiques")
-		return
-	}
-
-	// Récupérer les sous-statistiques
-	subStats, err := models.GetPlayerSubStatsByUserID(userId)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des sous-statistiques")
-		return
-	}
-
-	// Récupérer l'énergie
-	energy, err := models.GetPlayerEnergyByUserID(userId)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération de l'énergie")
-		return
-	}
-
-	// Récupérer les niveaux débloqués
-	unlockedLevels, err := models.GetUnlockedLevelsByUserID(userId)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des niveaux débloqués")
-		return
-	}
-
-	// Construire la réponse
-	response := StatsResponse{
-		// Statistiques principales
-		Strength:  stats.Strength,
-		Endurance: stats.Endurance,
-		Recovery:  stats.Recovery,
-		Agility:   stats.Agility,
-
-		// Points disponibles
-		AvailableStrengthPoints:  stats.AvailableStrengthPoints,
-		AvailableEndurancePoints: stats.AvailableEndurancePoints,
-		AvailableRecoveryPoints:  stats.AvailableRecoveryPoints,
-		AvailableAgilityPoints:   stats.AvailableAgilityPoints,
-
-		// Sous-statistiques
-		Attack:    subStats.Attack,
-		Precision: subStats.Precision,
-		Critical:  subStats.Critical,
-		Health:    subStats.Health,
-		Armor:     subStats.Armor,
-		Dodge:     subStats.Dodge,
-		Regen:     subStats.Regen,
-		Lifesteal: subStats.Lifesteal,
-		Range:     subStats.Range,
-		Speed:     subStats.Speed,
-
-		// Énergie
-		CurrentEnergy: energy.CurrentEnergy,
-		MaxEnergy:     energy.MaxEnergy,
-
-		// Niveaux débloqués
-		UnlockedLevels: unlockedLevels,
-	}
-
-	middleware.RespondWithJSON(w, http.StatusOK, response)
-}
-
 // StatsUpdateRequest représente une demande de mise à jour des sous-statistiques
 type StatsUpdateRequest struct {
 	Category string         `json:"category"`
 	SubStats map[string]int `json:"subStats"`
-}
-
-// UpdatePlayerStats met à jour les sous-statistiques d'un joueur
-func UpdatePlayerStats(w http.ResponseWriter, r *http.Request) {
-	// Récupérer l'ID utilisateur depuis le contexte
-	userId := r.Context().Value("userId").(int)
-
-	var request StatsUpdateRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		middleware.RespondWithError(w, http.StatusBadRequest, "Données invalides")
-		return
-	}
-
-	// Récupérer les statistiques actuelles
-	stats, err := models.GetPlayerStatsByUserID(userId)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des statistiques")
-		return
-	}
-
-	// Récupérer les sous-statistiques actuelles
-	subStats, err := models.GetPlayerSubStatsByUserID(userId)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des sous-statistiques")
-		return
-	}
-
-	// Calculer la différence totale de points
-	pointsDiff := 0
-
-	switch request.Category {
-	case "strength":
-		// Traiter les sous-stats de force
-		if val, ok := request.SubStats["attack"]; ok {
-			pointsDiff += val - subStats.Attack
-			subStats.Attack = val
-		}
-		if val, ok := request.SubStats["precision"]; ok {
-			pointsDiff += val - subStats.Precision
-			subStats.Precision = val
-		}
-		if val, ok := request.SubStats["critical"]; ok {
-			pointsDiff += val - subStats.Critical
-			subStats.Critical = val
-		}
-
-		// Vérifier si le joueur a assez de points
-		if pointsDiff > stats.AvailableStrengthPoints {
-			middleware.RespondWithError(w, http.StatusBadRequest, "Pas assez de points disponibles")
-			return
-		}
-
-		// Mettre à jour les points disponibles
-		stats.AvailableStrengthPoints -= pointsDiff
-
-	case "endurance":
-		// Traiter les sous-stats d'endurance
-		if val, ok := request.SubStats["health"]; ok {
-			pointsDiff += val - subStats.Health
-			subStats.Health = val
-		}
-		if val, ok := request.SubStats["armor"]; ok {
-			pointsDiff += val - subStats.Armor
-			subStats.Armor = val
-		}
-		if val, ok := request.SubStats["dodge"]; ok {
-			pointsDiff += val - subStats.Dodge
-			subStats.Dodge = val
-		}
-
-		// Vérifier si le joueur a assez de points
-		if pointsDiff > stats.AvailableEndurancePoints {
-			middleware.RespondWithError(w, http.StatusBadRequest, "Pas assez de points disponibles")
-			return
-		}
-
-		// Mettre à jour les points disponibles
-		stats.AvailableEndurancePoints -= pointsDiff
-
-	case "recovery":
-		// Traiter les sous-stats de récupération
-		if val, ok := request.SubStats["regen"]; ok {
-			pointsDiff += val - subStats.Regen
-			subStats.Regen = val
-		}
-		if val, ok := request.SubStats["lifesteal"]; ok {
-			pointsDiff += val - subStats.Lifesteal
-			subStats.Lifesteal = val
-		}
-
-		// Vérifier si le joueur a assez de points
-		if pointsDiff > stats.AvailableRecoveryPoints {
-			middleware.RespondWithError(w, http.StatusBadRequest, "Pas assez de points disponibles")
-			return
-		}
-
-		// Mettre à jour les points disponibles
-		stats.AvailableRecoveryPoints -= pointsDiff
-
-	case "agility":
-		// Traiter les sous-stats d'agilité
-		if val, ok := request.SubStats["range"]; ok {
-			pointsDiff += val - subStats.Range
-			subStats.Range = val
-		}
-		if val, ok := request.SubStats["speed"]; ok {
-			pointsDiff += val - subStats.Speed
-			subStats.Speed = val
-		}
-
-		// Vérifier si le joueur a assez de points
-		if pointsDiff > stats.AvailableAgilityPoints {
-			middleware.RespondWithError(w, http.StatusBadRequest, "Pas assez de points disponibles")
-			return
-		}
-
-		// Mettre à jour les points disponibles
-		stats.AvailableAgilityPoints -= pointsDiff
-
-	default:
-		middleware.RespondWithError(w, http.StatusBadRequest, "Catégorie invalide")
-		return
-	}
-
-	// Mettre à jour les valeurs des stats principales
-	stats.Strength = subStats.Attack + subStats.Precision + subStats.Critical
-	stats.Endurance = subStats.Health + subStats.Armor + subStats.Dodge
-	stats.Recovery = subStats.Regen + subStats.Lifesteal
-	stats.Agility = subStats.Range + subStats.Speed
-
-	// Sauvegarder les statistiques mises à jour
-	if err := stats.Save(); err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la sauvegarde des statistiques")
-		return
-	}
-
-	// Sauvegarder les sous-statistiques mises à jour
-	if err := subStats.Save(); err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la sauvegarde des sous-statistiques")
-		return
-	}
-
-	middleware.RespondWithJSON(w, http.StatusOK, map[string]bool{"success": true})
 }
 
 // TrainingRequest représente une demande d'enregistrement d'exercice complété
@@ -270,66 +57,6 @@ type TrainingRequest struct {
 	ExerciseName string `json:"exerciseName"`
 	Difficulty   int    `json:"difficulty"`
 	PointsEarned int    `json:"pointsEarned"`
-}
-
-// CompleteTraining enregistre un exercice d'entraînement complété
-func CompleteTraining(w http.ResponseWriter, r *http.Request) {
-	// Récupérer l'ID utilisateur depuis le contexte
-	userId := r.Context().Value("userId").(int)
-
-	var request TrainingRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		middleware.RespondWithError(w, http.StatusBadRequest, "Données invalides")
-		return
-	}
-
-	if request.Category == "" || request.ExerciseName == "" || request.Difficulty <= 0 || request.PointsEarned <= 0 {
-		middleware.RespondWithError(w, http.StatusBadRequest, "Paramètres invalides")
-		return
-	}
-
-	// Enregistrer l'exercice complété
-	err := models.RecordTrainingCompletion(
-		userId,
-		request.Category,
-		request.ExerciseName,
-		request.Difficulty,
-		request.PointsEarned,
-	)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de l'enregistrement de l'exercice")
-		return
-	}
-
-	// Récupérer les statistiques actuelles
-	stats, err := models.GetPlayerStatsByUserID(userId)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des statistiques")
-		return
-	}
-
-	// Mettre à jour les points disponibles selon la catégorie
-	switch request.Category {
-	case "strength":
-		stats.AvailableStrengthPoints += request.PointsEarned
-	case "endurance":
-		stats.AvailableEndurancePoints += request.PointsEarned
-	case "recovery":
-		stats.AvailableRecoveryPoints += request.PointsEarned
-	case "agility":
-		stats.AvailableAgilityPoints += request.PointsEarned
-	}
-
-	// Sauvegarder les statistiques mises à jour
-	if err := stats.Save(); err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la sauvegarde des points")
-		return
-	}
-
-	middleware.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
-		"success":      true,
-		"pointsEarned": request.PointsEarned,
-	})
 }
 
 // BattleRequest représente une demande de début de combat
@@ -490,4 +217,189 @@ func CompleteBattle(w http.ResponseWriter, r *http.Request) {
 		"isNewBest":         isNewBest,
 		"nextLevelUnlocked": nextLevelUnlocked,
 	})
+}
+
+// GetPlayerStats récupère toutes les statistiques d'un joueur
+func GetPlayerStats(w http.ResponseWriter, r *http.Request) {
+	// Récupérer l'ID utilisateur depuis le contexte
+	userId := r.Context().Value("userId").(int)
+
+	// Récupérer les statistiques principales
+	mainStats, err := models.GetPlayerStatsResponse(userId)
+	if err != nil {
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des statistiques")
+		return
+	}
+
+	// Récupérer les sous-statistiques
+	subStats, err := models.GetPlayerSubStatsResponse(userId)
+	if err != nil {
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des sous-statistiques")
+		return
+	}
+
+	// Récupérer l'énergie
+	energy, err := models.GetPlayerEnergyByUserID(userId)
+	if err != nil {
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération de l'énergie")
+		return
+	}
+
+	// Récupérer les niveaux débloqués
+	unlockedLevels, err := models.GetUnlockedLevelsByUserID(userId)
+	if err != nil {
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des niveaux débloqués")
+		return
+	}
+
+	// Construire la réponse
+	response := StatsResponse{
+		// Statistiques principales
+		Strength:  mainStats.Strength,
+		Endurance: mainStats.Endurance,
+		Recovery:  mainStats.Recovery,
+		Agility:   mainStats.Agility,
+
+		// Points disponibles
+		AvailableStrengthPoints:  mainStats.AvailableStrengthPoints,
+		AvailableEndurancePoints: mainStats.AvailableEndurancePoints,
+		AvailableRecoveryPoints:  mainStats.AvailableRecoveryPoints,
+		AvailableAgilityPoints:   mainStats.AvailableAgilityPoints,
+
+		// Sous-statistiques
+		Attack:    subStats.Attack,
+		Precision: subStats.Precision,
+		Critical:  subStats.Critical,
+		Health:    subStats.Health,
+		Armor:     subStats.Armor,
+		Dodge:     subStats.Dodge,
+		Regen:     subStats.Regen,
+		Lifesteal: subStats.Lifesteal,
+		Range:     subStats.Range,
+		Speed:     subStats.Speed,
+
+		// Énergie
+		CurrentEnergy: energy.CurrentEnergy,
+		MaxEnergy:     energy.MaxEnergy,
+
+		// Niveaux débloqués
+		UnlockedLevels: unlockedLevels,
+	}
+
+	middleware.RespondWithJSON(w, http.StatusOK, response)
+}
+
+// UpdatePlayerStats met à jour les sous-statistiques d'un joueur
+func UpdatePlayerStats(w http.ResponseWriter, r *http.Request) {
+	// Récupérer l'ID utilisateur depuis le contexte
+	userId := r.Context().Value("userId").(int)
+
+	var request StatsUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		log.Printf("Erreur de décodage JSON: %v", err)
+		middleware.RespondWithError(w, http.StatusBadRequest, "Données invalides")
+		return
+	}
+
+	log.Printf("Requête de mise à jour reçue: %+v", request)
+
+	// Récupérer l'ID de la catégorie
+	category, err := models.GetStatCategoryByName(request.Category)
+	if err != nil {
+		log.Printf("Catégorie invalide: %s, erreur: %v", request.Category, err)
+		middleware.RespondWithError(w, http.StatusBadRequest, "Catégorie invalide: "+request.Category)
+		return
+	}
+
+	// Vérifier les points disponibles
+	availablePoints, err := models.GetAvailablePoints(userId, category.ID)
+	if err != nil {
+		log.Printf("Erreur lors du calcul des points disponibles: %v", err)
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors du calcul des points disponibles")
+		return
+	}
+
+	// Obtenir les sous-stats actuelles
+	currentSubStats, err := models.GetPlayerSubStatsByCategory(userId, category.ID)
+	if err != nil {
+		log.Printf("Erreur lors de la récupération des sous-stats actuelles: %v", err)
+		// Ne pas échouer ici, juste loguer l'erreur
+	}
+
+	// Mapper les sous-stats actuelles par nom
+	currentSubStatsMap := make(map[string]int)
+	for _, subStat := range currentSubStats {
+		subCategory, err := models.GetStatSubCategoryByID(subStat.SubCategoryID)
+		if err == nil {
+			currentSubStatsMap[subCategory.Name] = subStat.Points
+		}
+	}
+
+	// Calculer la différence
+	currentTotal := 0
+	for _, points := range currentSubStatsMap {
+		currentTotal += points
+	}
+
+	requestedTotal := 0
+	for _, points := range request.SubStats {
+		requestedTotal += points
+	}
+
+	pointsDiff := requestedTotal - currentTotal
+	log.Printf("Points actuels: %d, Points demandés: %d, Différence: %d, Disponibles: %d",
+		currentTotal, requestedTotal, pointsDiff, availablePoints)
+
+	if pointsDiff > availablePoints {
+		middleware.RespondWithError(w, http.StatusBadRequest,
+			fmt.Sprintf("Pas assez de points disponibles. Demandés: %d, Disponibles: %d",
+				pointsDiff, availablePoints))
+		return
+	}
+
+	// Mettre à jour les sous-statistiques
+	err = models.UpdatePlayerSubStatsForCategory(userId, category.ID, request.SubStats)
+	if err != nil {
+		log.Printf("Erreur lors de la mise à jour des sous-stats: %v", err)
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la mise à jour des statistiques")
+		return
+	}
+
+	middleware.RespondWithJSON(w, http.StatusOK, map[string]bool{"success": true})
+}
+
+// CompleteTraining enregistre un exercice d'entraînement complété
+func CompleteTraining(w http.ResponseWriter, r *http.Request) {
+	// Récupérer l'ID utilisateur depuis le contexte
+	userId := r.Context().Value("userId").(int)
+
+	var request TrainingRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		middleware.RespondWithError(w, http.StatusBadRequest, "Données invalides")
+		return
+	}
+
+	if request.Category == "" || request.ExerciseName == "" || request.Difficulty <= 0 || request.PointsEarned <= 0 {
+		middleware.RespondWithError(w, http.StatusBadRequest, "Paramètres invalides")
+		return
+	}
+
+	// Enregistrer l'exercice complété
+	err := models.RecordTrainingCompletion(
+		userId,
+		request.Category,
+		request.ExerciseName,
+		request.Difficulty,
+		request.PointsEarned,
+	)
+	if err != nil {
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de l'enregistrement de l'exercice")
+		return
+	}
+
+	middleware.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"success":      true,
+		"pointsEarned": request.PointsEarned,
+	})
+
 }

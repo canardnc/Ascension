@@ -29,15 +29,15 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 12px;
+            padding: 8px;
         }
         
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding-top: 10px;
+            margin-bottom: 10px;
+            padding-top: 8px;
         }
         
         .logo {
@@ -50,9 +50,9 @@
         .profile-section {
             background-color: rgba(31, 31, 58, 0.85);
             border-radius: 15px;
-            padding: 20px;
+            padding: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(101, 66, 254, 0.3);
         }
@@ -60,16 +60,16 @@
         .profile-header {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .avatar {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             overflow: hidden;
             border: 2px solid #6542fe;
-            margin-right: 15px;
+            margin-right: 12px;
             box-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
         }
         
@@ -80,7 +80,7 @@
         }
         
         .user-info h2 {
-            font-size: 20px;
+            font-size: 18px;
             margin-bottom: 3px;
             color: #fff;
         }
@@ -88,20 +88,20 @@
         .user-info .rank {
             color: #6542fe;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         .stats-container {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-bottom: 15px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
         
         .stat-card {
             background-color: rgba(47, 47, 77, 0.6);
             border-radius: 10px;
-            padding: 10px;
+            padding: 8px;
             text-align: center;
             border: 1px solid rgba(101, 66, 254, 0.2);
             transition: all 0.3s ease;
@@ -113,19 +113,19 @@
         }
         
         .stat-card .value {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 700;
             color: #6542fe;
             margin-bottom: 2px;
         }
         
         .stat-card .label {
-            font-size: 12px;
+            font-size: 11px;
             color: #a9a9c9;
         }
         
         .stats-details {
-            margin-top: 15px;
+            margin-top: 12px;
         }
         
         .points-available {
@@ -134,7 +134,7 @@
             align-items: center;
             margin-bottom: 12px;
             background-color: rgba(47, 47, 77, 0.6);
-            padding: 10px 15px;
+            padding: 8px 12px;
             border-radius: 10px;
             border: 1px solid rgba(101, 66, 254, 0.3);
         }
@@ -145,55 +145,113 @@
             gap: 10px;
         }
         
-        .improve-all-btn {
-            background: none;
-            border: none;
-            color: #6542fe;
-            cursor: pointer;
+        .train-all-btn {
             display: flex;
+            gap: 6px;
             align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background-color: rgba(101, 66, 254, 0.2);
+            background: linear-gradient(45deg, #6542fe, #a16bff);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
             transition: all 0.3s;
         }
         
-        .improve-all-btn:hover {
-            background-color: rgba(101, 66, 254, 0.4);
+        .train-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(101, 66, 254, 0.6);
+        }
+        
+        .train-all-btn svg {
+            width: 16px;
+            height: 16px;
         }
         
         .points-badge {
             background-color: rgba(101, 66, 254, 0.3);
-            padding: 5px 10px;
+            padding: 4px 8px;
             border-radius: 20px;
             font-weight: 600;
             color: #a16bff;
             font-size: 12px;
         }
         
+        .points-badge.hidden {
+            display: none;
+        }
+        
         .main-stat {
             background-color: rgba(47, 47, 77, 0.3);
             border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 12px;
+            padding: 10px;
+            margin-bottom: 10px;
             border: 1px solid rgba(101, 66, 254, 0.1);
+            overflow: hidden;
         }
         
         .main-stat-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
+            padding-bottom: 6px;
             border-bottom: 1px solid rgba(101, 66, 254, 0.1);
+            cursor: pointer;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stat-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            color: #6542fe;
+        }
+        
+        .toggle-icon {
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        
+        .main-stat.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .sub-stats-container {
+            height: auto;
+            overflow: hidden;
+            transition: height 0.2s ease-out;
+            margin-top: 8px;
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .main-stat.collapsed .sub-stats-container {
+            height: 0;
+            margin-top: 0;
+            visibility: hidden;
+            opacity: 0;
         }
         
         .sub-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 6px;
         }
         
         .sub-stat {
@@ -201,12 +259,12 @@
             justify-content: space-between;
             align-items: center;
             background-color: rgba(47, 47, 77, 0.6);
-            padding: 8px 12px;
+            padding: 6px 8px;
             border-radius: 8px;
         }
         
         .sub-stat-name {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: #ccc;
         }
@@ -217,16 +275,16 @@
         }
         
         .sub-stat-value {
-            padding: 0 8px;
+            padding: 0 6px;
             font-weight: 700;
             color: #a16bff;
-            min-width: 24px;
+            min-width: 20px;
             text-align: center;
         }
         
         .point-btn {
-            width: 22px;
-            height: 22px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -237,7 +295,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 12px;
+            font-size: 10px;
         }
         
         .point-btn:hover {
@@ -255,15 +313,15 @@
         .points-save-container {
             display: flex;
             justify-content: center;
-            margin-top: 15px;
+            margin-top: 12px;
         }
         
         #save-points-btn {
             background: linear-gradient(45deg, #6542fe, #a16bff);
             border: none;
             color: white;
-            padding: 10px 20px;
-            font-size: 15px;
+            padding: 8px 20px;
+            font-size: 14px;
             font-weight: 600;
             border-radius: 30px;
             cursor: pointer;
@@ -279,14 +337,13 @@
         .play-section {
             display: flex;
             justify-content: center;
-            margin-top: 15px;
         }
         
         .play-button {
             background: linear-gradient(45deg, #6542fe, #a16bff);
             border: none;
             color: white;
-            padding: 12px 40px;
+            padding: 10px 40px;
             font-size: 18px;
             font-weight: 700;
             border-radius: 50px;
@@ -316,53 +373,35 @@
             color: #ffcc00;
         }
         
-        @media (max-width: 768px) {
-            .sub-stats {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .profile-header {
-                flex-direction: row;
-                text-align: left;
-            }
-            
-            .avatar {
-                margin-right: 15px;
-                margin-bottom: 0;
-            }
-            
-            .main-stat-header {
-                align-items: center;
-            }
-        }
-        
-        /* Compact mode for smaller screens */
         @media (max-width: 480px) {
             .container {
-                padding: 8px;
+                padding: 6px;
             }
             
-            .profile-section,
-            .main-stat {
+            .profile-section {
                 padding: 10px;
             }
             
             .sub-stats {
                 grid-template-columns: 1fr 1fr;
-                gap: 6px;
+                gap: 5px;
             }
             
             .sub-stat {
-                padding: 6px 10px;
+                padding: 5px 8px;
             }
             
-            .main-stat-header {
-                padding-bottom: 6px;
+            .main-stat {
+                padding: 8px;
                 margin-bottom: 8px;
             }
             
+            .main-stat-header {
+                padding-bottom: 5px;
+            }
+            
             .play-button {
-                padding: 10px 20px;
+                padding: 8px 15px;
             }
         }
     </style>
@@ -410,20 +449,26 @@
                 <div class="points-available">
                     <div class="stats-header">
                         <h3>Statistiques du héros</h3>
-                        <button class="improve-all-btn" title="Améliorer toutes les statistiques" onclick="navigateToAllTrainings()">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                            </svg>
-                        </button>
                     </div>
+                    <button class="train-all-btn" onclick="navigateToAllTrainings()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 7 L20 4 L17 4"></path>
+                            <path d="M4 17 L4 20 L7 20"></path>
+                            <path d="M20 4 L15 9"></path>
+                            <path d="M4 20 L9 15"></path>
+                            <path d="M18 12 C18 16.4183 14.4183 20 10 20"></path>
+                            <path d="M6 12 C6 7.58172 9.58172 4 14 4"></path>
+                        </svg>
+                        Entraînement
+                    </button>
                 </div>
                 
                 <!-- FORCE -->
-                <div class="main-stat">
-                    <div class="main-stat-header">
+                <div class="main-stat" id="strength-stat">
+                    <div class="main-stat-header" onclick="toggleCategory('strength-stat')">
                         <div class="stat-item">
                             <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
                                     <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
                                     <line x1="6" y1="1" x2="6" y2="4"></line>
@@ -434,90 +479,98 @@
                             <div class="stat-name">Force</div>
                             <div class="stat-value">28</div>
                         </div>
-                        <div class="points-badge">Pts: <span id="strength-points-available">5</span></div>
+                        <div class="points-badge" id="strength-points-badge">Pts: <span id="strength-points-available">5</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
                     </div>
                     
-                    <div class="sub-stats">
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Attaque</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('attack', -1)">-</button>
-                                <div class="sub-stat-value" id="attack-points">8</div>
-                                <button class="point-btn plus" onclick="adjustPoints('attack', 1)">+</button>
+                    <div class="sub-stats-container">
+                        <div class="sub-stats">
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Attaque</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('attack', -1)">-</button>
+                                    <div class="sub-stat-value" id="attack-points">8</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('attack', 1)">+</button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Précision</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('precision', -1)">-</button>
-                                <div class="sub-stat-value" id="precision-points">5</div>
-                                <button class="point-btn plus" onclick="adjustPoints('precision', 1)">+</button>
+                            
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Précision</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('precision', -1)">-</button>
+                                    <div class="sub-stat-value" id="precision-points">5</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('precision', 1)">+</button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Dégâts crit</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('critical', -1)">-</button>
-                                <div class="sub-stat-value" id="critical-points">3</div>
-                                <button class="point-btn plus" onclick="adjustPoints('critical', 1)">+</button>
+                            
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Dégâts crit</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('critical', -1)">-</button>
+                                    <div class="sub-stat-value" id="critical-points">3</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('critical', 1)">+</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- ENDURANCE -->
-                <div class="main-stat">
-                    <div class="main-stat-header">
+                <div class="main-stat collapsed" id="endurance-stat">
+                    <div class="main-stat-header" onclick="toggleCategory('endurance-stat')">
                         <div class="stat-item">
                             <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                                 </svg>
                             </div>
                             <div class="stat-name">Endurance</div>
                             <div class="stat-value">35</div>
                         </div>
-                        <div class="points-badge">Pts: <span id="endurance-points-available">4</span></div>
+                        <div class="points-badge" id="endurance-points-badge">Pts: <span id="endurance-points-available">4</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
                     </div>
                     
-                    <div class="sub-stats">
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Vie</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('health', -1)">-</button>
-                                <div class="sub-stat-value" id="health-points">10</div>
-                                <button class="point-btn plus" onclick="adjustPoints('health', 1)">+</button>
+                    <div class="sub-stats-container">
+                        <div class="sub-stats">
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Vie</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('health', -1)">-</button>
+                                    <div class="sub-stat-value" id="health-points">10</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('health', 1)">+</button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Armure</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('armor', -1)">-</button>
-                                <div class="sub-stat-value" id="armor-points">7</div>
-                                <button class="point-btn plus" onclick="adjustPoints('armor', 1)">+</button>
+                            
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Armure</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('armor', -1)">-</button>
+                                    <div class="sub-stat-value" id="armor-points">7</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('armor', 1)">+</button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Esquive</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('dodge', -1)">-</button>
-                                <div class="sub-stat-value" id="dodge-points">4</div>
-                                <button class="point-btn plus" onclick="adjustPoints('dodge', 1)">+</button>
+                            
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Esquive</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('dodge', -1)">-</button>
+                                    <div class="sub-stat-value" id="dodge-points">4</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('dodge', 1)">+</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- RÉCUPÉRATION -->
-                <div class="main-stat">
-                    <div class="main-stat-header">
+                <div class="main-stat collapsed" id="recovery-stat">
+                    <div class="main-stat-header" onclick="toggleCategory('recovery-stat')">
                         <div class="stat-item">
                             <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M4.5 9.5V4.5H9.5"></path>
                                     <path d="M19.5 14.5v5h-5"></path>
                                     <path d="M4.5 4.5L9 9"></path>
@@ -529,61 +582,69 @@
                             <div class="stat-name">Récupération</div>
                             <div class="stat-value">22</div>
                         </div>
-                        <div class="points-badge">Pts: <span id="recovery-points-available">3</span></div>
+                        <div class="points-badge" id="recovery-points-badge">Pts: <span id="recovery-points-available">3</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
                     </div>
                     
-                    <div class="sub-stats">
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Régénération</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('regen', -1)">-</button>
-                                <div class="sub-stat-value" id="regen-points">6</div>
-                                <button class="point-btn plus" onclick="adjustPoints('regen', 1)">+</button>
+                    <div class="sub-stats-container">
+                        <div class="sub-stats">
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Régénération</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('regen', -1)">-</button>
+                                    <div class="sub-stat-value" id="regen-points">6</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('regen', 1)">+</button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Vol de vie</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('lifesteal', -1)">-</button>
-                                <div class="sub-stat-value" id="lifesteal-points">4</div>
-                                <button class="point-btn plus" onclick="adjustPoints('lifesteal', 1)">+</button>
+                            
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Vol de vie</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('lifesteal', -1)">-</button>
+                                    <div class="sub-stat-value" id="lifesteal-points">4</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('lifesteal', 1)">+</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- AGILITÉ -->
-                <div class="main-stat">
-                    <div class="main-stat-header">
+                <div class="main-stat collapsed" id="agility-stat">
+                    <div class="main-stat-header" onclick="toggleCategory('agility-stat')">
                         <div class="stat-item">
                             <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
                                 </svg>
                             </div>
                             <div class="stat-name">Agilité</div>
                             <div class="stat-value">19</div>
                         </div>
-                        <div class="points-badge">Pts: <span id="agility-points-available">3</span></div>
+                        <div class="points-badge" id="agility-points-badge">Pts: <span id="agility-points-available">3</span>
+                            <span class="toggle-icon">▼</span>
+                        </div>
                     </div>
                     
-                    <div class="sub-stats">
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Portée</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('range', -1)">-</button>
-                                <div class="sub-stat-value" id="range-points">5</div>
-                                <button class="point-btn plus" onclick="adjustPoints('range', 1)">+</button>
+                    <div class="sub-stats-container">
+                        <div class="sub-stats">
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Portée</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('range', -1)">-</button>
+                                    <div class="sub-stat-value" id="range-points">5</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('range', 1)">+</button>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="sub-stat">
-                            <div class="sub-stat-name">Vitesse</div>
-                            <div class="sub-stat-controls">
-                                <button class="point-btn minus" onclick="adjustPoints('speed', -1)">-</button>
-                                <div class="sub-stat-value" id="speed-points">6</div>
-                                <button class="point-btn plus" onclick="adjustPoints('speed', 1)">+</button>
+                            
+                            <div class="sub-stat">
+                                <div class="sub-stat-name">Vitesse</div>
+                                <div class="sub-stat-controls">
+                                    <button class="point-btn minus" onclick="adjustPoints('speed', -1)">-</button>
+                                    <div class="sub-stat-value" id="speed-points">6</div>
+                                    <button class="point-btn plus" onclick="adjustPoints('speed', 1)">+</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -655,6 +716,68 @@
             range: 'agility',
             speed: 'agility'
         };
+
+        // Fonction pour plier/déplier une catégorie
+        function toggleCategory(categoryId) {
+            const category = document.getElementById(categoryId);
+            const isCollapsed = category.classList.contains('collapsed');
+            
+            // Si on déplie cette catégorie, on replie toutes les autres
+            if (isCollapsed) {
+                document.querySelectorAll('.main-stat').forEach(stat => {
+                    if (stat.id !== categoryId) {
+                        stat.classList.add('collapsed');
+                        
+                        // S'assurer que la hauteur est bien à 0
+                        const subStatsContainer = stat.querySelector('.sub-stats-container');
+                        if (subStatsContainer) {
+                            subStatsContainer.style.height = '0';
+                        }
+                    }
+                });
+                
+                // Déplie la catégorie sélectionnée
+                const subStatsContainer = category.querySelector('.sub-stats-container');
+                if (subStatsContainer) {
+                    // Calculer la hauteur réelle du contenu
+                    subStatsContainer.style.height = 'auto';
+                    const autoHeight = subStatsContainer.offsetHeight;
+                    
+                    // Réinitialiser pour l'animation
+                    subStatsContainer.style.height = '0';
+                    
+                    // Forcer un reflow pour que la transition s'applique
+                    void subStatsContainer.offsetHeight;
+                    
+                    // Appliquer la hauteur réelle
+                    subStatsContainer.style.height = autoHeight + 'px';
+                    
+                    // Nettoyer après l'animation
+                    setTimeout(() => {
+                        if (!category.classList.contains('collapsed')) {
+                            subStatsContainer.style.height = 'auto';
+                        }
+                    }, 200); // Même durée que la transition CSS
+                }
+            } else {
+                // Replier la catégorie
+                const subStatsContainer = category.querySelector('.sub-stats-container');
+                if (subStatsContainer) {
+                    // Fixer la hauteur actuelle
+                    const currentHeight = subStatsContainer.offsetHeight;
+                    subStatsContainer.style.height = currentHeight + 'px';
+                    
+                    // Forcer un reflow
+                    void subStatsContainer.offsetHeight;
+                    
+                    // Animer vers 0
+                    subStatsContainer.style.height = '0';
+                }
+            }
+            
+            // Plier/déplier la catégorie cliquée
+            category.classList.toggle('collapsed');
+        }
         
         // Fonction pour ajuster les points
         function adjustPoints(stat, amount) {
@@ -683,8 +806,22 @@
         function updateStatsDisplay() {
             // Mettre à jour les points disponibles pour chaque catégorie
             for (const category in statsData.mainStats) {
-                document.getElementById(`${category}-points-available`).textContent = 
-                    statsData.mainStats[category].available;
+                const availablePoints = statsData.mainStats[category].available;
+                const pointsBadge = document.getElementById(`${category}-points-badge`);
+                const pointsElement = document.getElementById(`${category}-points-available`);
+                
+                if (pointsElement) {
+                    pointsElement.textContent = availablePoints;
+                }
+                
+                // Masquer le badge s'il n'y a pas de points disponibles
+                if (pointsBadge) {
+                    if (availablePoints <= 0) {
+                        pointsBadge.classList.add('hidden');
+                    } else {
+                        pointsBadge.classList.remove('hidden');
+                    }
+                }
             }
             
             // Mettre à jour chaque sous-statistique

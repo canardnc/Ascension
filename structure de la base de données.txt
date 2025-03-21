@@ -163,3 +163,114 @@ CREATE TABLE public.unlocked_levels (
 	CONSTRAINT unlocked_levels_pkey PRIMARY KEY (id),
 	CONSTRAINT unlocked_levels_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
+
+
+-- DROP FUNCTION public.initialize_player_stats();
+
+CREATE OR REPLACE FUNCTION public.initialize_player_stats()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    INSERT INTO player_stats (user_id) VALUES (NEW.id);
+    INSERT INTO player_substats (user_id) VALUES (NEW.id);
+    INSERT INTO player_energy (user_id) VALUES (NEW.id);
+    INSERT INTO unlocked_levels (user_id, level_id) VALUES (NEW.id, 1);
+    RETURN NEW;
+END;
+$function$
+;
+
+-- DROP FUNCTION public.update_player_stats();
+
+CREATE OR REPLACE FUNCTION public.update_player_stats()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+DECLARE
+    user_id_val INTEGER;
+    category_id_val INTEGER;
+    total_points INTEGER := 0;
+    score_points INTEGER;
+    rec RECORD;
+    stat_field TEXT;
+BEGIN
+    -- Déterminer le user_id et category_id concernés
+    IF TG_OP = 'DELETE' THEN
+        user_id_val := OLD.user_id;
+        category_id_val := OLD.category_id;
+    ELSE
+        user_id_val := NEW.user_id;
+        category_id_val := NEW.category_id;
+    END IF;
+
+    -- Choisir le champ à mettre à jour en fonction de category_id
+    CASE category_id_val
+        WHEN 1 THEN stat_field := 'strength';
+        WHEN 2 THEN stat_field := 'endurance';
+        WHEN 3 THEN stat_field := 'recovery';
+        WHEN 4 THEN stat_field := 'agility';
+        ELSE RETURN NULL; -- Ignorer les autres catégories
+    END CASE;
+
+    -- Parcourir tous les scores du joueur pour cette catégorie
+    FOR rec IN SELECT points FROM minigames_progress 
+               WHERE user_id = user_id_val AND category_id = category_id_val
+    LOOP
+        -- Calculer les points pour ce score selon le barème
+        CASE
+            WHEN rec.points < 100 THEN score_points := 0;
+            WHEN rec.points < 200 THEN score_points := 1;
+            WHEN rec.points < 400 THEN score_points := 2;
+            WHEN rec.points < 800 THEN score_points := 3;
+            WHEN rec.points < 1600 THEN score_points := 4;
+            WHEN rec.points < 3200 THEN score_points := 5;
+            WHEN rec.points < 6400 THEN score_points := 6;
+            WHEN rec.points < 12800 THEN score_points := 7;
+            WHEN rec.points < 25600 THEN score_points := 8;
+            WHEN rec.points < 51200 THEN score_points := 9;
+            ELSE score_points := 10;
+        END CASE;
+        
+        total_points := total_points + score_points;
+    END LOOP;
+
+    -- Mettre à jour le champ approprié dans player_stats avec la somme des points
+    EXECUTE 'UPDATE player_stats SET ' || stat_field || ' = $1 WHERE user_id = $2'
+    USING total_points, user_id_val;
+
+    RETURN NULL;
+END;
+$function$
+;
+
+
+CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
+
+CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id);
+
+CREATE UNIQUE INDEX users_username_key ON public.users USING btree (username);
+
+CREATE UNIQUE INDEX game_scores_pkey ON public.game_scores USING btree (id);
+
+CREATE UNIQUE INDEX player_stats_pkey ON public.player_stats USING btree (id);
+
+CREATE UNIQUE INDEX player_substats_pkey ON public.player_substats USING btree (id);
+
+CREATE INDEX idx_minigames_progress_category ON public.minigames_progress USING btree (category_id);
+
+CREATE INDEX idx_minigames_progress_minigame ON public.minigames_progress USING btree (minigame_id);
+
+CREATE INDEX idx_minigames_progress_user_id ON public.minigames_progress USING btree (user_id);
+
+CREATE UNIQUE INDEX minigames_progress_pkey ON public.minigames_progress USING btree (id);
+
+CREATE UNIQUE INDEX minigames_progress_unique ON public.minigames_progress USING btree (user_id, category_id, minigame_id, difficulty_level);
+
+CREATE UNIQUE INDEX level_progress_pkey ON public.level_progress USING btree (user_id, level_id);
+
+CREATE UNIQUE INDEX unlocked_levels_pkey ON public.unlocked_levels USING btree (id);
+
+CREATE UNIQUE INDEX player_energy_pkey ON public.player_energy USING btree (id);
+
+
