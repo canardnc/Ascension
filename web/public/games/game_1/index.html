@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tables de Multiplication - Le Jeu</title>
+    <style>
+        :root {
+            --primary: #4a6ee0;
+            --secondary: #e07c4a;
+            --correct: #4ae07c;
+            --wrong: #e04a4a;
+            --background: #f5f7ff;
+            --disabled: #cccccc;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--background);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .game-container {
+            background-color: white;
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
+
+        /* Page de sélection (maintenant masquée) */
+        .selection-page {
+            display: none;
+        }
+
+        /* Page de jeu (maintenant affichée par défaut) */
+        .game-page {
+            display: block;
+        }
+
+        .multiplication-grid {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 1px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .grid-cell {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border: 1px solid #ddd;
+            background-color: white;
+            transition: background-color 0.3s;
+        }
+
+        .grid-header {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+
+        .grid-row-header {
+            background-color: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+
+        .grid-active {
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+        }
+
+        .grid-inactive {
+            background-color: var(--disabled);
+            color: #888;
+        }
+
+        .grid-correct {
+            background-color: var(--correct);
+            color: white;
+        }
+
+        .grid-wrong {
+            background-color: var(--wrong);
+            color: white;
+        }
+
+        .grid-highlight {
+            animation: highlight 0.5s infinite alternate;
+        }
+
+        @keyframes highlight {
+            from {
+                background-color: var(--primary);
+            }
+
+            to {
+                background-color: var(--secondary);
+            }
+        }
+
+        /* Question et réponse */
+        .question-container {
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0f5ff;
+            border-radius: 10px;
+        }
+
+        .question {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        /* Styles pour les options de réponse */
+        .answer-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .answer-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 60px;
+        }
+
+        .answer-button:hover {
+            transform: scale(1.05);
+            background-color: #3a5ec0;
+        }
+
+        .answer-button:disabled {
+            cursor: default;
+            transform: none;
+        }
+
+        .correct-answer {
+            background-color: var(--correct) !important;
+        }
+
+        .wrong-answer {
+            background-color: var(--wrong) !important;
+        }
+
+        /* Score */
+        .score-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        /* Boutons de navigation */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .nav-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* Modal de fin */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .game-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .exit-button {
+            background-color: var(--secondary);
+        }
+
+        .confetti {
+            width: 10px;
+            height: 10px;
+            position: absolute;
+            animation: fall 3s linear forwards;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+
+        .countdown {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            padding: 5px 15px;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Styles pour les écrans plus larges */
+        @media (min-width: 768px) {
+            .grid-cell {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+            
+            .answer-button {
+                padding: 10px 15px;
+                font-size: 1.4rem;
+                min-width: 80px;
+            }
+
+            .question {
+                font-size: 2.2rem;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .game-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Tables de Multiplication</h1>
+        <p class="subtitle">Apprends en t'amusant avec une grille interactive !</p>
+
+        <!-- Page de sélection des tables (maintenant masquée) -->
+        <div class="game-container selection-page" id="selection-page">
+            <h2>Choisis les tables sur lesquelles tu veux t'entraîner :</h2>
+
+            <div class="table-selection" id="table-selection">
+                <!-- Les checkboxes seront générées par JS -->
+            </div>
+
+            <button class="start-button" id="start-button" disabled>Commencer</button>
+        </div>
+
+        <!-- Page de jeu (maintenant affichée par défaut) -->
+        <div class="game-container game-page" id="game-page">
+            <div class="multiplication-grid" id="multiplication-grid">
+                <!-- La grille sera générée par JS -->
+            </div>
+
+            <div class="question-container" id="question-container">
+                <div class="question" id="question">...</div>
+                <!-- Le champ input est supprimé, remplacé par des options -->
+                <div id="answer-options" class="answer-options">
+                    <!-- Les options seront générées par JS -->
+                </div>
+            </div>
+
+            <div class="score-container">
+                Score: <span id="score">0</span>
+            </div>
+
+            <div class="navigation">
+                <button class="nav-button" id="back-button">Quitter</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de fin de jeu -->
+    <div class="modal" id="completion-modal">
+        <div class="modal-content">
+            <h2>Bravo !</h2>
+            <p>Tu as terminé avec un score de <span id="final-score">0</span>/<span id="final-total">0</span></p>
+            <div id="completion-message"></div>
+            <div class="button-container">
+                <button class="game-button" id="retry-button">Rejouer</button>
+                <button class="game-button exit-button" id="exit-button">Quitter</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration du jeu
+        const MAX_TABLE = 10;
+        let selectedTables = [];
+        let grid = [];
+        let remainingCells = [];
+        let allPossibleCells = []; // Nouvelle variable pour stocker toutes les cellules possibles
+        let currentCell = null;
+        let score = 0;
+        let totalPoints = 0;
+        let isRoulette = false;
+        let rouletteInterval = null;
+        // Variables pour le suivi du temps et du niveau de difficulté
+        let gameStartTime;
+        let gameTimeInSeconds = 0;
+        let difficultyLevel = 1;
+        let timeLimit = 0; // Pour le niveau 3
+        let countdownInterval;
+        
+        // Points par difficulté
+        let pointsPerCorrectAnswer = 10; // Valeur par défaut, sera ajustée selon le niveau
+
+        // Éléments DOM
+        const selectionPage = document.getElementById('selection-page');
+        const gamePage = document.getElementById('game-page');
+        const tableSelection = document.getElementById('table-selection');
+        const startButton = document.getElementById('start-button');
+        const multiplicationGrid = document.getElementById('multiplication-grid');
+        const questionElement = document.getElementById('question');
+        const scoreElement = document.getElementById('score');
+        const backButton = document.getElementById('back-button');
+        const completionModal = document.getElementById('completion-modal');
+        const finalScoreElement = document.getElementById('final-score');
+        const finalTotalElement = document.getElementById('final-total');
+        const completionMessageElement = document.getElementById('completion-message');
+        const retryButton = document.getElementById('retry-button');
+        const exitButton = document.getElementById('exit-button');
+
+        // Initialisation
+        init();
+
+        function init() {
+            // Récupérer le niveau de difficulté depuis l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            difficultyLevel = parseInt(urlParams.get('difficulty') || '1');
+            
+            // Définir les points selon le niveau de difficulté
+            switch(difficultyLevel) {
+                case 1:
+                    pointsPerCorrectAnswer = 10;
+                    break;
+                case 2:
+                    pointsPerCorrectAnswer = 20;
+                    break;
+                case 3:
+                    pointsPerCorrectAnswer = 30;
+                    break;
+                default:
+                    pointsPerCorrectAnswer = 10;
+            }
+
+            // Créer les checkboxes (nous ne les afficherons pas mais nous en avons besoin pour le fonctionnement)
+            createTableSelection();
+            
+            // Sélectionner automatiquement les tables en fonction du niveau de difficulté
+            switch (difficultyLevel) {
+                case 1:
+                    // Tables 1 à 4 pour le niveau débutant
+                    for (let i = 1; i <= 4; i++) {
+                        const checkbox = document.getElementById(`table-${i}`);
+                        if (checkbox) checkbox.checked = true;
+                    }
+                    break;
+                case 2:
+                    // Tables 2 à 7 pour le niveau intermédiaire
+                    for (let i = 2; i <= 7; i++) {
+                        const checkbox = document.getElementById(`table-${i}`);
+                        if (checkbox) checkbox.checked = true;
+                    }
+                    break;
+                case 3:
+                    // Tables 2 à 10 pour le niveau avancé
+                    for (let i = 2; i <= 10; i++) {
+                        const checkbox = document.getElementById(`table-${i}`);
+                        if (checkbox) checkbox.checked = true;
+                    }
+                    break;
+            }
+
+            // Mettre à jour le titre avec le niveau
+            document.querySelector('h1').textContent = `Tables - Niveau ${difficultyLevel}`;
+
+            // Configurer les événements
+            backButton.addEventListener('click', exitGame);
+            retryButton.addEventListener('click', () => window.location.reload());
+            exitButton.addEventListener('click', exitGame);
+
+            // Démarrer le jeu automatiquement
+            startGame();
+        }
+
+        function createTableSelection() {
+            tableSelection.innerHTML = '';
+
+            for (let i = 1; i <= MAX_TABLE; i++) {
+                const checkboxId = `table-${i}`;
+
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = checkboxId;
+                input.className = 'table-checkbox';
+                input.value = i;
+
+                const label = document.createElement('label');
+                label.htmlFor = checkboxId;
+                label.className = 'table-label';
+                label.textContent = i;
+
+                tableSelection.appendChild(input);
+                tableSelection.appendChild(label);
+            }
+        }
+
+        function startGame() {
+            // Récupérer les tables sélectionnées
+            selectedTables = Array.from(document.querySelectorAll('.table-checkbox:checked')).map(cb => parseInt(cb.value));
+
+            if (selectedTables.length === 0) {
+                alert("Aucune table sélectionnée. Veuillez réessayer.");
+                return;
+            }
+
+            // Initialiser le jeu
+            createGrid();
+            score = 0;
+            totalPoints = remainingCells.length;
+
+            scoreElement.textContent = score;
+            // Nous n'utilisons plus totalPointsElement puisque nous avons retiré cette partie de l'affichage
+
+            // Enregistrer l'heure de début
+            gameStartTime = new Date();
+
+            // Démarrer le compte à rebours pour le niveau 3
+            if (difficultyLevel === 3 && timeLimit > 0) {
+                startCountdown();
+            }
+
+            // Démarrer avec la première question
+            selectNextQuestion();
+        }
+
+        function createGrid() {
+            multiplicationGrid.innerHTML = '';
+            grid = [];
+            remainingCells = [];
+            allPossibleCells = [];
+
+            // Créer la cellule vide en haut à gauche
+            const cornerCell = document.createElement('div');
+            cornerCell.className = 'grid-cell grid-header';
+            cornerCell.textContent = '×';
+            multiplicationGrid.appendChild(cornerCell);
+
+            // Créer les en-têtes de colonnes (les tables)
+            for (let i = 1; i <= MAX_TABLE; i++) {
+                const headerCell = document.createElement('div');
+                headerCell.className = 'grid-cell grid-header';
+                headerCell.textContent = i;
+                multiplicationGrid.appendChild(headerCell);
+            }
+
+            // Créer les lignes avec les cellules
+            for (let row = 1; row <= MAX_TABLE; row++) {
+                // En-tête de ligne
+                const rowHeader = document.createElement('div');
+                rowHeader.className = 'grid-cell grid-row-header';
+                rowHeader.textContent = row;
+                multiplicationGrid.appendChild(rowHeader);
+
+                // Cellules de multiplication pour cette ligne
+                const gridRow = [];
+                for (let col = 1; col <= MAX_TABLE; col++) {
+                    const cell = document.createElement('div');
+
+                    // Déterminer si cette cellule est active (table sélectionnée)
+                    const isActive = selectedTables.includes(col);
+
+                    cell.className = isActive ? 'grid-cell grid-active' : 'grid-cell grid-inactive';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.dataset.result = row * col;
+                    cell.textContent = '?';
+
+                    multiplicationGrid.appendChild(cell);
+                    gridRow.push(cell);
+
+                    // Ajouter aux cellules potentielles si active
+                    if (isActive) {
+                        allPossibleCells.push({ row, col, cell });
+                    }
+                }
+                grid.push(gridRow);
+            }
+            
+            // Sélectionner aléatoirement 10 cellules parmi toutes les cellules actives
+            if (allPossibleCells.length > 10) {
+                // Mélanger le tableau avec l'algorithme de Fisher-Yates
+                for (let i = allPossibleCells.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allPossibleCells[i], allPossibleCells[j]] = [allPossibleCells[j], allPossibleCells[i]];
+                }
+                
+                // Prendre les 10 premières cellules
+                remainingCells = allPossibleCells.slice(0, 10);
+            } else {
+                remainingCells = [...allPossibleCells];
+            }
+            
+            // Mettre à jour le total de points
+            totalPoints = remainingCells.length;
+        }
+
+        // Fonction pour le compte à rebours
+        function startCountdown() {
+            const countdownElement = document.getElementById('countdown');
+            let timeRemaining = timeLimit;
+
+            countdownInterval = setInterval(() => {
+                timeRemaining--;
+
+                if (countdownElement) {
+                    countdownElement.textContent = formatTime(timeRemaining);
+
+                    // Changer la couleur quand il reste peu de temps
+                    if (timeRemaining <= 30) {
+                        countdownElement.style.color = '#e04a4a';
+                    }
+                    if (timeRemaining <= 10) {
+                        countdownElement.classList.add('pulse');
+                    }
+                }
+
+                if (timeRemaining <= 0) {
+                    clearInterval(countdownInterval);
+                    endGame(); // Fin du jeu quand le temps est écoulé
+                }
+            }, 1000);
+        }
+
+        // Formater le temps (secondes) en MM:SS
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        // Version plus robuste de selectNextQuestion
+        function selectNextQuestion() {
+            try {
+                // Vérifier si le jeu est déjà terminé ou s'il n'y a plus de cellules
+                if (remainingCells.length === 0) {
+                    endGame();
+                    return;
+                }
+
+                // Nettoyer l'état précédent
+                if (currentCell) {
+                    try {
+                        currentCell.cell.classList.remove('grid-highlight');
+                    } catch (e) {
+                        console.warn("Impossible de supprimer la surbrillance", e);
+                    }
+                }
+
+                // Arrêter tout intervalle existant
+                clearInterval(rouletteInterval);
+                isRoulette = true;
+                
+                // Animation de roulette sur différentes cellules
+                let rouletteCount = 0;
+                const finalIndex = Math.floor(Math.random() * remainingCells.length);
+                
+                // Stocker la cellule finale pour plus tard
+                const finalCell = remainingCells[finalIndex];
+                
+                // Variables pour suivre la cellule actuellement mise en évidence
+                let currentHighlightedCell = null;
+                
+                // MODIFICATION: Animation 2x plus rapide (150ms au lieu de 300ms)
+                rouletteInterval = setInterval(() => {
+                    try {
+                        // Enlever la surbrillance de la cellule précédente si elle existe
+                        if (currentHighlightedCell) {
+                            currentHighlightedCell.classList.remove('grid-highlight');
+                        }
+                        
+                        // Si nous sommes à la fin de l'animation, utiliser la cellule finale
+                        // Sinon, choisir une cellule aléatoire pour l'effet de roulette
+                        if (rouletteCount >= 8) {
+                            // Utiliser la cellule finale
+                            currentHighlightedCell = finalCell.cell;
+                            currentCell = finalCell;
+                        } else {
+                            // Choisir une cellule aléatoire parmi les cellules restantes
+                            const randomCellIndex = Math.floor(Math.random() * remainingCells.length);
+                            currentHighlightedCell = remainingCells[randomCellIndex].cell;
+                        }
+                        
+                        // Ajouter la surbrillance à la cellule actuelle
+                        currentHighlightedCell.classList.add('grid-highlight');
+                        
+                        rouletteCount++;
+                        
+                        // Arrêter après suffisamment d'étapes
+                        if (rouletteCount > 10) {
+                            clearInterval(rouletteInterval);
+                            isRoulette = false;
+                            
+                            // S'assurer que la cellule est surlignée à la fin
+                            currentCell.cell.classList.add('grid-highlight');
+                            
+                            // Mettre à jour l'affichage de la question
+                            questionElement.textContent = `${currentCell.row} × ${currentCell.col} = ?`;
+                            
+                            // Générer les options de réponse de façon sécurisée
+                            setTimeout(() => {
+                                try {
+                                    generateAnswerOptionsSafe();
+                                } catch (e) {
+                                    console.error("Erreur lors de la génération des options", e);
+                                    // En cas d'erreur, essayer une approche plus simple
+                                    createSimpleAnswerOptions();
+                                }
+                            }, 100);
+                        }
+                    } catch (e) {
+                        console.error("Erreur dans l'animation de roulette", e);
+                        clearInterval(rouletteInterval);
+                        isRoulette = false;
+                        
+                        // Tenter de récupérer en affichant la question et les réponses
+                        try {
+                            questionElement.textContent = `${currentCell.row} × ${currentCell.col} = ?`;
+                            createSimpleAnswerOptions();
+                        } catch (fallbackError) {
+                            console.error("Impossible de récupérer après erreur", fallbackError);
+                            // En dernier recours, recharger la page
+                            alert("Une erreur est survenue. Le jeu va redémarrer.");
+                            window.location.reload();
+                        }
+                    }
+                }, 150); // MODIFICATION: 150ms au lieu de 300ms
+            } catch (e) {
+                console.error("Erreur critique dans selectNextQuestion", e);
+                // Tentative de récupération en dernier recours
+                try {
+                    clearInterval(rouletteInterval);
+                    isRoulette = false;
+                    if (remainingCells.length > 0) {
+                        currentCell = remainingCells[0];
+                        questionElement.textContent = `${currentCell.row} × ${currentCell.col} = ?`;
+                        createSimpleAnswerOptions();
+                    } else {
+                        endGame();
+                    }
+                } catch (recoveryError) {
+                    alert("Une erreur critique est survenue. Le jeu va redémarrer.");
+                    window.location.reload();
+                }
+            }
+        }
+
+        // Version simplifiée et sécurisée pour les réponses
+        function createSimpleAnswerOptions() {
+            try {
+                // S'assurer que l'élément question-container existe
+                const questionContainer = document.getElementById('question-container');
+                if (!questionContainer) {
+                    console.error("Container de question introuvable");
+                    return;
+                }
+                
+                // Supprimer toutes les options existantes
+                const existingOptions = document.getElementById('answer-options');
+                if (existingOptions) {
+                    existingOptions.remove();
+                }
+                
+                // Créer un nouveau conteneur
+                const answerContainer = document.createElement('div');
+                answerContainer.id = 'answer-options';
+                answerContainer.className = 'answer-options';
+                
+                // Ajouter le conteneur au DOM
+                questionContainer.appendChild(answerContainer);
+                
+                // Créer des options simples
+                const correctAnswer = currentCell.row * currentCell.col;
+                
+                // Liste de 6 réponses (correcte + 5 autres)
+                const options = [
+                    correctAnswer,
+                    correctAnswer + 1,
+                    correctAnswer - 1,
+                    correctAnswer + 2,
+                    correctAnswer - 2,
+                    correctAnswer * 2
+                ];
+                
+                // S'assurer que toutes les valeurs sont positives et uniques
+                for (let i = 0; i < options.length; i++) {
+                    if (options[i] <= 0) options[i] = i + 1;
+                }
+                
+                // Mélanger les options
+                for (let i = options.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [options[i], options[j]] = [options[j], options[i]];
+                }
+                
+                // Créer les boutons
+                options.forEach(value => {
+                    const button = document.createElement('button');
+                    button.className = 'answer-button';
+                    button.textContent = value;
+                    button.addEventListener('click', () => checkAnswerWithValue(value));
+                    answerContainer.appendChild(button);
+                });
+                
+            } catch (e) {
+                console.error("Erreur dans createSimpleAnswerOptions", e);
+                // Dernier recours: afficher directement un champ de saisie
+                alert("Une erreur est survenue avec les options de réponse. Merci de réessayer.");
+            }
+        }
+
+        // Version sécurisée de la fonction generateAnswerOptions
+        function generateAnswerOptionsSafe() {
+            try {
+                // Obtenir ou créer le conteneur de réponses
+                let answerContainer = document.getElementById('answer-options');
+                const questionContainer = document.getElementById('question-container');
+                
+                if (!questionContainer) {
+                    throw new Error("Container de question introuvable");
+                }
+                
+                // Supprimer l'ancien conteneur s'il existe
+                if (answerContainer) {
+                    answerContainer.remove();
+                }
+                
+                // Créer un nouveau conteneur frais
+                answerContainer = document.createElement('div');
+                answerContainer.id = 'answer-options';
+                answerContainer.className = 'answer-options';
+                questionContainer.appendChild(answerContainer);
+                
+                // Obtenir la réponse correcte
+                const correctAnswer = currentCell.row * currentCell.col;
+                
+                // Générer des réponses incorrectes de manière robuste
+                const incorrectAnswers = [];
+                
+                // Quelques erreurs typiques
+                if (currentCell.col > 1) incorrectAnswers.push(currentCell.row * (currentCell.col - 1));
+                incorrectAnswers.push(currentCell.row * (currentCell.col + 1));
+                if (currentCell.row > 1) incorrectAnswers.push((currentCell.row - 1) * currentCell.col);
+                incorrectAnswers.push((currentCell.row + 1) * currentCell.col);
+                incorrectAnswers.push(currentCell.row + currentCell.col);
+                
+                // Filtrer les réponses négatives ou identiques
+                const filteredAnswers = incorrectAnswers.filter(a => a > 0 && a !== correctAnswer);
+                
+                // Compléter jusqu'à 5 réponses incorrectes si nécessaire
+                const finalIncorrectAnswers = [];
+                for (let i = 0; i < filteredAnswers.length && i < 5; i++) {
+                    finalIncorrectAnswers.push(filteredAnswers[i]);
+                }
+                
+                // Ajouter des réponses aléatoires si besoin
+                while (finalIncorrectAnswers.length < 5) {
+                    const randomValue = Math.floor(Math.random() * 20) + 1;
+                    if (randomValue !== correctAnswer && !finalIncorrectAnswers.includes(randomValue)) {
+                        finalIncorrectAnswers.push(randomValue);
+                    }
+                }
+                
+                // Combiner et mélanger toutes les réponses
+                const allAnswers = [correctAnswer, ...finalIncorrectAnswers];
+                
+                // Fisher-Yates shuffle
+                for (let i = allAnswers.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allAnswers[i], allAnswers[j]] = [allAnswers[j], allAnswers[i]];
+                }
+                
+                // Créer les boutons
+                allAnswers.forEach(answer => {
+                    if (answerContainer) {
+                        const button = document.createElement('button');
+                        button.className = 'answer-button';
+                        button.textContent = answer;
+                        button.addEventListener('click', () => checkAnswerWithValue(answer));
+                        answerContainer.appendChild(button);
+                    }
+                });
+            } catch (e) {
+                console.error("Erreur dans generateAnswerOptionsSafe", e);
+                // Fallback vers la version simplifiée
+                createSimpleAnswerOptions();
+            }
+        }
+
+        // Version sécurisée de checkAnswerWithValue avec nouveau calcul de score
+        function checkAnswerWithValue(userAnswer) {
+            try {
+                if (isRoulette) return; // Ne pas vérifier pendant la roulette
+                
+                // Protection contre des valeurs non numériques
+                userAnswer = parseInt(userAnswer) || 0;
+                
+                const correctAnswer = currentCell.row * currentCell.col;
+                const isCorrect = userAnswer === correctAnswer;
+                
+                // MODIFICATION: Ajuster le score selon la difficulté et la réponse
+                if (isCorrect) {
+                    // Ajouter des points pour une bonne réponse
+                    score += pointsPerCorrectAnswer;
+                } else {
+                    // Soustraire des points pour une mauvaise réponse (sans aller en dessous de 0)
+                    score = Math.max(0, score - pointsPerCorrectAnswer);
+                }
+                
+                // Mettre à jour l'affichage du score
+                scoreElement.textContent = score;
+                
+                // Mettre à jour la cellule avec gestion d'erreurs
+                try {
+                    currentCell.cell.classList.remove('grid-active', 'grid-highlight');
+                    currentCell.cell.classList.add(isCorrect ? 'grid-correct' : 'grid-wrong');
+                    currentCell.cell.textContent = correctAnswer;
+                } catch (cellError) {
+                    console.warn("Erreur lors de la mise à jour de la cellule", cellError);
+                }
+                
+                // Mettre à jour visuellement les boutons
+                try {
+                    const buttons = document.querySelectorAll('.answer-button');
+                    buttons.forEach(button => {
+                        const value = parseInt(button.textContent) || 0;
+                        if (value === correctAnswer) {
+                            button.classList.add('correct-answer');
+                        } else if (value === userAnswer && !isCorrect) {
+                            button.classList.add('wrong-answer');
+                        }
+                        button.disabled = true;
+                    });
+                } catch (buttonError) {
+                    console.warn("Erreur lors de la mise à jour des boutons", buttonError);
+                }
+                
+                // Supprimer cette cellule des cellules restantes
+                try {
+                    const index = remainingCells.findIndex(cell => 
+                        cell.row === currentCell.row && cell.col === currentCell.col
+                    );
+                    
+                    if (index !== -1) {
+                        remainingCells.splice(index, 1);
+                    } else {
+                        console.warn("Cellule non trouvée dans les cellules restantes");
+                        // Reconstruire la liste des cellules restantes pour éviter des incohérences
+                        let foundRemaining = false;
+                        for (let i = 0; i < allPossibleCells.length; i++) {
+                            const cell = allPossibleCells[i];
+                            if (cell.row === currentCell.row && cell.col === currentCell.col) {
+                                foundRemaining = true;
+                                continue; // Sauter cette cellule
+                            }
+                            if (foundRemaining) {
+                                // Reconstruire uniquement si on a trouvé la cellule courante
+                                remainingCells.push(cell);
+                            }
+                        }
+                    }
+                } catch (remainingError) {
+                    console.warn("Erreur lors de la mise à jour des cellules restantes", remainingError);
+                    // Dernier recours, recréer complètement
+                    remainingCells = [];
+                }
+                
+                // Passer à la question suivante après un délai (avec protection)
+                const timeoutId = setTimeout(() => {
+                    try {
+                        selectNextQuestion();
+                    } catch (nextError) {
+                        console.error("Erreur lors du passage à la question suivante", nextError);
+                        // Tentative de récupération
+                        if (remainingCells.length > 0) {
+                            setTimeout(() => selectNextQuestion(), 1000);
+                        } else {
+                            endGame();
+                        }
+                    }
+                }, 1500);
+                
+                // Sécurité supplémentaire: effacer le timeout si la page est déchargée
+                window.addEventListener('beforeunload', () => clearTimeout(timeoutId));
+            } catch (e) {
+                console.error("Erreur critique dans checkAnswerWithValue", e);
+                // Tentative de récupération
+                setTimeout(() => {
+                    try {
+                        if (remainingCells.length > 0) {
+                            selectNextQuestion();
+                        } else {
+                            endGame();
+                        }
+                    } catch (recoveryError) {
+                        alert("Une erreur est survenue. Le jeu va redémarrer.");
+                        window.location.reload();
+                    }
+                }, 1000);
+            }
+        }
+
+        function endGame() {
+            // Calculer le temps de jeu
+            if (gameStartTime) {
+                const endTime = new Date();
+                gameTimeInSeconds = Math.floor((endTime - gameStartTime) / 1000);
+            }
+
+            // Arrêter le compte à rebours si actif
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            // Afficher les résultats
+            finalScoreElement.textContent = score;
+            finalTotalElement.textContent = totalPoints * pointsPerCorrectAnswer;
+
+            // Message personnalisé en fonction du score
+            let message = '';
+            const maxPossibleScore = totalPoints * pointsPerCorrectAnswer;
+            const percentage = maxPossibleScore > 0 ? score / maxPossibleScore : 0;
+
+            if (percentage === 1) {
+                message = 'Parfait ! Tu as maîtrisé toutes les tables de multiplication !';
+                createConfetti();
+            } else if (percentage >= 0.8) {
+                message = 'Excellent travail ! Tu as presque tout compris !';
+            } else if (percentage >= 0.6) {
+                message = 'Bon travail ! Continue à t\'entraîner !';
+            } else {
+                message = 'Continue à pratiquer, tu t\'amélioreras !';
+            }
+
+            completionMessageElement.textContent = message;
+            completionModal.style.display = 'flex';
+
+            // Enregistrer les résultats
+            saveGameResults();
+        }
+
+        function saveGameResults() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error("Aucun token d'authentification trouvé");
+                return;
+            }
+
+            fetch('/api/minigame/complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    minigameId: 1,  // ID du jeu des tables de multiplication
+                    difficultyLevel: difficultyLevel,
+                    score: score,
+                    timeSpent: gameTimeInSeconds
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur réseau');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Stocker les données pour l'animation à la sortie
+                    if (data.success) {
+                        localStorage.setItem('lastMinigameResults', JSON.stringify({
+                            minigameId: 1,
+                            difficultyLevel: difficultyLevel,
+                            scoreBefore: data.scoreBefore,
+                            scoreAfter: data.scoreAfter,
+                            newStars: data.newStars
+                        }));
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
+        }
+
+        function exitGame() {
+            // Rediriger vers la page d'entraînement
+            window.location.href = `/training.html?type=strength`;
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = getRandomColor();
+                confetti.style.animationDelay = `${Math.random() * 3}s`;
+                document.body.appendChild(confetti);
+
+                // Supprimer les confettis après l'animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+        }
+
+        function getRandomColor() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+    </script>
+</body>
+
+</html>

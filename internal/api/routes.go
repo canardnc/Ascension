@@ -28,6 +28,9 @@ func SetupRoutes(mux *http.ServeMux) {
 	iconsDir := http.FileServer(http.Dir("./web/public/icons"))
 	mux.Handle("/icons/", http.StripPrefix("/icons/", iconsDir))
 
+	gamesDir := http.FileServer(http.Dir("./web/public/games"))
+	mux.Handle("/games/", http.StripPrefix("/games/", gamesDir))
+
 	// Routes HTML
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
@@ -81,6 +84,23 @@ func SetupRoutes(mux *http.ServeMux) {
 		case http.MethodPost:
 			middleware.JWTAuth(handlers.SaveScore)(w, r)
 		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Routes des mini-jeux
+	mux.HandleFunc("/api/minigames", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			middleware.JWTAuth(handlers.GetMinigames)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/minigame/complete", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			middleware.JWTAuth(handlers.CompleteMinigame)(w, r)
+		} else {
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
 	})

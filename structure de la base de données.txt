@@ -1,0 +1,165 @@
+-- public.users definition
+
+-- Drop table
+
+-- DROP TABLE public.users;
+
+CREATE TABLE public.users (
+	id serial4 NOT NULL,
+	email varchar(255) NOT NULL,
+	hero_name varchar(100) NULL,
+	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	username varchar(255) NOT NULL,
+	"level" int4 DEFAULT 1 NULL,
+	CONSTRAINT users_email_key UNIQUE (email),
+	CONSTRAINT users_pkey PRIMARY KEY (id),
+	CONSTRAINT users_username_key UNIQUE (username)
+);
+
+-- Table Triggers
+
+create trigger new_user_stats_trigger after
+insert
+    on
+    public.users for each row execute function initialize_player_stats();
+
+
+-- public.game_scores definition
+
+-- Drop table
+
+-- DROP TABLE public.game_scores;
+
+CREATE TABLE public.game_scores (
+	id serial4 NOT NULL,
+	user_id int4 NULL,
+	score int4 NOT NULL,
+	duration int4 NOT NULL,
+	completed_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT game_scores_pkey PRIMARY KEY (id),
+	CONSTRAINT game_scores_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+
+-- public.level_progress definition
+
+-- Drop table
+
+-- DROP TABLE public.level_progress;
+
+CREATE TABLE public.level_progress (
+	user_id int4 NOT NULL,
+	level_id int4 NOT NULL,
+	stars int4 DEFAULT 0 NULL,
+	completed_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT level_progress_pkey PRIMARY KEY (user_id, level_id),
+	CONSTRAINT level_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+
+-- public.minigames_progress definition
+
+-- Drop table
+
+-- DROP TABLE public.minigames_progress;
+
+CREATE TABLE public.minigames_progress (
+	id serial4 NOT NULL,
+	user_id int4 NOT NULL,
+	category_id int4 NOT NULL,
+	minigame_id int4 NOT NULL,
+	difficulty_level int4 NOT NULL,
+	points int4 DEFAULT 0 NULL,
+	last_played timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	total_played int4 DEFAULT 0 NULL,
+	available bool DEFAULT true NULL,
+	"cost" int4 DEFAULT 1 NULL,
+	time_played int4 DEFAULT 0 NULL,
+	CONSTRAINT minigames_progress_pkey PRIMARY KEY (id),
+	CONSTRAINT minigames_progress_unique UNIQUE (user_id, category_id, minigame_id, difficulty_level),
+	CONSTRAINT minigames_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE INDEX idx_minigames_progress_category ON public.minigames_progress USING btree (category_id);
+CREATE INDEX idx_minigames_progress_minigame ON public.minigames_progress USING btree (minigame_id);
+CREATE INDEX idx_minigames_progress_user_id ON public.minigames_progress USING btree (user_id);
+
+
+-- public.player_energy definition
+
+-- Drop table
+
+-- DROP TABLE public.player_energy;
+
+CREATE TABLE public.player_energy (
+	id serial4 NOT NULL,
+	user_id int4 NULL,
+	current_energy int4 DEFAULT 20 NULL,
+	max_energy int4 DEFAULT 20 NULL,
+	last_refresh timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT player_energy_pkey PRIMARY KEY (id),
+	CONSTRAINT player_energy_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+
+-- public.player_stats definition
+
+-- Drop table
+
+-- DROP TABLE public.player_stats;
+
+CREATE TABLE public.player_stats (
+	id serial4 NOT NULL,
+	user_id int4 NULL,
+	strength int4 DEFAULT 0 NULL,
+	endurance int4 DEFAULT 0 NULL,
+	"recovery" int4 DEFAULT 0 NULL,
+	agility int4 DEFAULT 0 NULL,
+	available_strength_points int4 DEFAULT 5 NULL,
+	available_endurance_points int4 DEFAULT 5 NULL,
+	available_recovery_points int4 DEFAULT 5 NULL,
+	available_agility_points int4 DEFAULT 5 NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT player_stats_pkey PRIMARY KEY (id),
+	CONSTRAINT player_stats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+
+-- public.player_substats definition
+
+-- Drop table
+
+-- DROP TABLE public.player_substats;
+
+CREATE TABLE public.player_substats (
+	id serial4 NOT NULL,
+	user_id int4 NULL,
+	attack int4 DEFAULT 0 NULL,
+	"precision" int4 DEFAULT 0 NULL,
+	critical int4 DEFAULT 0 NULL,
+	health int4 DEFAULT 0 NULL,
+	armor int4 DEFAULT 0 NULL,
+	dodge int4 DEFAULT 0 NULL,
+	regen int4 DEFAULT 0 NULL,
+	lifesteal int4 DEFAULT 0 NULL,
+	"range" int4 DEFAULT 0 NULL,
+	speed int4 DEFAULT 0 NULL,
+	updated_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT player_substats_pkey PRIMARY KEY (id),
+	CONSTRAINT player_substats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+
+
+-- public.unlocked_levels definition
+
+-- Drop table
+
+-- DROP TABLE public.unlocked_levels;
+
+CREATE TABLE public.unlocked_levels (
+	id serial4 NOT NULL,
+	user_id int4 NULL,
+	level_id int4 NOT NULL,
+	unlocked_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	CONSTRAINT unlocked_levels_pkey PRIMARY KEY (id),
+	CONSTRAINT unlocked_levels_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);

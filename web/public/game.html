@@ -898,10 +898,10 @@
                 const stats = await response.json();
                 
                 // Appliquer les statistiques au joueur
-                this.player.attackDamage = stats.attack || 1;
-                this.player.attackRange = stats.range || 200;
-                this.player.speed = stats.speed || 200;
-                this.player.maxHealth = stats.health || 10;
+                this.player.attackDamage = 1+ stats.attack*stats.attack/5 ;
+                this.player.attackRange = 200 + stats.range*4 ;
+                this.player.speed = stats.speed*2 + 100;
+                this.player.maxHealth = stats.health*stats.health/2 + 10;
                 this.player.health = this.player.maxHealth;
                 
                 // Calculer d'autres statistiques dérivées

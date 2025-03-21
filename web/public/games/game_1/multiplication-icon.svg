@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Fond -->
+  <rect width="100" height="100" rx="15" fill="#6542fe" />
+  
+  <!-- Symbole de multiplication -->
+  <g fill="#ffffff" transform="translate(50, 50)">
+    <!-- Forme X -->
+    <rect x="-35" y="-8" width="70" height="16" rx="5" transform="rotate(45)" />
+    <rect x="-35" y="-8" width="70" height="16" rx="5" transform="rotate(-45)" />
+    
+    <!-- Points décoratifs -->
+    <circle cx="-25" cy="-25" r="6" fill="#ffcc00" />
+    <circle cx="25" cy="-25" r="6" fill="#ff6b6b" />
+    <circle cx="-25" cy="25" r="6" fill="#4ecdc4" />
+    <circle cx="25" cy="25" r="6" fill="#ff9f43" />
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+name: "Tables de Multiplication"
+description: "Entraîne-toi aux tables de multiplication avec une grille interactive !"
+difficulty_levels:
+  1:
+    description: "Tables de 1 à 5 - Débutant"
+    difficulty: 1
+  2:
+    description: "Tables de 1 à 10 - Intermédiaire"
+    difficulty: 2
+  3:
+    description: "Tables de 1 à 12 avec temps limité - Avancé"
+    difficulty: 3
+category: 1  # Catégorie Force
+icon: "multiplication-icon.svg"
