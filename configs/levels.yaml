@@ -1,0 +1,161 @@
+levels:
+  - id: 1
+    name: "La Cour d'École"
+    description: "Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base."
+    image: "level1.jpg"
+    background: "bg1.jpg"
+    energyCost: 5
+    monsters:
+      - type: "book"
+        count: 10
+        health: 3
+        speed: 50
+        damage: 1
+    tiles:
+      base: "iso_dirt"
+      special:
+        - type: "zone"
+          tile: "iso_stone"
+          centerX: 0.5
+          centerY: 0.5
+          radius: 0.25
+        - type: "random"
+          tile: "iso_dry"
+          count: 5
+          radius: 3
+    
+  - id: 2
+    name: "La Bibliothèque Hantée"
+    description: "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve."
+    image: "level2.jpg"
+    background: "bg2.jpg"
+    energyCost: 6
+    monsters:
+      - type: "book"
+        count: 15
+        health: 5
+        speed: 70
+        damage: 1.5
+      - type: "pencil"
+        count: 5
+        health: 8
+        speed: 40
+        damage: 2
+    tiles:
+      base: "iso_stone"
+      special:
+        - type: "zone"
+          tile: "iso_dry"
+          centerX: 0.3
+          centerY: 0.7
+          radius: 0.15
+        - type: "random"
+          tile: "iso_dirt"
+          count: 3
+          radius: 4
+    obstacles:
+      - type: "bookshelf"
+        x: 10
+        y: 10
+        width: 3
+        height: 1
+    
+  - id: 3
+    name: "Le Laboratoire de Sciences"
+    description: "Formules, équations et réactions chimiques prennent vie dans ce laboratoire. Attention aux explosions de connaissances!"
+    image: "level3.jpg"
+    background: "bg3.jpg"
+    energyCost: 7
+    monsters:
+      - type: "book"
+        count: 100
+        health: 6
+        speed: 50
+        damage: 2
+      - type: "calculator"
+        count: 8
+        health: 10
+        speed: 30
+        damage: 3
+    tiles:
+      base: "iso_stone"
+      special:
+        - type: "zone"
+          tile: "iso_dirt"
+          centerX: 0.5
+          centerY: 0.5
+          radius: 0.3
+    
+  - id: 4
+    name: "L'Amphithéâtre du Savoir"
+    description: "Le lieu où les plus grands savants ont partagé leurs théories. Préparez-vous à affronter des connaissances de niveau universitaire."
+    image: "level4.jpg"
+    background: "bg4.jpg"
+    energyCost: 8
+    monsters:
+      - type: "book"
+        count: 12
+        health: 8
+        speed: 60
+        damage: 2.5
+      - type: "pencil"
+        count: 10
+        health: 10
+        speed: 50
+        damage: 3
+      - type: "calculator"
+        count: 5
+        health: 15
+        speed: 40
+        damage: 4
+    tiles:
+      base: "iso_dry"
+      special:
+        - type: "zone"
+          tile: "iso_stone"
+          centerX: 0.7
+          centerY: 0.3
+          radius: 0.2
+    
+  - id: 5
+    name: "La Tour de l'Érudition"
+    description: "Au sommet de cette tour se trouve le savoir ultime. Seuls les plus déterminés pourront gravir ses étages et affronter le gardien des connaissances."
+    image: "level5.jpg"
+    background: "bg5.jpg"
+    energyCost: 9
+    monsters:
+      - type: "book"
+        count: 15
+        health: 10
+        speed: 70
+        damage: 3
+      - type: "pencil"
+        count: 12
+        health: 12
+        speed: 60
+        damage: 3.5
+      - type: "calculator"
+        count: 8
+        health: 20
+        speed: 50
+        damage: 5
+    tiles:
+      base: "iso_stone"
+      special:
+        - type: "zone"
+          tile: "iso_dirt"
+          centerX: 0.5
+          centerY: 0.5
+          radius: 0.4
+    boss:
+      type: "master_book"
+      health: 100
+      speed: 30
+      damage: 10
+      specialAttacks:
+        - name: "knowledge_blast"
+          damage: 15
+          cooldown: 10
+        - name: "summon_minions"
+          count: 3
+          cooldown: 20

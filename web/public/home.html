@@ -7,7 +7,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
         
         * {
             margin: 0;
@@ -16,971 +16,345 @@
         }
         
         body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #1f1f3a;
+            font-family: 'Nunito', sans-serif;
             color: #fff;
-            background-image: url('/assets/images/background.jpg');
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/assets/images/background/chapter_1.jpg');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
-            min-height: 100vh;
+            filter: blur(3px) brightness(0.7);
+            z-index: -1;
         }
         
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 8px;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
         }
         
+        /* En-tête avec nom et statistiques */
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            padding-top: 8px;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
-        }
-        
-        .profile-section {
-            background-color: rgba(31, 31, 58, 0.85);
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            margin-bottom: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(101, 66, 254, 0.3);
-        }
-        
-        .profile-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        
-        .avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 2px solid #6542fe;
-            margin-right: 12px;
-            box-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
-        }
-        
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .user-info h2 {
-            font-size: 18px;
-            margin-bottom: 3px;
-            color: #fff;
-        }
-        
-        .user-info .rank {
-            color: #6542fe;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        
-        .stat-card {
-            background-color: rgba(47, 47, 77, 0.6);
-            border-radius: 10px;
-            padding: 8px;
             text-align: center;
-            border: 1px solid rgba(101, 66, 254, 0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 10px rgba(101, 66, 254, 0.4);
-        }
-        
-        .stat-card .value {
-            font-size: 22px;
-            font-weight: 700;
-            color: #6542fe;
-            margin-bottom: 2px;
-        }
-        
-        .stat-card .label {
-            font-size: 11px;
-            color: #a9a9c9;
-        }
-        
-        .stats-details {
-            margin-top: 12px;
-        }
-        
-        .points-available {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            background-color: rgba(47, 47, 77, 0.6);
-            padding: 8px 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(101, 66, 254, 0.3);
-        }
-        
-        .stats-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .train-all-btn {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            background: linear-gradient(45deg, #6542fe, #a16bff);
-            border: none;
-            padding: 5px 10px;
-            border-radius: 20px;
-            color: white;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .train-all-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(101, 66, 254, 0.6);
-        }
-        
-        .train-all-btn svg {
-            width: 16px;
-            height: 16px;
-        }
-        
-        .points-badge {
-            background-color: rgba(101, 66, 254, 0.3);
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-weight: 600;
-            color: #a16bff;
-            font-size: 12px;
-        }
-        
-        .points-badge.hidden {
-            display: none;
-        }
-        
-        .main-stat {
-            background-color: rgba(47, 47, 77, 0.3);
-            border-radius: 10px;
-            padding: 10px;
             margin-bottom: 10px;
-            border: 1px solid rgba(101, 66, 254, 0.1);
-            overflow: hidden;
-        }
-        
-        .main-stat-header {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(101, 66, 254, 0.1);
-            cursor: pointer;
         }
         
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .stat-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .stat-name {
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .stat-value {
-            font-weight: 700;
-            color: #6542fe;
-        }
-        
-        .toggle-icon {
-            transition: transform 0.2s;
+        .hero-name {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            margin-bottom: 1rem;
+            background-color: rgba(101, 66, 254, 0.7);
+            border-radius: 15px;
+            padding: 5px 20px;
             display: inline-block;
         }
         
-        .main-stat.collapsed .toggle-icon {
-            transform: rotate(-90deg);
-        }
-        
-        .sub-stats-container {
-            height: auto;
-            overflow: hidden;
-            transition: height 0.2s ease-out;
-            margin-top: 8px;
-            visibility: visible;
-            opacity: 1;
-        }
-        
-        .main-stat.collapsed .sub-stats-container {
-            height: 0;
-            margin-top: 0;
-            visibility: hidden;
-            opacity: 0;
-        }
-        
-        .sub-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-            gap: 6px;
-        }
-        
-        .sub-stat {
+        /* Statistiques (niveau, puissance, score) */
+        .stats-container {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: rgba(47, 47, 77, 0.6);
-            padding: 6px 8px;
-            border-radius: 8px;
+            justify-content: center;
+            align-items: center; /* Centrage vertical */
+            width: 90%;
+            margin: 0 auto 15px;
+            gap: 10px;
         }
         
-        .sub-stat-name {
-            font-size: 11px;
-            font-weight: 600;
-            color: #ccc;
-        }
-        
-        .sub-stat-controls {
-            display: flex;
-            align-items: center;
-        }
-        
-        .sub-stat-value {
-            padding: 0 6px;
-            font-weight: 700;
-            color: #a16bff;
-            min-width: 20px;
+        .stat-box {
+            position: relative;
+            width: 28%;
             text-align: center;
-        }
-        
-        .point-btn {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
+            display: flex; /* Pour le centrage vertical */
             align-items: center;
             justify-content: center;
-            border: none;
-            background-color: rgba(101, 66, 254, 0.3);
-            color: white;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 10px;
         }
         
-        .point-btn:hover {
-            background-color: rgba(101, 66, 254, 0.8);
-        }
-        
-        .point-btn.minus {
-            background-color: rgba(255, 66, 66, 0.3);
-        }
-        
-        .point-btn.minus:hover {
-            background-color: rgba(255, 66, 66, 0.8);
-        }
-        
-        .points-save-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 12px;
-        }
-        
-        #save-points-btn {
-            background: linear-gradient(45deg, #6542fe, #a16bff);
-            border: none;
-            color: white;
-            padding: 8px 20px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 5px 15px rgba(101, 66, 254, 0.4);
-        }
-        
-        #save-points-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(101, 66, 254, 0.6);
-        }
-        
-        .play-section {
-            display: flex;
-            justify-content: center;
-        }
-        
-        .play-button {
-            background: linear-gradient(45deg, #6542fe, #a16bff);
-            border: none;
-            color: white;
-            padding: 10px 40px;
-            font-size: 18px;
-            font-weight: 700;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 10px 20px rgba(101, 66, 254, 0.4);
-            display: flex;
-            align-items: center;
+        .stat-background {
             width: 100%;
-            justify-content: center;
-            gap: 15px;
+            height: auto;
         }
         
-        .play-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(101, 66, 254, 0.6);
+        .stat-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
         
-        .energy-info {
+        /* Conteneur principal pour le personnage et les boutons */
+        .content-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        /* Section du personnage */
+        .character-section {
+            position: absolute;
+            left: 0; /* Modifié de -10% à 0 */
+            bottom: 0;
+            width: 60%;
+            height: 90%;
+            display: flex;
+            align-items: flex-end;
+        }
+        
+        .character-image {
+            height: 85vh;
+            max-height: 85%;
+            max-width: 100%;
+            object-fit: contain;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.3));
+        }
+        
+        /* Navigation (icônes à droite) */
+        .navigation {
+            position: absolute;
+            bottom: 20px;
+            right: 10px;
+            width: 30%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+            max-height: 70vh;
+        }
+        
+        .nav-button {
             display: flex;
             align-items: center;
-            font-size: 16px;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-decoration: none;
+            background: none;
+            border: none;
+            width: 100%;
+            max-height: calc(70vh / 3 - 8px);
         }
         
-        .energy-icon {
-            margin-right: 5px;
-            color: #ffcc00;
+        .nav-button:hover {
+            transform: translateY(-5px);
         }
         
-        @media (max-width: 480px) {
+        .nav-icon {
+            width: 100%;
+            height: auto;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.3));
+        }
+        
+        /* Pour les grands écrans */
+        @media (min-width: 768px) {
             .container {
-                padding: 6px;
+                max-width: 500px;
+                margin: 0 auto;
+                border-left: 1px solid rgba(255, 255, 255, 0.2);
+                border-right: 1px solid rgba(255, 255, 255, 0.2);
+                background-color: rgba(0, 0, 0, 0.1);
             }
-            
-            .profile-section {
-                padding: 10px;
-            }
-            
-            .sub-stats {
-                grid-template-columns: 1fr 1fr;
-                gap: 5px;
-            }
-            
-            .sub-stat {
-                padding: 5px 8px;
-            }
-            
-            .main-stat {
-                padding: 8px;
-                margin-bottom: 8px;
-            }
-            
-            .main-stat-header {
-                padding-bottom: 5px;
-            }
-            
-            .play-button {
-                padding: 8px 15px;
-            }
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .character-image {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Écran de chargement */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1f1f3a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+        
+        .loading-logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #6542fe;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
+    <!-- Écran de chargement -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-logo">ASCENSION</div>
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Arrière-plan -->
+    <div class="background"></div>
+    
     <div class="container">
-        <header class="header">
-            <div class="logo">ASCENSION</div>
-            <div class="menu-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </div>
-        </header>
-        
-        <section class="profile-section">
-            <div class="profile-header">
-                <div class="avatar">
-                    <img src="/icons/icon-192.png" alt="Avatar du héros">
-                </div>
-                <div class="user-info">
-                    <h2 id="hero-name">Héros Invincible</h2>
-                    <div class="rank">Adepte · Niveau <span id="player-level">7</span></div>
-                </div>
-            </div>
+        <!-- En-tête avec nom du héros et statistiques -->
+        <div class="header">
+            <h1 class="hero-name" id="hero-name">HÉROS</h1>
             
             <div class="stats-container">
-                <div class="stat-card">
-                    <div class="value" id="total-score">1245</div>
-                    <div class="label">Score total</div>
+                <div class="stat-box">
+                    <img src="/assets/images/level.png" alt="Niveau" class="stat-background">
+                    <div class="stat-value" id="player-level">1</div>
                 </div>
-                <div class="stat-card">
-                    <div class="value" id="max-level">7</div>
-                    <div class="label">Niveau max</div>
+                
+                <div class="stat-box">
+                    <img src="/assets/images/power.png" alt="Puissance" class="stat-background">
+                    <div class="stat-value" id="player-power">0</div>
                 </div>
-                <div class="stat-card">
-                    <div class="value" id="energy-display">12/20</div>
-                    <div class="label">Énergie</div>
+                
+                <div class="stat-box">
+                    <img src="/assets/images/score.png" alt="Score" class="stat-background">
+                    <div class="stat-value" id="total-score">0</div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal avec personnage et navigation -->
+        <div class="content-wrapper">
+            <!-- Image du héros -->
+            <div class="character-section">
+                <img class="character-image" src="/assets/images/caracter/caracter_1.png" alt="Personnage héros" id="character-image" onError="this.onerror=null;this.src='/icons/icon-512.png';">
             </div>
             
-            <div class="stats-details">
-                <div class="points-available">
-                    <div class="stats-header">
-                        <h3>Statistiques du héros</h3>
-                    </div>
-                    <button class="train-all-btn" onclick="navigateToAllTrainings()">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 7 L20 4 L17 4"></path>
-                            <path d="M4 17 L4 20 L7 20"></path>
-                            <path d="M20 4 L15 9"></path>
-                            <path d="M4 20 L9 15"></path>
-                            <path d="M18 12 C18 16.4183 14.4183 20 10 20"></path>
-                            <path d="M6 12 C6 7.58172 9.58172 4 14 4"></path>
-                        </svg>
-                        Entraînement
-                    </button>
-                </div>
+            <!-- Icônes de navigation à droite -->
+            <div class="navigation">
+                <a href="/battle.html" class="nav-button">
+                    <img src="/assets/images/adventure.png" class="nav-icon" alt="Aventure">
+                </a>
                 
-                <!-- FORCE -->
-                <div class="main-stat" id="strength-stat">
-                    <div class="main-stat-header" onclick="toggleCategory('strength-stat')">
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                                    <line x1="6" y1="1" x2="6" y2="4"></line>
-                                    <line x1="10" y1="1" x2="10" y2="4"></line>
-                                    <line x1="14" y1="1" x2="14" y2="4"></line>
-                                </svg>
-                            </div>
-                            <div class="stat-name">Force</div>
-                            <div class="stat-value">28</div>
-                        </div>
-                        <div class="points-badge" id="strength-points-badge">Pts: <span id="strength-points-available">5</span>
-                            <span class="toggle-icon">▼</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sub-stats-container">
-                        <div class="sub-stats">
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Attaque</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('attack', -1)">-</button>
-                                    <div class="sub-stat-value" id="attack-points">8</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('attack', 1)">+</button>
-                                </div>
-                            </div>
-                            
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Précision</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('precision', -1)">-</button>
-                                    <div class="sub-stat-value" id="precision-points">5</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('precision', 1)">+</button>
-                                </div>
-                            </div>
-                            
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Dégâts crit</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('critical', -1)">-</button>
-                                    <div class="sub-stat-value" id="critical-points">3</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('critical', 1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <a href="/training.html" class="nav-button">
+                    <img src="/assets/images/training.png" class="nav-icon" alt="Entraînement">
+                </a>
                 
-                <!-- ENDURANCE -->
-                <div class="main-stat collapsed" id="endurance-stat">
-                    <div class="main-stat-header" onclick="toggleCategory('endurance-stat')">
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                            </div>
-                            <div class="stat-name">Endurance</div>
-                            <div class="stat-value">35</div>
-                        </div>
-                        <div class="points-badge" id="endurance-points-badge">Pts: <span id="endurance-points-available">4</span>
-                            <span class="toggle-icon">▼</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sub-stats-container">
-                        <div class="sub-stats">
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Vie</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('health', -1)">-</button>
-                                    <div class="sub-stat-value" id="health-points">10</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('health', 1)">+</button>
-                                </div>
-                            </div>
-                            
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Armure</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('armor', -1)">-</button>
-                                    <div class="sub-stat-value" id="armor-points">7</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('armor', 1)">+</button>
-                                </div>
-                            </div>
-                            
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Esquive</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('dodge', -1)">-</button>
-                                    <div class="sub-stat-value" id="dodge-points">4</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('dodge', 1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- RÉCUPÉRATION -->
-                <div class="main-stat collapsed" id="recovery-stat">
-                    <div class="main-stat-header" onclick="toggleCategory('recovery-stat')">
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4.5 9.5V4.5H9.5"></path>
-                                    <path d="M19.5 14.5v5h-5"></path>
-                                    <path d="M4.5 4.5L9 9"></path>
-                                    <path d="M15 15l4.5 4.5"></path>
-                                    <path d="M4 12a8 8 0 0 1 8-8"></path>
-                                    <path d="M12 20a8 8 0 0 0 8-8"></path>
-                                </svg>
-                            </div>
-                            <div class="stat-name">Récupération</div>
-                            <div class="stat-value">22</div>
-                        </div>
-                        <div class="points-badge" id="recovery-points-badge">Pts: <span id="recovery-points-available">3</span>
-                            <span class="toggle-icon">▼</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sub-stats-container">
-                        <div class="sub-stats">
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Régénération</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('regen', -1)">-</button>
-                                    <div class="sub-stat-value" id="regen-points">6</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('regen', 1)">+</button>
-                                </div>
-                            </div>
-                            
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Vol de vie</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('lifesteal', -1)">-</button>
-                                    <div class="sub-stat-value" id="lifesteal-points">4</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('lifesteal', 1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- AGILITÉ -->
-                <div class="main-stat collapsed" id="agility-stat">
-                    <div class="main-stat-header" onclick="toggleCategory('agility-stat')">
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                                </svg>
-                            </div>
-                            <div class="stat-name">Agilité</div>
-                            <div class="stat-value">19</div>
-                        </div>
-                        <div class="points-badge" id="agility-points-badge">Pts: <span id="agility-points-available">3</span>
-                            <span class="toggle-icon">▼</span>
-                        </div>
-                    </div>
-                    
-                    <div class="sub-stats-container">
-                        <div class="sub-stats">
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Portée</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('range', -1)">-</button>
-                                    <div class="sub-stat-value" id="range-points">5</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('range', 1)">+</button>
-                                </div>
-                            </div>
-                            
-                            <div class="sub-stat">
-                                <div class="sub-stat-name">Vitesse</div>
-                                <div class="sub-stat-controls">
-                                    <button class="point-btn minus" onclick="adjustPoints('speed', -1)">-</button>
-                                    <div class="sub-stat-value" id="speed-points">6</div>
-                                    <button class="point-btn plus" onclick="adjustPoints('speed', 1)">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="points-save-container">
-                    <button id="save-points-btn" onclick="savePointsDistribution()">Sauvegarder</button>
-                </div>
+                <a href="/stats.html" class="nav-button">
+                    <img src="/assets/images/stats.png" class="nav-icon" alt="Statistiques">
+                </a>
             </div>
-        </section>
-        
-        <div class="play-section">
-            <button class="play-button" onclick="navigateToBattle()">
-                JOUER
-                <div class="energy-info">
-                    <span class="energy-icon">⚡</span>
-                    <span id="energy-info-display">12/20</span>
-                </div>
-            </button>
         </div>
     </div>
 
     <script>
-        // Données des statistiques
-        const statsData = {
-            mainStats: {
-                strength: { available: 5 },
-                endurance: { available: 4 },
-                recovery: { available: 3 },
-                agility: { available: 3 }
+        // Données du joueur (données d'exemple pour la démonstration)
+        let playerData = {
+            heroName: "Héros Intrépide",
+            level: 1,
+            maxLevel: 3, // Niveau maximum débloqué
+            stats: {
+                strength: 8,
+                endurance: 7,
+                recovery: 5,
+                agility: 6
             },
-            subStats: {
-                attack: 8,
-                precision: 5,
-                critical: 3,
-                health: 10,
-                armor: 7,
-                dodge: 4,
-                regen: 6,
-                lifesteal: 4,
-                range: 5,
-                speed: 6
-            },
-            // Points initiaux, utilisés pour calculer la différence
-            initialSubStats: {
-                attack: 8,
-                precision: 5,
-                critical: 3,
-                health: 10,
-                armor: 7,
-                dodge: 4,
-                regen: 6,
-                lifesteal: 4,
-                range: 5,
-                speed: 6
-            }
+            totalScore: 1245
         };
         
-        // Mapping des sous-statistiques à leur catégorie principale
-        const statCategories = {
-            attack: 'strength',
-            precision: 'strength',
-            critical: 'strength',
-            health: 'endurance',
-            armor: 'endurance',
-            dodge: 'endurance',
-            regen: 'recovery',
-            lifesteal: 'recovery',
-            range: 'agility',
-            speed: 'agility'
-        };
-
-        // Fonction pour plier/déplier une catégorie
-        function toggleCategory(categoryId) {
-            const category = document.getElementById(categoryId);
-            const isCollapsed = category.classList.contains('collapsed');
+        // Fonction pour calculer la puissance du héros
+        function calculatePower(stats) {
+            // S'assurer qu'aucune statistique n'est à zéro pour éviter une puissance nulle
+            const strength = Math.max(1, stats.strength);
+            const endurance = Math.max(1, stats.endurance);
+            const recovery = Math.max(1, stats.recovery);
+            const agility = Math.max(1, stats.agility);
             
-            // Si on déplie cette catégorie, on replie toutes les autres
-            if (isCollapsed) {
-                document.querySelectorAll('.main-stat').forEach(stat => {
-                    if (stat.id !== categoryId) {
-                        stat.classList.add('collapsed');
-                        
-                        // S'assurer que la hauteur est bien à 0
-                        const subStatsContainer = stat.querySelector('.sub-stats-container');
-                        if (subStatsContainer) {
-                            subStatsContainer.style.height = '0';
-                        }
-                    }
-                });
-                
-                // Déplie la catégorie sélectionnée
-                const subStatsContainer = category.querySelector('.sub-stats-container');
-                if (subStatsContainer) {
-                    // Calculer la hauteur réelle du contenu
-                    subStatsContainer.style.height = 'auto';
-                    const autoHeight = subStatsContainer.offsetHeight;
-                    
-                    // Réinitialiser pour l'animation
-                    subStatsContainer.style.height = '0';
-                    
-                    // Forcer un reflow pour que la transition s'applique
-                    void subStatsContainer.offsetHeight;
-                    
-                    // Appliquer la hauteur réelle
-                    subStatsContainer.style.height = autoHeight + 'px';
-                    
-                    // Nettoyer après l'animation
-                    setTimeout(() => {
-                        if (!category.classList.contains('collapsed')) {
-                            subStatsContainer.style.height = 'auto';
-                        }
-                    }, 200); // Même durée que la transition CSS
-                }
+            // Calculer la puissance comme produit des statistiques principales
+            return Math.round(Math.sqrt(strength * endurance * recovery * agility) * 10);
+        }
+        
+        // Fonction pour formater les nombres de façon synthétique
+        function formatNumber(num) {
+            if (num < 1000) {
+                return num.toString();
+            } else if (num < 1000000) {
+                return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
             } else {
-                // Replier la catégorie
-                const subStatsContainer = category.querySelector('.sub-stats-container');
-                if (subStatsContainer) {
-                    // Fixer la hauteur actuelle
-                    const currentHeight = subStatsContainer.offsetHeight;
-                    subStatsContainer.style.height = currentHeight + 'px';
-                    
-                    // Forcer un reflow
-                    void subStatsContainer.offsetHeight;
-                    
-                    // Animer vers 0
-                    subStatsContainer.style.height = '0';
-                }
-            }
-            
-            // Plier/déplier la catégorie cliquée
-            category.classList.toggle('collapsed');
-        }
-        
-        // Fonction pour ajuster les points
-        function adjustPoints(stat, amount) {
-            const category = statCategories[stat];
-            
-            // Vérifier si l'on peut retirer des points (minimum 0)
-            if (amount < 0 && statsData.subStats[stat] <= 0) {
-                return;
-            }
-            
-            // Vérifier si l'on a assez de points disponibles pour ajouter
-            if (amount > 0 && statsData.mainStats[category].available <= 0) {
-                alert(`Vous n'avez plus de points disponibles pour la catégorie ${category} !`);
-                return;
-            }
-            
-            // Ajuster les points
-            statsData.subStats[stat] += amount;
-            statsData.mainStats[category].available -= amount;
-            
-            // Mettre à jour l'affichage
-            updateStatsDisplay();
-        }
-        
-        // Mettre à jour l'affichage des statistiques
-        function updateStatsDisplay() {
-            // Mettre à jour les points disponibles pour chaque catégorie
-            for (const category in statsData.mainStats) {
-                const availablePoints = statsData.mainStats[category].available;
-                const pointsBadge = document.getElementById(`${category}-points-badge`);
-                const pointsElement = document.getElementById(`${category}-points-available`);
-                
-                if (pointsElement) {
-                    pointsElement.textContent = availablePoints;
-                }
-                
-                // Masquer le badge s'il n'y a pas de points disponibles
-                if (pointsBadge) {
-                    if (availablePoints <= 0) {
-                        pointsBadge.classList.add('hidden');
-                    } else {
-                        pointsBadge.classList.remove('hidden');
-                    }
-                }
-            }
-            
-            // Mettre à jour chaque sous-statistique
-            for (const stat in statsData.subStats) {
-                const element = document.getElementById(`${stat}-points`);
-                if (element) {
-                    element.textContent = statsData.subStats[stat];
-                }
-            }
-            
-            // Mettre à jour les totaux des catégories principales
-            updateMainStatTotals();
-            
-            // Désactiver les boutons si nécessaire
-            updateButtonStates();
-        }
-        
-        // Mettre à jour les totaux des catégories principales
-        function updateMainStatTotals() {
-            const mainStats = {
-                strength: 0,
-                endurance: 0,
-                recovery: 0,
-                agility: 0
-            };
-            
-            // Calculer les totaux pour chaque catégorie
-            for (const stat in statsData.subStats) {
-                const category = statCategories[stat];
-                mainStats[category] += statsData.subStats[stat];
-            }
-            
-            // Mettre à jour l'affichage des totaux
-            document.querySelectorAll('.stat-item').forEach(item => {
-                const statName = item.querySelector('.stat-name').textContent.toLowerCase();
-                let categoryKey;
-                
-                switch (statName) {
-                    case 'force': categoryKey = 'strength'; break;
-                    case 'endurance': categoryKey = 'endurance'; break;
-                    case 'récupération': categoryKey = 'recovery'; break;
-                    case 'agilité': categoryKey = 'agility'; break;
-                }
-                
-                if (categoryKey && mainStats[categoryKey]) {
-                    item.querySelector('.stat-value').textContent = mainStats[categoryKey];
-                }
-            });
-        }
-        
-        // Désactiver les boutons si nécessaire
-        function updateButtonStates() {
-            // Pour chaque sous-statistique
-            for (const stat in statsData.subStats) {
-                const category = statCategories[stat];
-                const availablePoints = statsData.mainStats[category].available;
-                
-                // Trouver les boutons + et - pour cette statistique
-                const plusButton = document.querySelector(`.point-btn.plus[onclick="adjustPoints('${stat}', 1)"]`);
-                const minusButton = document.querySelector(`.point-btn.minus[onclick="adjustPoints('${stat}', -1)"]`);
-                
-                if (plusButton) {
-                    const disabled = availablePoints <= 0;
-                    plusButton.disabled = disabled;
-                    plusButton.style.opacity = disabled ? '0.5' : '1';
-                    plusButton.style.cursor = disabled ? 'not-allowed' : 'pointer';
-                }
-                
-                if (minusButton) {
-                    const disabled = statsData.subStats[stat] <= 0;
-                    minusButton.disabled = disabled;
-                    minusButton.style.opacity = disabled ? '0.5' : '1';
-                    minusButton.style.cursor = disabled ? 'not-allowed' : 'pointer';
-                }
+                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
             }
         }
         
-        // Naviguer vers toutes les pages d'entraînement
-        function navigateToAllTrainings() {
-            window.location.href = '/training.html';
+        // Mettre à jour l'affichage avec les données du joueur
+        function updateUI() {
+            document.getElementById('hero-name').textContent = playerData.heroName;
+            document.getElementById('player-level').textContent = playerData.maxLevel;
+            
+            // Formatter la puissance et le score de façon synthétique
+            const power = calculatePower(playerData.stats);
+            document.getElementById('player-power').textContent = formatNumber(power);
+            document.getElementById('total-score').textContent = formatNumber(playerData.totalScore);
         }
         
-        // Sauvegarder la distribution des points
-        function savePointsDistribution() {
-            const token = localStorage.getItem('token');
+        // Fonction sécurisée pour récupérer le token
+        function getAuthToken() {
+            try {
+                return localStorage.getItem('token');
+            } catch (e) {
+                console.warn("Impossible d'accéder à localStorage:", e);
+                return null;
+            }
+        }
+        
+        // Charger les données du joueur depuis l'API si possible
+        function loadPlayerData() {
+            // D'abord afficher les données par défaut
+            updateUI();
+            
+            // Essayer de récupérer le token
+            const token = getAuthToken();
             if (!token) {
-                alert('Vous devez être connecté pour sauvegarder vos statistiques');
+                console.log("Mode démonstration: utilisation des données d'exemple");
+                hideLoadingScreen();
                 return;
             }
             
-            // Récupérer les statistiques par catégorie
-            const categories = ['strength', 'endurance', 'recovery', 'agility'];
-            
-            // Pour chaque catégorie, envoyer une mise à jour séparée
-            let updatesCompleted = 0;
-            
-            categories.forEach(category => {
-                // Préparer les sous-statistiques de cette catégorie
-                const subStats = {};
-                
-                switch(category) {
-                    case 'strength':
-                        subStats.attack = statsData.subStats.attack;
-                        subStats.precision = statsData.subStats.precision;
-                        subStats.critical = statsData.subStats.critical;
-                        break;
-                    case 'endurance':
-                        subStats.health = statsData.subStats.health;
-                        subStats.armor = statsData.subStats.armor;
-                        subStats.dodge = statsData.subStats.dodge;
-                        break;
-                    case 'recovery':
-                        subStats.regen = statsData.subStats.regen;
-                        subStats.lifesteal = statsData.subStats.lifesteal;
-                        break;
-                    case 'agility':
-                        subStats.range = statsData.subStats.range;
-                        subStats.speed = statsData.subStats.speed;
-                        break;
-                }
-                
-                // Envoyer la mise à jour au serveur
-                fetch('/api/player/stats', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({
-                        category: category,
-                        subStats: subStats
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    updatesCompleted++;
-                    
-                    // Si toutes les mises à jour sont terminées, afficher un message
-                    if (updatesCompleted === categories.length) {
-                        alert('Statistiques sauvegardées avec succès !');
-                        // Mettre à jour les statistiques initiales
-                        Object.assign(statsData.initialSubStats, statsData.subStats);
-                    }
-                })
-                .catch(error => {
-                    console.error('Erreur:', error);
-                    alert('Erreur lors de la sauvegarde des statistiques: ' + category);
-                });
-            });
-        }
-        
-        // Charger les données utilisateur au chargement de la page
-        window.onload = function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/';
-                return;
-            }
-        
             // Récupérer les informations de l'utilisateur
             fetch('/api/user', {
                 headers: { 'Authorization': 'Bearer ' + token }
@@ -993,62 +367,30 @@
             })
             .then(data => {
                 // Mettre à jour le nom du héros
-                document.getElementById('hero-name').textContent = data.heroName || 'Héros sans nom';
-                // Mettre à jour le niveau du joueur
-                document.getElementById('player-level').textContent = data.level || 1;
+                playerData.heroName = data.heroName || 'Héros sans nom';
+                playerData.level = data.level || 1;
+                
+                // Continuer avec les statistiques
+                return fetch('/api/player/stats', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
             })
-            .catch(error => {
-                console.error('Erreur:', error);
-                localStorage.removeItem('token');
-                window.location.href = '/';
-            });
-        
-            // Récupérer les statistiques du joueur
-            fetch('/api/player/stats', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Erreur lors de la récupération des statistiques');
-                }
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
-                // Mettre à jour les stats principales
-                statsData.mainStats = {
-                    strength: { available: data.availableStrengthPoints },
-                    endurance: { available: data.availableEndurancePoints },
-                    recovery: { available: data.availableRecoveryPoints },
-                    agility: { available: data.availableAgilityPoints }
-                };
-        
-                // Mettre à jour les sous-statistiques
-                statsData.subStats = {
-                    attack: data.attack,
-                    precision: data.precision,
-                    critical: data.critical,
-                    health: data.health,
-                    armor: data.armor,
-                    dodge: data.dodge,
-                    regen: data.regen,
-                    lifesteal: data.lifesteal,
-                    range: data.range,
-                    speed: data.speed
+                // Mettre à jour les statistiques
+                playerData.stats = {
+                    strength: data.strength || 1,
+                    endurance: data.endurance || 1,
+                    recovery: data.recovery || 1,
+                    agility: data.agility || 1
                 };
                 
-                // Mettre à jour l'énergie
-                const energyDisplay = `${data.currentEnergy}/${data.maxEnergy}`;
-                document.getElementById('energy-display').textContent = energyDisplay;
-                document.getElementById('energy-info-display').textContent = energyDisplay;
+                // Récupérer le niveau maximum débloqué
+                playerData.maxLevel = data.unlockedLevels && data.unlockedLevels.length > 0 
+                    ? Math.max(...data.unlockedLevels) 
+                    : 1;
                 
-                // Mettre à jour le niveau maximal débloqué
-                const maxLevel = Math.max(...data.unlockedLevels) || 1;
-                document.getElementById('max-level').textContent = maxLevel;
-                
-                // Mettre à jour l'affichage
-                updateStatsDisplay();
-                
-                // Récupérer le score total (somme des scores de tous les mini-jeux)
+                // Récupérer le score total
                 return fetch('/api/scores?limit=100', {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
@@ -1056,25 +398,57 @@
             .then(res => res.json())
             .then(scores => {
                 // Calculer le score total
-                let totalScore = 0;
                 if (Array.isArray(scores)) {
-                    scores.forEach(score => {
-                        totalScore += score.score || 0;
-                    });
+                    playerData.totalScore = scores.reduce((sum, score) => sum + (score.score || 0), 0);
                 }
                 
-                // Mettre à jour l'affichage du score total
-                document.getElementById('total-score').textContent = totalScore;
+                // Mettre à jour l'interface
+                updateUI();
+                hideLoadingScreen();
             })
             .catch(error => {
                 console.error('Erreur:', error);
+                console.log("Mode démonstration activé suite à une erreur");
+                hideLoadingScreen();
             });
-        };
-        
-        // Naviguer vers la page de combat
-        function navigateToBattle() {
-            window.location.href = '/battle.html';
         }
+        
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loading-screen');
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+        
+        // Rendre les liens de navigation sécurisés
+        function setupNavigation() {
+            const links = document.querySelectorAll('.nav-button');
+            
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Dans un environnement sandbox, prévenez juste la redirection
+                    try {
+                        if (!getAuthToken()) {
+                            e.preventDefault();
+                            alert("Mode démonstration: les redirections sont désactivées");
+                        }
+                    } catch (err) {
+                        e.preventDefault();
+                        console.log("Navigation désactivée en mode démo");
+                    }
+                });
+            });
+        }
+        
+        // Au chargement de la page
+        window.onload = function() {
+            loadPlayerData();
+            setupNavigation();
+            
+            // Assurer que l'écran de chargement disparaît même en cas de problème
+            setTimeout(hideLoadingScreen, 3000);
+        };
     </script>
 </body>
 </html>

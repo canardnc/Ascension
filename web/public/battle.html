@@ -190,33 +190,6 @@
             margin-right: 5px;
         }
         
-        .player-stats {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            padding: 0 50px;
-            margin-top: 20px;
-        }
-        
-        .stat-item {
-            background-color: rgba(101, 66, 254, 0.2);
-            border-radius: 10px;
-            padding: 10px 20px;
-            text-align: center;
-            border: 1px solid rgba(101, 66, 254, 0.3);
-        }
-        
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #6542fe;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: #a9a9c9;
-        }
-        
         .background-image {
             position: absolute;
             top: 0;
@@ -234,16 +207,6 @@
             .battle-image-container {
                 width: 90%;
                 height: 50vh;
-            }
-            
-            .player-stats {
-                flex-wrap: wrap;
-                gap: 10px;
-                padding: 0 20px;
-            }
-            
-            .stat-item {
-                flex: 1 0 40%;
             }
             
             .battle-name {
@@ -281,31 +244,12 @@
             <div class="battle-image-container">
                 <img src="/assets/images/level1.jpg" alt="Image du niveau" class="battle-image" id="battle-image" onerror="this.src='/icons/icon-512.png'">
                 <div class="battle-image-overlay">
-                    <div class="battle-name" id="battle-name">La Cour d'École</div>
-                    <div class="battle-description" id="battle-description">Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.</div>
+                    <div class="battle-name" id="battle-name">Chargement...</div>
+                    <div class="battle-description" id="battle-description">Chargement de la description...</div>
                     <div class="energy-required">
                         <span class="energy-icon">⚡</span>
-                        <span id="energy-cost">5 énergie requise</span>
+                        <span id="energy-cost">Chargement...</span>
                     </div>
-                </div>
-            </div>
-            
-            <div class="player-stats">
-                <div class="stat-item">
-                    <div class="stat-value">28</div>
-                    <div class="stat-label">Force</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">35</div>
-                    <div class="stat-label">Endurance</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">22</div>
-                    <div class="stat-label">Récupération</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">19</div>
-                    <div class="stat-label">Agilité</div>
                 </div>
             </div>
             
@@ -314,67 +258,170 @@
     </div>
 
     <script>
-        // Données des niveaux
-        const levels = [
-            {
-                id: 1,
-                name: "La Cour d'École",
-                description: "Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.",
-                image: "/assets/images/level1.jpg",
-                background: "/assets/images/bg1.jpg",
-                energyCost: 5
-            },
-            {
-                id: 2,
-                name: "La Bibliothèque Hantée",
-                description: "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
-                image: "/assets/images/level2.jpg",
-                background: "/assets/images/bg2.jpg",
-                energyCost: 8
-            },
-            {
-                id: 3,
-                name: "Le Laboratoire de Sciences",
-                description: "Formules, équations et réactions chimiques prennent vie dans ce laboratoire. Attention aux explosions de connaissances!",
-                image: "/assets/images/level3.jpg",
-                background: "/assets/images/bg3.jpg",
-                energyCost: 10
-            },
-            {
-                id: 4,
-                name: "L'Amphithéâtre du Savoir",
-                description: "Le lieu où les plus grands savants ont partagé leurs théories. Préparez-vous à affronter des connaissances de niveau universitaire.",
-                image: "/assets/images/level4.jpg",
-                background: "/assets/images/bg4.jpg",
-                energyCost: 12
-            },
-            {
-                id: 5,
-                name: "La Tour de l'Érudition",
-                description: "Au sommet de cette tour se trouve le savoir ultime. Seuls les plus déterminés pourront gravir ses étages et affronter le gardien des connaissances.",
-                image: "/assets/images/level5.jpg",
-                background: "/assets/images/bg5.jpg",
-                energyCost: 15
-            }
-        ];
-        
-        // Variables pour gérer le niveau actuel et le niveau maximum débloqué
+        // Variables globales pour les niveaux
+        let levels = [];
         let currentLevelIndex = 0;
-        let maxUnlockedLevel = 3; // Simuler que le joueur a débloqué jusqu'au niveau 3
+        let maxUnlockedLevel = 1;
         
-        // Changer de niveau
-        function changeLevel(direction) {
-            const newIndex = currentLevelIndex + direction;
+        // Initialiser la page
+        window.onload = function() {
+            // Vérifier l'authentification
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/';
+                return;
+            }
             
-            // Vérifier si le nouveau niveau est valide
-            if (newIndex >= 0 && newIndex < levels.length && levels[newIndex].id <= maxUnlockedLevel) {
-                currentLevelIndex = newIndex;
-                updateLevelDisplay();
+            // Récupérer la configuration des niveaux depuis le serveur
+            fetchLevelsConfig()
+                .then(() => {
+                    // Récupérer les statistiques du joueur, y compris les niveaux débloqués
+                    return fetchPlayerStats();
+                })
+                .then(() => {
+                    // Mettre à jour l'affichage avec le premier niveau débloqué
+                    updateLevelDisplay();
+                })
+                .catch(error => {
+                    console.error('Erreur lors de l\'initialisation:', error);
+                    alert('Erreur lors du chargement des données. Veuillez réessayer.');
+                });
+        };
+        
+        // Récupérer la configuration des niveaux depuis le fichier JSON
+        async function fetchLevelsConfig() {
+            try {
+                // Charger le fichier JSON avec un paramètre anti-cache
+                const response = await fetch('/configs/levels.json?nocache=' + Date.now());
+                if (!response.ok) {
+                    throw new Error('Erreur lors du chargement de la configuration des niveaux');
+                }
+                
+                const levelsData = await response.json();
+                
+                if (!levelsData || !levelsData.levels || !Array.isArray(levelsData.levels)) {
+                    throw new Error('Format de données invalide: la structure attendue est { levels: [...] }');
+                }
+                
+                // Transformer les données en format utilisable
+                levels = levelsData.levels.map(level => ({
+                    id: level.id,
+                    name: level.name || `Niveau ${level.id}`,
+                    description: level.description || "Description non disponible",
+                    // Gérer les cas où image ou background sont undefined
+                    image: level.image ? (level.image.startsWith('/') ? level.image : `/assets/images/${level.image}`) : `/assets/images/level${level.id}.jpg`,
+                    background: level.background ? (level.background.startsWith('/') ? level.background : `/assets/images/${level.background}`) : `/assets/images/bg${level.id}.jpg`,
+                    // Utilise energyCost du fichier s'il existe, sinon calcule basé sur l'ID
+                    energyCost: level.energyCost || (5 + (level.id - 1)),
+                    // Conserver les informations de tuiles pour le jeu
+                    tiles: level.tiles || { base: "iso_dirt", special: [] },
+                    monsters: level.monsters || [],
+                    obstacles: level.obstacles || [],
+                    boss: level.boss
+                }));
+            } catch (error) {
+                console.error("Erreur lors du chargement des niveaux:", error);
+                
+                // En cas d'erreur, utiliser des données par défaut pour éviter de bloquer l'interface
+                levels = [
+                    {
+                        id: 1,
+                        name: "La Cour d'École",
+                        description: "Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.",
+                        image: "/assets/images/level1.jpg",
+                        background: "/assets/images/bg1.jpg",
+                        energyCost: 5
+                    },
+                    {
+                        id: 2,
+                        name: "La Bibliothèque Hantée",
+                        description: "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+                        image: "/assets/images/level2.jpg",
+                        background: "/assets/images/bg2.jpg",
+                        energyCost: 6
+                    },
+                    {
+                        id: 3,
+                        name: "Le Laboratoire de Sciences",
+                        description: "Formules, équations et réactions chimiques prennent vie dans ce laboratoire. Attention aux explosions de connaissances!",
+                        image: "/assets/images/level3.jpg",
+                        background: "/assets/images/bg3.jpg",
+                        energyCost: 7
+                    },
+                    {
+                        id: 4,
+                        name: "L'Amphithéâtre du Savoir",
+                        description: "Le lieu où les plus grands savants ont partagé leurs théories. Préparez-vous à affronter des connaissances de niveau universitaire.",
+                        image: "/assets/images/level4.jpg",
+                        background: "/assets/images/bg4.jpg",
+                        energyCost: 8
+                    },
+                    {
+                        id: 5,
+                        name: "La Tour de l'Érudition",
+                        description: "Au sommet de cette tour se trouve le savoir ultime. Seuls les plus déterminés pourront gravir ses étages et affronter le gardien des connaissances.",
+                        image: "/assets/images/level5.jpg",
+                        background: "/assets/images/bg5.jpg",
+                        energyCost: 9
+                    }
+                ];
+            }
+        }
+        
+        // Récupérer les statistiques du joueur, y compris les niveaux débloqués
+        async function fetchPlayerStats() {
+            try {
+                const response = await fetch('/api/player/stats', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des statistiques');
+                }
+                
+                const data = await response.json();
+                
+                // Mettre à jour le niveau maximum débloqué
+                if (data.unlockedLevels && data.unlockedLevels.length > 0) {
+                    maxUnlockedLevel = Math.max(...data.unlockedLevels);
+                } else {
+                    maxUnlockedLevel = 1; // Par défaut, seulement le niveau 1 est débloqué
+                }
+                
+                // Ajuster currentLevelIndex pour pointer vers le niveau maximum débloqué
+                // On cherche le niveau correspondant à maxUnlockedLevel dans notre tableau levels
+                const levelIndex = levels.findIndex(level => level.id === maxUnlockedLevel);
+                if (levelIndex !== -1) {
+                    currentLevelIndex = levelIndex;
+                } else {
+                    // Si nous ne trouvons pas le niveau exact, chercher le plus proche disponible
+                    const availableLevels = levels.filter(level => level.id <= maxUnlockedLevel);
+                    if (availableLevels.length > 0) {
+                        // Prendre le niveau le plus élevé disponible
+                        const highestAvailable = availableLevels.reduce((max, level) => 
+                            level.id > max.id ? level : max, availableLevels[0]);
+                        currentLevelIndex = levels.findIndex(level => level.id === highestAvailable.id);
+                    } else {
+                        // Fallback vers le niveau 1 si aucun niveau n'est trouvé
+                        currentLevelIndex = levels.findIndex(level => level.id === 1) || 0;
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur lors de la récupération des statistiques:", error);
+                // En cas d'erreur, on suppose que seul le niveau 1 est débloqué
+                maxUnlockedLevel = 1;
             }
         }
         
         // Mettre à jour l'affichage du niveau
         function updateLevelDisplay() {
+            if (levels.length === 0) {
+                console.error("Aucun niveau n'a été chargé");
+                return;
+            }
+            
             const level = levels[currentLevelIndex];
             
             document.getElementById('current-level').textContent = level.id;
@@ -382,13 +429,14 @@
             document.getElementById('battle-description').textContent = level.description;
             document.getElementById('energy-cost').textContent = `${level.energyCost} énergie requise`;
             
-            // Gérer les erreurs d'image avec fallback
+            // Mettre à jour l'image du niveau
             const battleImage = document.getElementById('battle-image');
             battleImage.src = level.image;
             battleImage.onerror = function() {
                 this.src = '/icons/icon-512.png';
             };
             
+            // Mettre à jour l'image de fond
             const backgroundImage = document.getElementById('background-image');
             backgroundImage.style.backgroundImage = `url('${level.background}')`;
             
@@ -396,145 +444,100 @@
             const leftArrow = document.querySelectorAll('.level-arrow')[0];
             const rightArrow = document.querySelectorAll('.level-arrow')[1];
             
+            // Flèche gauche désactivée si on est au premier niveau
             leftArrow.style.opacity = currentLevelIndex > 0 ? '1' : '0.3';
             leftArrow.style.cursor = currentLevelIndex > 0 ? 'pointer' : 'not-allowed';
             
-            const isMaxLevel = currentLevelIndex >= levels.length - 1 || levels[currentLevelIndex + 1].id > maxUnlockedLevel;
+            // Flèche droite désactivée si on est au dernier niveau débloqué
+            const isMaxLevel = currentLevelIndex >= levels.length - 1 || 
+                               (currentLevelIndex + 1 < levels.length && levels[currentLevelIndex + 1].id > maxUnlockedLevel);
             rightArrow.style.opacity = isMaxLevel ? '0.3' : '1';
             rightArrow.style.cursor = isMaxLevel ? 'not-allowed' : 'pointer';
         }
         
+        // Changer de niveau
+        function changeLevel(direction) {
+            const newIndex = currentLevelIndex + direction;
+            
+            // Vérifier si le nouveau niveau est valide
+            if (newIndex >= 0 && newIndex < levels.length) {
+                // Vérifier si le niveau est débloqué
+                if (levels[newIndex].id <= maxUnlockedLevel) {
+                    currentLevelIndex = newIndex;
+                    updateLevelDisplay();
+                } else {
+                    alert(`Le niveau ${levels[newIndex].id} n'est pas encore débloqué.`);
+                }
+            }
+        }
+        
         // Lancer le combat
         function startBattle() {
-    const level = levels[currentLevelIndex];
-    console.log(`Démarrage du combat niveau ${level.id}: ${level.name}`);
-    
-    const token = localStorage.getItem('token');
-    if (!token) {
-        alert('Vous devez être connecté pour démarrer un combat');
-        return;
-    }
-    
-    // Vérifier si le joueur a assez d'énergie et démarrer le combat
-    fetch('/api/battle/start', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-            levelId: level.id
-        })
-    })
-    .then(res => {
-        if (!res.ok) {
-            return res.json().then(data => {
-                throw new Error(data.error || 'Erreur serveur');
+            const level = levels[currentLevelIndex];
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Vous devez être connecté pour démarrer un combat');
+                return;
+            }
+            
+            // Vérifier si le joueur a assez d'énergie et démarrer le combat
+            fetch('/api/battle/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    levelId: level.id
+                })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(data => {
+                        throw new Error(data.error || 'Erreur serveur');
+                    });
+                }
+                return res.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Stockage temporaire des données de niveau dans localStorage pour que game.html puisse y accéder
+                    try {
+                        // Ne stocker que les informations essentielles pour éviter de dépasser la limite de localStorage
+                        const levelData = {
+                            id: level.id,
+                            name: level.name,
+                            tiles: level.tiles,
+                            monsters: level.monsters,
+                            obstacles: level.obstacles || []
+                        };
+                        
+                        if (level.boss) {
+                            levelData.boss = level.boss;
+                        }
+                        
+                        localStorage.setItem('currentLevelData', JSON.stringify(levelData));
+                    } catch (e) {
+                        console.warn("Impossible de stocker les données de niveau dans localStorage:", e);
+                    }
+                    
+                    // Rediriger vers la page de jeu avec les paramètres du niveau
+                    window.location.href = `/game.html?level=${level.id}`;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                // Gérer les différentes erreurs possibles
+                if (error.message.includes('énergie')) {
+                    alert("Vous n'avez pas assez d'énergie pour ce niveau!");
+                } else if (error.message.includes('niveau')) {
+                    alert("Ce niveau n'est pas encore débloqué!");
+                } else {
+                    alert("Erreur lors du démarrage du combat: " + error.message);
+                }
             });
         }
-        return res.json();
-    })
-    .then(data => {
-        if (data.success) {
-            // Rediriger vers la page de jeu avec les paramètres du niveau
-            window.location.href = `/game.html?level=${level.id}`;
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        // Gérer les différentes erreurs possibles
-        if (error.message.includes('énergie')) {
-            alert("Vous n'avez pas assez d'énergie pour ce niveau!");
-        } else if (error.message.includes('niveau')) {
-            alert("Ce niveau n'est pas encore débloqué!");
-        } else {
-            alert("Erreur lors du démarrage du combat: " + error.message);
-        }
-    });
-}
-        
-        // Initialiser la page
-        window.onload = function() {
-    // Vérifier l'authentification
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/';
-        return;
-    }
-    
-    // Récupérer les statistiques du joueur
-    fetch('/api/player/stats', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        // Mettre à jour le niveau maximum débloqué
-        maxUnlockedLevel = Math.max(...data.unlockedLevels);
-        updateLevelDisplay();
-        
-        // Mettre à jour les statistiques affichées
-        document.querySelectorAll('.stat-item').forEach(item => {
-            const label = item.querySelector('.stat-label').textContent.toLowerCase();
-            
-            switch (label) {
-                case 'force':
-                    item.querySelector('.stat-value').textContent = data.strength;
-                    break;
-                case 'endurance':
-                    item.querySelector('.stat-value').textContent = data.endurance;
-                    break;
-                case 'récupération':
-                    item.querySelector('.stat-value').textContent = data.recovery;
-                    break;
-                case 'agilité':
-                    item.querySelector('.stat-value').textContent = data.agility;
-                    break;
-            }
-        });
-    })
-    .catch(error => console.error('Erreur:', error));
-    
-    updateLevelDisplay();
-};
-
-function completeBattle(success, score, timeSpent) {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    
-    // Récupérer le niveau depuis l'URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const levelId = parseInt(urlParams.get('level') || '1');
-    
-    // Envoyer le résultat au serveur
-    fetch('/api/battle/complete', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({
-            levelId: levelId,
-            success: success,
-            score: score,
-            timeSpent: timeSpent
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            if (data.isNewBest) {
-                alert('Nouveau record !');
-            }
-            
-            if (data.nextLevelUnlocked) {
-                alert('Niveau suivant débloqué !');
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-    });
-}
     </script>
 </body>
 </html>
