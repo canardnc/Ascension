@@ -11,23 +11,23 @@ import (
 
 // MinigameResponse représente un mini-jeu dans la réponse API
 type MinigameResponse struct {
-	ID              int                       `json:"id"`
-	Name            string                    `json:"name"`
-	Description     string                    `json:"description"`
-	Icon            string                    `json:"icon"`
+	ID               int                       `json:"id"`
+	Name             string                    `json:"name"`
+	Description      string                    `json:"description"`
+	Icon             string                    `json:"icon"`
 	DifficultyLevels []MinigameDifficultyLevel `json:"difficultyLevels"`
 }
 
 // MinigameDifficultyLevel représente un niveau de difficulté d'un mini-jeu
 type MinigameDifficultyLevel struct {
-	Level        int       `json:"level"`
-	Description  string    `json:"description"`
-	Difficulty   int       `json:"difficulty"`
-	Points       int       `json:"points"`
-	Stars        int       `json:"stars"`
-	Progress     float64   `json:"progress"`
-	LastPlayed   string    `json:"lastPlayed,omitempty"`
-	TotalPlayed  int       `json:"totalPlayed"`
+	Level       int     `json:"level"`
+	Description string  `json:"description"`
+	Difficulty  int     `json:"difficulty"`
+	Points      int     `json:"points"`
+	Stars       int     `json:"stars"`
+	Progress    float64 `json:"progress"`
+	LastPlayed  string  `json:"lastPlayed,omitempty"`
+	TotalPlayed int     `json:"totalPlayed"`
 }
 
 // MinigameCompletionRequest représente une demande d'enregistrement de mini-jeu complété
@@ -80,10 +80,10 @@ func GetMinigames(w http.ResponseWriter, r *http.Request) {
 			}
 
 			minigamesMap[progress.MinigameID] = &MinigameResponse{
-				ID:              progress.MinigameID,
-				Name:            metadata.Name,
-				Description:     metadata.Description,
-				Icon:            metadata.Icon,
+				ID:               progress.MinigameID,
+				Name:             metadata.Name,
+				Description:      metadata.Description,
+				Icon:             metadata.Icon,
 				DifficultyLevels: []MinigameDifficultyLevel{},
 			}
 		}
@@ -154,33 +154,25 @@ func CompleteMinigame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Récupérer la progression actuelle
-	progress, err := models.GetMinigameProgress(userID, request.MinigameID, request.DifficultyLevel)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération de la progression")
-		return
-	}
-
-	// Calculer les scores et les étoiles
-	scoreBefore := progress.Points
-	scoreAfter := scoreBefore + request.Score
-	
-	starsBefore := models.CalculateStars(scoreBefore)
-	starsAfter := models.CalculateStars(scoreAfter)
-	newStars := starsAfter - starsBefore
-
-	// Mettre à jour la progression
-	err = models.UpdateMinigameProgress(
+	// Utiliser la nouvelle fonction pour mettre à jour toutes les lignes concernées
+	// et récupérer les scores avant/après
+	scoreBefore, scoreAfter, err := UpdateMinigameProgressWithScore(
 		userID,
 		request.MinigameID,
 		request.DifficultyLevel,
-		scoreAfter,
+		request.Score,
 		request.TimeSpent,
 	)
+
 	if err != nil {
 		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la mise à jour de la progression")
 		return
 	}
+
+	// Calculer les étoiles avant et après
+	starsBefore := models.CalculateStars(scoreBefore)
+	starsAfter := models.CalculateStars(scoreAfter)
+	newStars := starsAfter - starsBefore
 
 	// Préparer le message
 	message := "Félicitations ! Vous avez gagné " + strconv.Itoa(request.Score) + " points."
