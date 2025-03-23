@@ -602,8 +602,22 @@
         
         // Lancer un mini-jeu
         function launchMinigame(minigameId, difficultyLevel) {
-            window.location.href = `/games/game_${minigameId}/index.html?difficulty=${difficultyLevel}`;
-        }
+    // Obtenir le type de catégorie actuel
+    const categoryType = getTrainingType();
+    
+    // Convertir le type de catégorie en ID pour le mini-jeu
+    let categoryId;
+    switch(categoryType) {
+        case 'strength': categoryId = 1; break;
+        case 'endurance': categoryId = 2; break;
+        case 'recovery': categoryId = 3; break;
+        case 'agility': categoryId = 4; break;
+        default: categoryId = 1;
+    }
+    
+    // Rediriger vers le mini-jeu avec tous les paramètres nécessaires
+    window.location.href = `/games/game_${minigameId}/index.html?difficulty=${difficultyLevel}&category=${categoryType}&categoryId=${categoryId}`;
+}
         
         // Vérifier s'il y a des résultats récents à animer
         function checkForRecentResults() {

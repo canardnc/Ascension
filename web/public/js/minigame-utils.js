@@ -12,20 +12,18 @@
  * @param {number} results.timeSpent - Temps passé en secondes
  * @returns {Promise} - Promesse résolue avec les données de résultat
  */
-async function saveMinigameResults(results) {
-    // Récupérer le token d'authentification
-    const token = localStorage.getItem('token');
-    if (!token) {
-        console.error("Erreur d'authentification: aucun token trouvé");
-        throw new Error("Vous devez être connecté pour enregistrer vos résultats");
-    }
+function saveMinigameResults(results) {
+    return new Promise((resolve, reject) => {
+        // Récupérer le token d'authentification
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.error("Erreur d'authentification: aucun token trouvé");
+            reject(new Error("Vous devez être connecté pour enregistrer vos résultats"));
+            return;
+        }
 
-    try {
-        // Convertir le temps passé de secondes en minutes pour la base de données
-        const timeSpentMinutes = Math.ceil(results.timeSpent / 60);
-        
         // Appeler l'API pour enregistrer les résultats
-        const response = await fetch('/api/minigame/complete', {
+        fetch('/api/minigame/complete', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,33 +33,41 @@ async function saveMinigameResults(results) {
                 minigameId: results.minigameId,
                 difficultyLevel: results.difficultyLevel,
                 score: results.score,
-                timeSpent: timeSpentMinutes
+                timeSpent: results.timeSpent
             })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || "Erreur lors de l'enregistrement des résultats");
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Stocker les résultats pour l'animation après redirection
+            if (data.success) {
+                try {
+                    localStorage.setItem('lastMinigameResults', JSON.stringify({
+                        minigameId: results.minigameId,
+                        difficultyLevel: results.difficultyLevel,
+                        scoreBefore: data.scoreBefore,
+                        scoreAfter: data.scoreAfter,
+                        newStars: data.newStars
+                    }));
+                } catch (error) {
+                    console.warn("Impossible de stocker les résultats dans localStorage:", error);
+                }
+            }
+            
+            // Résoudre la promesse avec les données
+            resolve(data);
+        })
+        .catch(error => {
+            console.error("Erreur lors de l'enregistrement des résultats:", error);
+            reject(error);
         });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Erreur lors de l'enregistrement des résultats");
-        }
-
-        const data = await response.json();
-        
-        // Stocker les résultats pour l'animation après redirection
-        if (data.success) {
-            localStorage.setItem('lastMinigameResults', JSON.stringify({
-                minigameId: results.minigameId,
-                difficultyLevel: results.difficultyLevel,
-                scoreBefore: data.scoreBefore,
-                scoreAfter: data.scoreAfter,
-                newStars: data.newStars
-            }));
-        }
-        
-        return data;
-    } catch (error) {
-        console.error("Erreur lors de l'enregistrement des résultats:", error);
-        throw error;
-    }
+    });
 }
 
 /**
@@ -77,6 +83,43 @@ async function saveMinigameResults(results) {
  * @param {number} gameData.timeSpent - Temps passé en secondes
  */
 function showEndgameScreen(score, maxScore, categoryType, resetGameFunction, gameData) {
+    // D'abord, enregistrer les résultats dans la base de données
+    try {
+        // Créer une fonction globale temporaire pour le gestionnaire de clic
+        window.endGameRetry = function() {
+            document.getElementById('endgame-modal-container').remove();
+            if (typeof resetGameFunction === 'function') {
+                resetGameFunction();
+            }
+        };
+        
+        window.endGameExit = function() {
+            window.location.href = `/training.html?type=${categoryType}`;
+        };
+        
+        // Enregistrer les résultats de façon asynchrone sans bloquer
+        const savePromise = fetch('/api/minigame/complete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
+            body: JSON.stringify({
+                minigameId: gameData.minigameId,
+                difficultyLevel: gameData.difficultyLevel,
+                score: score,
+                timeSpent: gameData.timeSpent
+            })
+        });
+        
+        // Gérer les erreurs silencieusement
+        savePromise.catch(error => {
+            console.error("Erreur lors de l'enregistrement des résultats:", error);
+        });
+    } catch (error) {
+        console.error("Erreur lors de la sauvegarde:", error);
+    }
+    
     // Calculer le pourcentage de réussite
     const percentage = (score / maxScore) * 100;
     
@@ -106,71 +149,144 @@ function showEndgameScreen(score, maxScore, categoryType, resetGameFunction, gam
             message = 'Continue à pratiquer, tu t\'amélioreras !';
     }
     
-    // Créer un conteneur modal s'il n'existe pas déjà
-    let modalContainer = document.getElementById('endgame-modal-container');
-    if (!modalContainer) {
-        modalContainer = document.createElement('div');
-        modalContainer.id = 'endgame-modal-container';
-        document.body.appendChild(modalContainer);
+    // Supprimer l'ancien modal s'il existe
+    const oldModal = document.getElementById('endgame-modal-container');
+    if (oldModal) {
+        oldModal.remove();
     }
     
-    // Appliquer les styles CSS au conteneur modal
-    const modalStyle = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    `;
-    modalContainer.style.cssText = modalStyle;
+    // Créer un nouveau conteneur modal
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'endgame-modal-container';
     
-    // Créer le contenu HTML du modal
+    // Générer les étoiles avec des images
+    const starsHTML = Array(3).fill().map((_, i) => {
+        const isActive = i < stars;
+        return `<img 
+            src="/assets/images/star.png" 
+            alt="Étoile" 
+            style="
+                width: 48px; 
+                height: 48px; 
+                filter: ${isActive ? 'brightness(1) drop-shadow(0 0 5px rgba(255, 215, 0, 0.8))' : 'brightness(0.3) grayscale(1)'};
+                transition: transform 0.3s ease;
+                ${isActive ? 'animation: star-pop 0.5s ease-out;' : ''}
+            "
+        >`;
+    }).join('');
+    
+    // Définir le HTML du modal
     modalContainer.innerHTML = `
-        <div style="background-color: #1f1f3a; border-radius: 15px; padding: 20px; text-align: center; max-width: 500px; width: 90%;">
-            <h2 style="font-size: 24px; margin-bottom: 10px; color: white;">${stars === 3 ? '🎉 Bravo ! 🎉' : 'Terminé !'}</h2>
-            <p style="font-size: 16px; margin-bottom: 20px; color: #ccc;">${message}</p>
+        <style>
+            #endgame-modal-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                font-family: 'Comic Neue', 'Nunito', 'Arial', sans-serif;
+            }
             
-            <div style="display: flex; justify-content: center; margin: 20px 0;">
-                ${Array(3).fill().map((_, i) => 
-                    `<div style="font-size: 40px; color: ${i < stars ? 'gold' : '#444'}; margin: 0 10px;">★</div>`
-                ).join('')}
+            @keyframes star-pop {
+                0% { transform: scale(0.5); opacity: 0.5; }
+                50% { transform: scale(1.2); opacity: 1; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+            
+            .frame-container {
+                background-image: url('/assets/images/endgame_frame.png');
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
+                width: 90%;
+                max-width: 500px;
+                aspect-ratio: 1 / 1.2;
+                padding: 30px;
+                text-align: center;
+                position: relative;
+            }
+            
+            .content-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 25%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding-top: 5%;
+            }
+            
+            .buttons-container {
+                position: absolute;
+                bottom: 13%;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                gap: 30px;
+                z-index: 10000;
+            }
+            
+            .button-image {
+                width: 90px;
+                height: auto;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            }
+            
+            .button-image:hover {
+                transform: scale(1.1);
+            }
+        </style>
+        
+        <div class="frame-container">
+            <!-- Conteneur pour centrer le contenu principal -->
+            <div class="content-container">
+                <div style="width: 80%;">
+                    <h2 style="font-size: 1.8rem; color: #ffffff; text-shadow: 0 0 10px rgba(101, 66, 254, 0.8); margin-bottom: 10px;">
+                        ${stars === 3 ? '🎉 Bravo ! 🎉' : 'Partie terminée !'}
+                    </h2>
+                    
+                    <div style="display: flex; justify-content: center; gap: 15px; margin: 10px 0;">
+                        ${starsHTML}
+                    </div>
+                    
+                    <div style="font-size: 1.3rem; color: #ffffff; margin: 15px 0;">
+                        Ton score est de <span style="font-weight: bold;">${score}</span> / ${maxScore}
+                    </div>
+                    
+                    <div style="font-size: 1.1rem; color: #ffffff; margin: 10px 0;">
+                        ${message}
+                    </div>
+                </div>
             </div>
             
-            <div style="font-size: 20px; margin: 15px 0; color: white;">
-                Score: <span style="font-weight: bold; color: #6542fe;">${score}</span> / ${maxScore}
-            </div>
-            
-            <div style="display: flex; justify-content: center; gap: 15px; margin-top: 30px;">
-                <button id="endgame-retry-btn" style="background: linear-gradient(45deg, #6542fe, #a16bff); border: none; color: white; padding: 10px 25px; border-radius: 25px; font-size: 16px; cursor: pointer;">Rejouer</button>
-                <button id="endgame-exit-btn" style="background: rgba(255, 255, 255, 0.2); border: none; color: white; padding: 10px 25px; border-radius: 25px; font-size: 16px; cursor: pointer;">Quitter</button>
+            <!-- Boutons de fin fixés en bas -->
+            <div class="buttons-container">
+                <img src="/assets/images/replay.png" alt="Rejouer" class="button-image" onclick="window.endGameRetry()">
+                <img src="/assets/images/quit.png" alt="Quitter" class="button-image" onclick="window.endGameExit()">
             </div>
         </div>
     `;
     
-    // Enregistrer les résultats dans la base de données
-    saveMinigameResults({
-        minigameId: gameData.minigameId,
-        difficultyLevel: gameData.difficultyLevel,
-        score: score,
-        timeSpent: gameData.timeSpent
-    }).catch(error => {
-        console.error("Erreur lors de l'enregistrement des résultats:", error);
-    });
+    // Ajouter le modal au document
+    document.body.appendChild(modalContainer);
     
-    // Ajouter les gestionnaires d'événements pour les boutons
-    document.getElementById('endgame-retry-btn').addEventListener('click', function() {
-        modalContainer.remove();
-        if (typeof resetGameFunction === 'function') {
-            resetGameFunction();
-        }
-    });
-    
-    document.getElementById('endgame-exit-btn').addEventListener('click', function() {
-        window.location.href = `/training.html?type=${categoryType}`;
-    });
+    // Essayer de charger la police Comic Neue
+    try {
+        const fontLink = document.createElement('link');
+        fontLink.href = 'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap';
+        fontLink.rel = 'stylesheet';
+        document.head.appendChild(fontLink);
+    } catch (error) {
+        console.warn("Impossible de charger la police:", error);
+    }
 }
