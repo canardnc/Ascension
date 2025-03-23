@@ -7,7 +7,7 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Montserrat:wght@400;600;700&display=swap');
         
         * {
             margin: 0;
@@ -16,538 +16,389 @@
         }
         
         body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #1f1f3a;
-            color: #fff;
-            background-image: url('/assets/images/strength-bg.jpg');
+            font-family: 'Comic Neue', 'Montserrat', sans-serif;
+            color: #000;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Background image based on category */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
-            min-height: 100vh;
+            filter: blur(3px);
+            opacity: 0.7;
+            z-index: -1;
+            transition: background-image 0.5s ease;
+        }
+        
+        body.strength::before {
+            background-image: url('/assets/images/background/training_force.jpeg');
+        }
+        
+        body.endurance::before {
+            background-image: url('/assets/images/background/training_stamina.jpeg');
+        }
+        
+        body.recovery::before {
+            background-image: url('/assets/images/background/training_recovery.jpeg');
+        }
+        
+        body.agility::before {
+            background-image: url('/assets/images/background/training_agility.jpeg');
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
         
-        .header {
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* Top navigation */
+        .top-navigation {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
-            padding-top: 20px;
+            margin-bottom: 10px;
         }
         
-        .logo {
-            font-size: 28px;
-            font-weight: 700;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
-        }
-        
-        .back-button {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
+        /* Secondary navigation for inactive categories */
+        .secondary-navigation {
             display: flex;
-            align-items: center;
+            margin-bottom: 20px;
         }
         
-        .back-button svg {
-            margin-right: 5px;
+        /* Active category */
+        .active-category {
+            width: 70px;
+            height: 70px;
         }
         
-        .training-section {
-            background-color: rgba(31, 31, 58, 0.85);
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            margin-bottom: 40px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(101, 66, 254, 0.3);
-        }
-        
-        .category-header {
+        /* Other categories */
+        .other-categories {
             display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            justify-content: space-between;
-        }
-        
-        .category-info {
-            display: flex;
-            align-items: center;
+            gap: 8px;
         }
         
         .category-icon {
-            width: 80px;
-            height: 80px;
-            background-color: rgba(101, 66, 254, 0.2);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 20px;
-            box-shadow: 0 0 15px rgba(101, 66, 254, 0.4);
-        }
-        
-        .category-icon svg {
-            width: 50px;
-            height: 50px;
-            stroke: #6542fe;
-        }
-        
-        .category-details h2 {
-            font-size: 24px;
-            margin-bottom: 5px;
-            color: #fff;
-        }
-        
-        .category-progress {
-            display: flex;
-            align-items: center;
-        }
-        
-        .progress-bar {
-            width: 200px;
-            height: 10px;
-            background-color: rgba(255, 255, 255, 0.1);
-            border-radius: 5px;
-            overflow: hidden;
-            margin-right: 10px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(45deg, #6542fe, #a16bff);
-            width: 65%; /* Ajustez selon la progression réelle */
-        }
-        
-        .progress-text {
-            font-size: 14px;
-            color: #a9a9c9;
-        }
-        
-        .category-switcher {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .category-button {
-            padding: 8px 15px;
-            background-color: rgba(101, 66, 254, 0.2);
-            border: 1px solid rgba(101, 66, 254, 0.4);
-            border-radius: 5px;
-            color: #fff;
+            width: 40px;
+            height: 40px;
             cursor: pointer;
             transition: all 0.3s;
         }
         
-        .category-button.active {
-            background-color: #6542fe;
-        }
-        
-        .category-button:hover {
-            background-color: rgba(101, 66, 254, 0.4);
-        }
-        
-        .exercises-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 30px;
-        }
-        
-        .exercise-card {
-            background-color: rgba(47, 47, 77, 0.6);
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid rgba(101, 66, 254, 0.2);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .exercise-card:hover {
+        .category-icon:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(101, 66, 254, 0.4);
         }
         
-        .exercise-image {
-            width: 100%;
-            height: 160px;
-            background-color: #2a2a4a;
+        /* Energy display */
+        .energy-display {
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
+            color: #000;
+        }
+        
+        .energy-icon {
+            color: #ffcc00;
+            margin-right: 5px;
+        }
+        
+        /* Home button */
+        .home-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .home-button:hover {
+            transform: translateY(-5px);
+        }
+        
+        .home-icon {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .home-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+        }
+        
+        /* Exercises grid */
+        .exercises-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 200px));
+            gap: 35px;
+            margin-top: 20px;
+            padding: 10px;
+            overflow-y: auto;
             justify-content: center;
-            color: #6542fe;
-            font-size: 24px;
+        }
+        
+        .exercise-frame {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 auto;
+        }
+        
+        .exercise-frame:hover {
+            transform: translateY(-8px);
+            filter: brightness(1.1);
+        }
+        
+        .frame-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/assets/images/training_task.png');
+            background-size: 100% 100%;
+            border-radius: 15px;
+            z-index: 1;
         }
         
         .exercise-content {
-            padding: 15px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 25px 15px;
+            z-index: 2;
+            color: #000;
         }
         
         .exercise-title {
-            font-weight: 600;
             font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            margin-bottom: 5px;
+        }
+        
+        .exercise-difficulty {
+            text-align: center;
+            font-size: 14px;
             margin-bottom: 10px;
         }
         
-        .exercise-info {
+        .pepper {
+            color: #e07c4a;
+            margin: 0 1px;
+        }
+        
+        .exercise-stars {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            padding: 3px;
+            border-radius: 5px;
+        }
+        
+        .star {
+            color: gold;
+            font-size: 12px;
+            text-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+        }
+        
+        .inactive-star {
+            color: #aaa;
+            font-size: 12px;
+            text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-container {
+            width: 100%;
+            margin-bottom: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            padding: 2px;
+            border-radius: 5px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4a90e2, #81c784);
+            transition: width 0.5s;
+        }
+        
+        .exercise-stats {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-        }
-        
-        .difficulty {
-            display: flex;
-        }
-        
-        .difficulty-star {
-            color: #6542fe;
-            margin-right: 2px;
-        }
-        
-        .difficulty-star.inactive {
-            color: rgba(101, 66, 254, 0.3);
-        }
-        
-        .points {
-            background-color: rgba(101, 66, 254, 0.2);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            color: #6542fe;
-            font-weight: 600;
-        }
-
-        /* Styles pour les mini-jeux */
-    .exercises-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-    
-    .minigame-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
-        background-color: rgba(47, 47, 77, 0.3);
-        border-radius: 10px;
-        padding: 15px;
-    }
-    
-    .minigame-card {
-        background-color: rgba(47, 47, 77, 0.6);
-        border-radius: 10px;
-        overflow: hidden;
-        border: 1px solid rgba(101, 66, 254, 0.2);
-        transition: all 0.3s ease;
-        cursor: pointer;
-        width: calc(33% - 10px);
-        min-width: 250px;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .minigame-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(101, 66, 254, 0.4);
-    }
-    
-    .minigame-header {
-        display: flex;
-        align-items: center;
-        padding: 10px;
-    }
-    
-    .minigame-icon {
-        width: 40px;
-        height: 40px;
-        margin-right: 10px;
-        border-radius: 5px;
-        background-color: rgba(101, 66, 254, 0.2);
-    }
-    
-    .minigame-info {
-        flex: 1;
-    }
-    
-    .minigame-name {
-        font-weight: 600;
-        font-size: 14px;
-        margin-bottom: 2px;
-    }
-    
-    .minigame-description {
-        font-size: 12px;
-        color: #a9a9c9;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .difficulty-peppers {
-        display: flex;
-        margin-top: 5px;
-    }
-    
-    .pepper {
-        color: #e07c4a;
-        margin-right: 3px;
-    }
-    
-    .minigame-content {
-        padding: 10px;
-    }
-    
-    .progress-stars {
-        display: flex;
-        gap: 1px;
-        margin-bottom: 5px;
-        flex-wrap: wrap;
-    }
-    
-    .progress-star {
-        color: #cccccc;
-        font-size: 14px;
-    }
-    
-    .progress-star.active {
-        color: gold;
-    }
-    
-    .progress-bar {
-        height: 6px;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-        margin-bottom: 8px;
-        overflow: hidden;
-    }
-    
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(45deg, #6542fe, #a16bff);
-        width: 0%;
-        transition: width 0.5s;
-    }
-    
-    .minigame-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 5px 10px;
-        border-top: 1px solid rgba(101, 66, 254, 0.1);
-        background-color: rgba(47, 47, 77, 0.3);
-    }
-    
-    .minigame-score {
-        font-size: 12px;
-        color: #a9a9c9;
-    }
-    
-    .minigame-plays {
-        font-size: 12px;
-        color: #a9a9c9;
-    }
-    
-    /* Animations */
-    @keyframes star-animation {
-        0% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.5);
-            color: gold;
-        }
-        100% {
-            transform: scale(1);
-        }
-    }
-    
-    .star-animation {
-        animation: star-animation 1s;
-    }
-    
-    @keyframes progress-animation {
-        0% {
-            width: var(--start-width);
-        }
-        100% {
-            width: var(--end-width);
-        }
-    }
-    
-    .progress-animation {
-        animation: progress-animation 1s forwards;
-    }
-    
-    /* Responsive design */
-    @media (max-width: 768px) {
-        .minigame-card {
             width: 100%;
+            font-size: 12px;
+            color: #333;
+            font-weight: 700;
         }
-    }
         
+        /* Loading indicator */
+        .loading-indicator {
+            text-align: center;
+            padding: 30px;
+            font-size: 18px;
+            grid-column: 1 / -1;
+            color: #a9a9c9;
+        }
+        
+        /* Animations */
+        @keyframes star-animation {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.5);
+                color: gold;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        .star-animation {
+            animation: star-animation 1s;
+        }
+        
+        @keyframes progress-animation {
+            0% {
+                width: var(--start-width);
+            }
+            100% {
+                width: var(--end-width);
+            }
+        }
+        
+        .progress-animation {
+            animation: progress-animation 1s forwards;
+        }
+        
+        /* Responsive design */
         @media (max-width: 768px) {
-            .exercises-grid {
-                grid-template-columns: 1fr;
+            .exercise-frame {
+                width: 180px;
+                height: 180px;
             }
             
-            .category-header {
-                flex-direction: column;
-                align-items: flex-start;
+            .exercise-title, .exercise-difficulty, .exercise-stars, .progress-container, .exercise-stats {
+                width: 140px;
             }
             
-            .category-switcher {
-                margin-top: 20px;
-                width: 100%;
-                justify-content: space-between;
+            .exercise-title {
+                font-size: 14px;
+                height: 36px;
             }
             
-            .category-info {
-                width: 100%;
+            .exercise-difficulty {
+                font-size: 12px;
             }
             
-            .progress-bar {
-                width: 100%;
+            .star, .inactive-star {
+                font-size: 10px;
             }
-        }
-        
-        /* Styles spécifiques pour chaque catégorie */
-        body.strength {
-            background-image: url('/assets/images/strength-bg.jpg');
-        }
-        
-        body.endurance {
-            background-image: url('/assets/images/endurance-bg.jpg');
-        }
-        
-        body.recovery {
-            background-image: url('/assets/images/recovery-bg.jpg');
-        }
-        
-        body.agility {
-            background-image: url('/assets/images/agility-bg.jpg');
         }
     </style>
 </head>
 <body class="strength">
     <div class="container">
-        <header class="header">
-            <div class="logo">ASCENSION</div>
-            <button class="back-button" onclick="window.location.href='/home.html'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 12H5"></path>
-                    <path d="M12 19l-7-7 7-7"></path>
-                </svg>
-                Retour
-            </button>
-        </header>
-        
-        <section class="training-section">
-            <div class="category-header">
-                <div class="category-info">
-                    <div class="category-icon" id="category-icon">
-                        <!-- Icon will be set by JavaScript -->
-                    </div>
-                    <div class="category-details">
-                        <h2 id="category-name">Force</h2>
-                        <div class="category-progress">
-                            <div class="progress-bar">
-                                <div class="progress-fill"></div>
-                            </div>
-                            <div class="progress-text">65/100 points</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="category-switcher">
-                    <button class="category-button" onclick="switchCategory('strength')">Force</button>
-                    <button class="category-button" onclick="switchCategory('endurance')">Endurance</button>
-                    <button class="category-button" onclick="switchCategory('recovery')">Récupération</button>
-                    <button class="category-button" onclick="switchCategory('agility')">Agilité</button>
-                </div>
+        <!-- Top navigation bar -->
+        <div class="top-navigation">
+            <!-- Left: Active category icon -->
+            <div class="active-category" id="active-category">
+                <img src="/assets/images/force_icon_2.png" alt="Force" style="width: 100%; height: 100%; object-fit: contain;">
             </div>
             
+            <!-- Center: Energy display -->
+            <div class="energy-display">
+                <span class="energy-icon">⚡</span>
+                <span id="energy-value">0/0</span>
+            </div>
+            
+            <!-- Right: Home button -->
+            <div class="home-button" onclick="window.location.href='/home.html'">
+                <div class="home-icon">
+                    <img src="/assets/images/home_icon.png" alt="Accueil" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <span class="home-text">Retour</span>
+            </div>
+        </div>
+        
+        <!-- Secondary navigation for inactive categories -->
+        <div class="secondary-navigation">
+            <div class="other-categories" id="other-categories">
+                <!-- These will be populated dynamically by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Main content container with scroll -->
+        <div class="main-content">
+            <!-- Exercises Grid -->
             <div class="exercises-grid" id="exercises-container">
-                <!-- Les mini-jeux seront générés ici dynamiquement -->
+                <!-- Loading indicator (will be replaced by JS) -->
                 <div class="loading-indicator">Chargement des mini-jeux...</div>
             </div>
-        </section>
+        </div>
     </div>
 
     <script>
-        // Données des catégories
+        // Catégories avec leurs icônes d'images
         const categories = {
             strength: {
                 name: "Force",
-                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                    <line x1="6" y1="1" x2="6" y2="4"></line>
-                    <line x1="10" y1="1" x2="10" y2="4"></line>
-                    <line x1="14" y1="1" x2="14" y2="4"></line>
-                </svg>`,
-                exercises: [
-                    { title: "Exercice de calcul mental", difficulty: 1, points: 5 },
-                    { title: "Problèmes mathématiques", difficulty: 2, points: 10 },
-                    { title: "Équations complexes", difficulty: 3, points: 15 },
-                    { title: "Quiz de connaissances générales", difficulty: 1, points: 5 },
-                    { title: "Test de logique", difficulty: 2, points: 10 },
-                    { title: "Défi de mémorisation", difficulty: 3, points: 15 }
-                ]
+                icon: `<img src="/assets/images/force_icon_2.png" alt="Force" style="width: 100%; height: 100%; object-fit: contain;">`
             },
             endurance: {
                 name: "Endurance",
-                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                </svg>`,
-                exercises: [
-                    { title: "Épreuve d'endurance mentale", difficulty: 1, points: 5 },
-                    { title: "Tests de résistance", difficulty: 2, points: 10 },
-                    { title: "Défis de longue durée", difficulty: 3, points: 15 },
-                    { title: "Exercice de concentration continue", difficulty: 1, points: 5 },
-                    { title: "Tâches répétitives complexes", difficulty: 2, points: 10 },
-                    { title: "Marathon d'épreuves", difficulty: 3, points: 15 }
-                ]
+                icon: `<img src="/assets/images/stamina_icon_2.png" alt="Endurance" style="width: 100%; height: 100%; object-fit: contain;">`
             },
             recovery: {
                 name: "Récupération",
-                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4.5 9.5V4.5H9.5"></path>
-                    <path d="M19.5 14.5v5h-5"></path>
-                    <path d="M4.5 4.5L9 9"></path>
-                    <path d="M15 15l4.5 4.5"></path>
-                    <path d="M4 12a8 8 0 0 1 8-8"></path>
-                    <path d="M12 20a8 8 0 0 0 8-8"></path>
-                </svg>`,
-                exercises: [
-                    { title: "Exercices de relaxation", difficulty: 1, points: 5 },
-                    { title: "Techniques de méditation", difficulty: 2, points: 10 },
-                    { title: "Défi de concentration prolongée", difficulty: 3, points: 15 },
-                    { title: "Jeux de mémoire", difficulty: 1, points: 5 },
-                    { title: "Tests de récupération cognitive", difficulty: 2, points: 10 },
-                    { title: "Épreuves de régénération", difficulty: 3, points: 15 }
-                ]
+                icon: `<img src="/assets/images/recovery_icon_2.png" alt="Récupération" style="width: 100%; height: 100%; object-fit: contain;">`
             },
             agility: {
                 name: "Agilité",
-                icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                </svg>`,
-                exercises: [
-                    { title: "Réactions rapides", difficulty: 1, points: 5 },
-                    { title: "Jeu d'actions rapides", difficulty: 2, points: 10 },
-                    { title: "Test de réflexes", difficulty: 3, points: 15 },
-                    { title: "Exercice de frappes rapides", difficulty: 1, points: 5 },
-                    { title: "Séquence de combinaisons", difficulty: 2, points: 10 },
-                    { title: "Course contre la montre", difficulty: 3, points: 15 }
-                ]
+                icon: `<img src="/assets/images/agility_icon_2.png" alt="Agilité" style="width: 100%; height: 100%; object-fit: contain;">`
             }
         };
         
@@ -558,156 +409,44 @@
             return categories[type] ? type : 'strength';
         }
         
-        // Générer les exercices pour la catégorie sélectionnée
-        function generateExercises(type) {
-            const container = document.getElementById('exercises-container');
+        // Mettre à jour l'affichage des autres catégories
+        function updateOtherCategories(currentCategory) {
+            const container = document.getElementById('other-categories');
             container.innerHTML = '';
             
-            categories[type].exercises.forEach(exercise => {
-                const card = document.createElement('div');
-                card.className = 'exercise-card';
-                card.onclick = () => startExercise(type, exercise);
-                
-                // Créer les étoiles pour la difficulté
-                let stars = '';
-                for (let i = 0; i < 3; i++) {
-                    const starClass = i < exercise.difficulty ? 'difficulty-star' : 'difficulty-star inactive';
-                    stars += `<div class="${starClass}">★</div>`;
+            // Pour chaque catégorie
+            for (const category in categories) {
+                // Ne pas afficher la catégorie active
+                if (category !== currentCategory) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'category-icon';
+                    categoryDiv.setAttribute('onclick', `switchCategory('${category}')`);
+                    categoryDiv.innerHTML = categories[category].icon;
+                    container.appendChild(categoryDiv);
                 }
-                
-                card.innerHTML = `
-                    <div class="exercise-image">
-                        <span>Exercice</span>
-                    </div>
-                    <div class="exercise-content">
-                        <div class="exercise-title">${exercise.title}</div>
-                        <div class="exercise-info">
-                            <div class="difficulty">${stars}</div>
-                            <div class="points">+${exercise.points} pts</div>
-                        </div>
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
+            }
         }
-        
-        // Lancer un exercice
-        function startExercise(type, exercise) {
-    console.log(`Démarrage de l'exercice : ${exercise.title} (${type})`);
-    
-    // Vérifier si l'utilisateur a suffisamment d'énergie (simulation)
-    const token = localStorage.getItem('token');
-    fetch('/api/player/stats', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        // Vérifier l'énergie (coût: 1 par exercice)
-        if (data.currentEnergy < 1) {
-            alert("Vous n'avez pas assez d'énergie pour démarrer cet exercice.");
-            return;
-        }
-        
-        // Rediriger vers la page du mini-jeu avec les paramètres
-        window.location.href = `/minigame.html?type=${type}&difficulty=${exercise.difficulty}&title=${encodeURIComponent(exercise.title)}&points=${exercise.points}`;
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        alert("Erreur lors de la vérification de l'énergie");
-    });
-}
         
         // Changer de catégorie
         function switchCategory(type) {
             if (!categories[type]) return;
             
-            // Mettre à jour le corps de la page
+            // Mettre à jour le body de la page
             document.body.className = type;
             
-            // Mettre à jour l'icône et le nom
-            document.getElementById('category-icon').innerHTML = categories[type].icon;
-            document.getElementById('category-name').textContent = categories[type].name;
+            // Mettre à jour l'icône de la catégorie active
+            document.getElementById('active-category').innerHTML = categories[type].icon;
             
-            // Mettre à jour les exercices
-            generateExercises(type);
-            
-            // Mettre à jour les boutons de catégorie
-            const buttons = document.querySelectorAll('.category-button');
-            buttons.forEach(button => {
-                button.classList.remove('active');
-                if (button.onclick.toString().includes(type)) {
-                    button.classList.add('active');
-                }
-            });
+            // Mettre à jour les autres catégories
+            updateOtherCategories(type);
             
             // Mettre à jour l'URL sans recharger la page
             history.pushState(null, '', `?type=${type}`);
+            
+            // Charger les mini-jeux de cette catégorie
+            loadMinigames(type);
         }
         
-        // Initialiser la page
-        window.onload = function() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = '/';
-        return;
-    }
-    
-    const type = getTrainingType();
-    document.body.className = type;
-    document.getElementById('category-icon').innerHTML = categories[type].icon;
-    document.getElementById('category-name').textContent = categories[type].name;
-    
-    // Récupérer les statistiques du joueur pour afficher la progression
-    fetch('/api/player/stats', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json())
-    .then(data => {
-        // Mettre à jour la barre de progression en fonction de la catégorie
-        let categoryValue = 0;
-        let maxValue = 100; // Valeur maximale par défaut
-        
-        switch(type) {
-            case 'strength':
-                categoryValue = data.strength;
-                break;
-            case 'endurance':
-                categoryValue = data.endurance;
-                break;
-            case 'recovery':
-                categoryValue = data.recovery;
-                break;
-            case 'agility':
-                categoryValue = data.agility;
-                break;
-        }
-        
-        // Mettre à jour la barre de progression
-        const progressFill = document.querySelector('.progress-fill');
-        const progressText = document.querySelector('.progress-text');
-        
-        // Calculer le pourcentage (limité à 100%)
-        const percentage = Math.min((categoryValue / maxValue) * 100, 100);
-        progressFill.style.width = `${percentage}%`;
-        progressText.textContent = `${categoryValue}/${maxValue} points`;
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-    });
-    
-    // Activer le bouton de catégorie correspondant
-    const buttons = document.querySelectorAll('.category-button');
-    buttons.forEach(button => {
-        if (button.onclick.toString().includes(type)) {
-            button.classList.add('active');
-        }
-    });
-    
-    generateExercises(type);
-};
-    </script>
-    <script>
         // Chargement des mini-jeux selon la catégorie
         function loadMinigames(categoryType) {
             const container = document.getElementById('exercises-container');
@@ -750,19 +489,14 @@
                 
                 // Créer les éléments pour chaque mini-jeu
                 minigames.forEach(minigame => {
-                    const minigameRow = document.createElement('div');
-                    minigameRow.className = 'minigame-row';
-                    
                     // Trier les niveaux de difficulté
                     minigame.difficultyLevels.sort((a, b) => a.level - b.level);
                     
                     // Créer une carte pour chaque niveau de difficulté
                     minigame.difficultyLevels.forEach(level => {
-                        const card = createMinigameCard(minigame, level);
-                        minigameRow.appendChild(card);
+                        const frame = createExerciseFrame(minigame, level);
+                        container.appendChild(frame);
                     });
-                    
-                    container.appendChild(minigameRow);
                 });
                 
                 // Vérifier s'il y a des résultats récents à animer
@@ -774,78 +508,44 @@
             });
         }
         
-        // Créer une carte pour un mini-jeu
-        function createMinigameCard(minigame, level) {
-            const card = document.createElement('div');
-            card.className = 'minigame-card';
-            card.dataset.minigameId = minigame.id;
-            card.dataset.difficultyLevel = level.level;
+        // Créer un cadre d'exercice
+        function createExerciseFrame(minigame, level) {
+            const frame = document.createElement('div');
+            frame.className = 'exercise-frame';
+            frame.dataset.minigameId = minigame.id;
+            frame.dataset.difficultyLevel = level.level;
             
-            // Événement de clic pour lancer le mini-jeu
-            card.addEventListener('click', () => {
+            // Ajouter un gestionnaire d'événement pour lancer le mini-jeu
+            frame.addEventListener('click', () => {
                 launchMinigame(minigame.id, level.level);
             });
             
-            // En-tête avec icône et nom
-            const header = document.createElement('div');
-            header.className = 'minigame-header';
+            // Créer l'arrière-plan du cadre
+            const frameBackground = document.createElement('div');
+            frameBackground.className = 'frame-background';
             
-            const icon = document.createElement('div');
-            icon.className = 'minigame-icon';
-            if (minigame.icon) {
-                icon.style.backgroundImage = `url('/games/game_${minigame.id}/${minigame.icon}')`;
-                icon.style.backgroundSize = 'cover';
-                icon.style.backgroundPosition = 'center';
-            } else {
-                // Icône par défaut
-                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6542fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><circle cx="15.5" cy="8.5" r="1.5"></circle><path d="M8.5 15a4 4 0 0 0 7 0"></path></svg>';
-                icon.style.display = 'flex';
-                icon.style.alignItems = 'center';
-                icon.style.justifyContent = 'center';
-            }
-            
-            const info = document.createElement('div');
-            info.className = 'minigame-info';
-            
-            const name = document.createElement('div');
-            name.className = 'minigame-name';
-            name.textContent = minigame.name;
-            
-            const description = document.createElement('div');
-            description.className = 'minigame-description';
-            description.textContent = level.description || `Niveau ${level.level}`;
-            
-            // Piments pour la difficulté
-            const peppers = document.createElement('div');
-            peppers.className = 'difficulty-peppers';
-            
-            for (let i = 0; i < level.difficulty; i++) {
-                const pepper = document.createElement('span');
-                pepper.className = 'pepper';
-                pepper.textContent = '🌶️';
-                peppers.appendChild(pepper);
-            }
-            
-            info.appendChild(name);
-            info.appendChild(description);
-            info.appendChild(peppers);
-            
-            header.appendChild(icon);
-            header.appendChild(info);
-            
-            // Contenu avec étoiles et barre de progression
+            // Créer le contenu
             const content = document.createElement('div');
-            content.className = 'minigame-content';
+            content.className = 'exercise-content';
             
-            const starsContainer = document.createElement('div');
-            starsContainer.className = 'progress-stars';
+            // Titre
+            const title = document.createElement('div');
+            title.className = 'exercise-title';
+            title.textContent = minigame.name;
             
-            for (let i = 0; i < 10; i++) {
-                const star = document.createElement('span');
-                star.className = `progress-star ${i < level.stars ? 'active' : ''}`;
-                star.textContent = i < level.stars ? '★' : '☆';
-                starsContainer.appendChild(star);
-            }
+            // Difficulté (piments)
+            const difficulty = document.createElement('div');
+            difficulty.className = 'exercise-difficulty';
+            difficulty.innerHTML = `Difficulté: ${createPeppers(level.difficulty)}`;
+            
+            // Étoiles
+            const stars = document.createElement('div');
+            stars.className = 'exercise-stars';
+            stars.innerHTML = createStars(level.stars);
+            
+            // Barre de progression
+            const progressContainer = document.createElement('div');
+            progressContainer.className = 'progress-container';
             
             const progressBar = document.createElement('div');
             progressBar.className = 'progress-bar';
@@ -855,31 +555,49 @@
             progressFill.style.width = `${level.progress}%`;
             
             progressBar.appendChild(progressFill);
+            progressContainer.appendChild(progressBar);
             
-            content.appendChild(starsContainer);
-            content.appendChild(progressBar);
+            // Statistiques
+            const stats = document.createElement('div');
+            stats.className = 'exercise-stats';
+            stats.innerHTML = `
+                <div>Parties: ${level.totalPlayed}</div>
+                <div>Score: ${level.points}</div>
+            `;
             
-            // Pied avec score et nombre de parties
-            const footer = document.createElement('div');
-            footer.className = 'minigame-footer';
+            // Assemblage
+            content.appendChild(title);
+            content.appendChild(difficulty);
+            content.appendChild(stars);
+            content.appendChild(progressContainer);
+            content.appendChild(stats);
             
-            const score = document.createElement('div');
-            score.className = 'minigame-score';
-            score.textContent = `Score: ${level.points}`;
+            frame.appendChild(frameBackground);
+            frame.appendChild(content);
             
-            const plays = document.createElement('div');
-            plays.className = 'minigame-plays';
-            plays.textContent = `Parties: ${level.totalPlayed}`;
-            
-            footer.appendChild(score);
-            footer.appendChild(plays);
-            
-            // Assembler la carte
-            card.appendChild(header);
-            card.appendChild(content);
-            card.appendChild(footer);
-            
-            return card;
+            return frame;
+        }
+        
+        // Créer les piments pour la difficulté
+        function createPeppers(count) {
+            let peppers = '';
+            for (let i = 0; i < count; i++) {
+                peppers += '<span class="pepper">🌶️</span>';
+            }
+            return peppers;
+        }
+        
+        // Créer les étoiles
+        function createStars(count) {
+            let stars = '';
+            for (let i = 0; i < 10; i++) {
+                if (i < count) {
+                    stars += '<span class="star">★</span>';
+                } else {
+                    stars += '<span class="inactive-star">☆</span>';
+                }
+            }
+            return stars;
         }
         
         // Lancer un mini-jeu
@@ -897,7 +615,7 @@
             localStorage.removeItem('lastMinigameResults');
             
             // Rechercher la carte correspondante
-            const card = document.querySelector(`.minigame-card[data-minigame-id="${results.minigameId}"][data-difficulty-level="${results.difficultyLevel}"]`);
+            const card = document.querySelector(`.exercise-frame[data-minigame-id="${results.minigameId}"][data-difficulty-level="${results.difficultyLevel}"]`);
             if (!card) return;
             
             // Calculer le nombre d'étoiles pour les scores avant et après
@@ -905,9 +623,12 @@
             const starsAfter = calculateStars(results.scoreAfter);
             
             // Mettre à jour le score affiché
-            const scoreElement = card.querySelector('.minigame-score');
+            const scoreElement = card.querySelector('.exercise-stats');
             if (scoreElement) {
-                scoreElement.textContent = `Score: ${results.scoreAfter}`;
+                scoreElement.innerHTML = `
+                    <div>Parties: ${parseInt(scoreElement.firstElementChild.textContent.split(': ')[1]) + 1}</div>
+                    <div>Score: ${results.scoreAfter}</div>
+                `;
             }
             
             // Animer la barre de progression
@@ -929,21 +650,23 @@
             
             // Animer les nouvelles étoiles
             if (starsAfter > starsBefore) {
-                const stars = card.querySelectorAll('.progress-star');
-                
-                for (let i = starsBefore; i < starsAfter; i++) {
-                    setTimeout(() => {
-                        if (stars[i]) {
-                            stars[i].textContent = '★';
-                            stars[i].classList.add('active');
-                            stars[i].classList.add('star-animation');
-                            
-                            // Retirer l'animation après qu'elle soit terminée
-                            setTimeout(() => {
-                                stars[i].classList.remove('star-animation');
-                            }, 1000);
-                        }
-                    }, (i - starsBefore) * 500);
+                const starsContainer = card.querySelector('.exercise-stars');
+                if (starsContainer) {
+                    starsContainer.innerHTML = createStars(starsAfter);
+                    
+                    const stars = starsContainer.querySelectorAll('.star');
+                    for (let i = starsBefore; i < starsAfter; i++) {
+                        setTimeout(() => {
+                            if (stars[i]) {
+                                stars[i].classList.add('star-animation');
+                                
+                                // Retirer l'animation après qu'elle soit terminée
+                                setTimeout(() => {
+                                    stars[i].classList.remove('star-animation');
+                                }, 1000);
+                            }
+                        }, (i - starsBefore) * 500);
+                    }
                 }
             }
         }
@@ -977,34 +700,26 @@
             return progression;
         }
         
-        // Fonction de changement de catégorie modifiée
-        function switchCategory(type) {
-            if (!categories[type]) return;
+        // Mettre à jour l'affichage de l'énergie
+        function updateEnergyDisplay() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
             
-            // Mettre à jour le corps de la page
-            document.body.className = type;
-            
-            // Mettre à jour l'icône et le nom
-            document.getElementById('category-icon').innerHTML = categories[type].icon;
-            document.getElementById('category-name').textContent = categories[type].name;
-            
-            // Charger les mini-jeux de cette catégorie
-            loadMinigames(type);
-            
-            // Mettre à jour les boutons de catégorie
-            const buttons = document.querySelectorAll('.category-button');
-            buttons.forEach(button => {
-                button.classList.remove('active');
-                if (button.onclick.toString().includes(type)) {
-                    button.classList.add('active');
+            fetch('/api/player/stats', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
                 }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('energy-value').textContent = `${data.currentEnergy}/${data.maxEnergy}`;
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération de l\'énergie:', error);
             });
-            
-            // Mettre à jour l'URL sans recharger la page
-            history.pushState(null, '', `?type=${type}`);
         }
         
-        // Remplacer la fonction onload
+        // Initialiser la page
         window.onload = function() {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -1014,54 +729,15 @@
             
             const type = getTrainingType();
             document.body.className = type;
-            document.getElementById('category-icon').innerHTML = categories[type].icon;
-            document.getElementById('category-name').textContent = categories[type].name;
             
-            // Récupérer les statistiques du joueur pour afficher la progression
-            fetch('/api/player/stats', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => res.json())
-            .then(data => {
-                // Mettre à jour la barre de progression en fonction de la catégorie
-                let categoryValue = 0;
-                let maxValue = 100; // Valeur maximale par défaut
-                
-                switch(type) {
-                    case 'strength':
-                        categoryValue = data.strength;
-                        break;
-                    case 'endurance':
-                        categoryValue = data.endurance;
-                        break;
-                    case 'recovery':
-                        categoryValue = data.recovery;
-                        break;
-                    case 'agility':
-                        categoryValue = data.agility;
-                        break;
-                }
-                
-                // Mettre à jour la barre de progression
-                const progressFill = document.querySelector('.progress-fill');
-                const progressText = document.querySelector('.progress-text');
-                
-                // Calculer le pourcentage (limité à 100%)
-                const percentage = Math.min((categoryValue / maxValue) * 100, 100);
-                progressFill.style.width = `${percentage}%`;
-                progressText.textContent = `${categoryValue}/${maxValue} points`;
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-            });
+            // Mettre à jour l'icône de la catégorie active
+            document.getElementById('active-category').innerHTML = categories[type].icon;
             
-            // Activer le bouton de catégorie correspondant
-            const buttons = document.querySelectorAll('.category-button');
-            buttons.forEach(button => {
-                if (button.onclick.toString().includes(type)) {
-                    button.classList.add('active');
-                }
-            });
+            // Mettre à jour les autres catégories
+            updateOtherCategories(type);
+            
+            // Mettre à jour l'affichage de l'énergie
+            updateEnergyDisplay();
             
             // Charger les mini-jeux
             loadMinigames(type);

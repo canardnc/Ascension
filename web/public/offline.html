@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension - Hors ligne</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6542fe">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #1f1f3a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
+            margin-bottom: 30px;
+        }
+        
+        .offline-container {
+            background-color: rgba(47, 47, 77, 0.8);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .offline-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            color: #6542fe;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+        
+        .retry-button {
+            background: linear-gradient(45deg, #6542fe, #a16bff);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(101, 66, 254, 0.4);
+            display: inline-block;
+            text-decoration: none;
+        }
+        
+        .retry-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(101, 66, 254, 0.6);
+        }
+        
+        .cached-content {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .cached-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #a16bff;
+        }
+        
+        .cached-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .cached-link {
+            background-color: rgba(101, 66, 254, 0.2);
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .cached-link:hover {
+            background-color: rgba(101, 66, 254, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="logo">ASCENSION</div>
+    
+    <div class="offline-container">
+        <div class="offline-icon">📶</div>
+        <h1>Vous êtes hors ligne</h1>
+        <p>Impossible de se connecter au serveur Ascension. Vérifiez votre connexion internet et réessayez.</p>
+        <a href="/" class="retry-button">Réessayer</a>
+        
+        <div class="cached-content">
+            <h2 class="cached-title">Contenu disponible hors ligne</h2>
+            <p>Vous pouvez toujours accéder à ces pages en mode hors ligne:</p>
+            <div class="cached-links">
+                <a href="/home.html" class="cached-link">Accueil</a>
+                <a href="/battle.html" class="cached-link">Aventure</a>
+                <a href="/training.html" class="cached-link">Entraînement</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Vérifier si nous sommes en ligne
+        function checkOnlineStatus() {
+            if (navigator.onLine) {
+                window.location.href = '/';
+            }
+        }
+        
+        // Vérifier au chargement et quand le statut change
+        window.addEventListener('online', checkOnlineStatus);
+        document.querySelector('.retry-button').addEventListener('click', function(e) {
+            e.preventDefault();
+            checkOnlineStatus();
+            if (!navigator.onLine) {
+                alert('Toujours hors ligne. Veuillez vérifier votre connexion internet.');
+            } else {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>
