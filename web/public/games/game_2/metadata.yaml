@@ -1,0 +1,14 @@
+name: "grammaire"
+description: "Entraîne-toi à identifier les groupes !"
+difficulty_levels:
+  1:
+    description: "1 mot à déchiffrer par phrase"
+    difficulty: 1
+  2:
+    description: "Au moins un mot à déchiffrer"
+    difficulty: 2
+  3:
+    description: "Tous les mots sont à déchiffrer"
+    difficulty: 3
+category: 1  # Catégorie Force
+icon: ""
