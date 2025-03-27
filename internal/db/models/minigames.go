@@ -24,10 +24,10 @@ type MinigameProgress struct {
 
 // MinigameMetadata représente les métadonnées d'un mini-jeu
 type MinigameMetadata struct {
-	Name           string                 `yaml:"name"`
-	Description    string                 `yaml:"description"`
-	Category       int                    `yaml:"category"`
-	Icon           string                 `yaml:"icon"`
+	Name             string `yaml:"name"`
+	Description      string `yaml:"description"`
+	Category         int    `yaml:"category"`
+	Icon             string `yaml:"icon"`
 	DifficultyLevels map[string]struct {
 		Description string `yaml:"description"`
 		Difficulty  int    `yaml:"difficulty"`
@@ -58,11 +58,13 @@ func GetMinigameProgress(userID, minigameID, difficultyLevel int) (*MinigameProg
 // GetMinigamesByCategory récupère tous les mini-jeux disponibles pour un joueur dans une catégorie
 func GetMinigamesByCategory(userID, categoryID int) ([]MinigameProgress, error) {
 	query := `
-		SELECT id, user_id, category_id, minigame_id, difficulty_level, points, last_played, total_played, available
-		FROM minigames_progress
-		WHERE user_id = $1 AND category_id = $2 AND available = true
-		ORDER BY minigame_id, difficulty_level
-	`
+        SELECT mp.id, mp.user_id, m.category_id, mp.minigame_id, mp.difficulty_level, 
+               mp.points, mp.last_played, mp.total_played, mp.available
+        FROM minigames_progress mp
+        JOIN minigames m ON mp.minigame_id = m.minigame_id
+        WHERE mp.user_id = $1 AND m.category_id = $2 AND mp.available = true
+        ORDER BY mp.minigame_id, mp.difficulty_level
+    `
 
 	rows, err := db.DB.Query(query, userID, categoryID)
 	if err != nil {
@@ -102,17 +104,17 @@ func UpdateMinigameProgress(userID, minigameID, difficultyLevel, points, timeSpe
 // GetMinigameMetadata récupère les métadonnées d'un mini-jeu
 func GetMinigameMetadata(minigameID int) (*MinigameMetadata, error) {
 	filePath := fmt.Sprintf("./web/public/games/game_%d/metadata.yaml", minigameID)
-	
+
 	data, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var metadata MinigameMetadata
 	if err := yaml.Unmarshal(data, &metadata); err != nil {
 		return nil, err
 	}
-	
+
 	return &metadata, nil
 }
 
@@ -120,13 +122,13 @@ func GetMinigameMetadata(minigameID int) (*MinigameMetadata, error) {
 func CalculateStars(score int) int {
 	// Les seuils pour chaque étoile
 	thresholds := []int{100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600, 51200}
-	
+
 	for i, threshold := range thresholds {
 		if score < threshold {
 			return i
 		}
 	}
-	
+
 	return 10 // Maximum 10 étoiles
 }
 
@@ -134,14 +136,14 @@ func CalculateStars(score int) int {
 func CalculateProgressPercentage(score int) float64 {
 	thresholds := []int{0, 100, 200, 400, 800, 1600, 3200, 6400, 12800, 25600, 51200}
 	stars := CalculateStars(score)
-	
+
 	if stars >= 10 {
 		return 100.0
 	}
-	
+
 	lowerThreshold := thresholds[stars]
 	upperThreshold := thresholds[stars+1]
 	progression := float64(score-lowerThreshold) / float64(upperThreshold-lowerThreshold) * 100.0
-	
+
 	return progression
 }

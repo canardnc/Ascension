@@ -24,12 +24,11 @@ func UpdateMinigameProgressWithScore(userID, minigameID, difficultyLevel, score,
 
 	// 1. Vérifier que la ligne existe et récupérer le score actuel
 	var currentScore int
-	var categoryID int
 	err = tx.QueryRow(`
-		SELECT points, category_id 
+		SELECT points
 		FROM minigames_progress 
 		WHERE user_id = $1 AND minigame_id = $2 AND difficulty_level = $3
-	`, userID, minigameID, difficultyLevel).Scan(&currentScore, &categoryID)
+	`, userID, minigameID, difficultyLevel).Scan(&currentScore)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

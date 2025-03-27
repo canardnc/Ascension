@@ -50,6 +50,7 @@ type MinigameCompletionResponse struct {
 // GetMinigames récupère tous les mini-jeux disponibles pour un joueur dans une catégorie
 func GetMinigames(w http.ResponseWriter, r *http.Request) {
 	// Récupérer l'ID utilisateur depuis le contexte
+	// Récupérer l'ID utilisateur depuis le contexte
 	userID := r.Context().Value("userId").(int)
 
 	// Récupérer la catégorie depuis les paramètres
@@ -60,7 +61,7 @@ func GetMinigames(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Récupérer les mini-jeux disponibles
+	// Récupérer les mini-jeux disponibles en utilisant la jointure avec la table minigames
 	progressList, err := models.GetMinigamesByCategory(userID, categoryID)
 	if err != nil {
 		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des mini-jeux")
