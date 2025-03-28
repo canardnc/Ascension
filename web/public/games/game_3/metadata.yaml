@@ -1,0 +1,14 @@
+name: "Anglais-Vocabulaire"
+description: "Apprends l'anglais en associant des mots à des images !"
+difficulty_levels:
+  1:
+    description: "20 mots simples d'animaux et objets courants"
+    difficulty: 1
+  2:
+    description: "50 mots avec vocabulaire étendu"
+    difficulty: 2
+  3:
+    description: "100 mots pour les plus avancés"
+    difficulty: 3
+category: 1  # Catégorie Force
+icon: "wordpic-icon.svg"

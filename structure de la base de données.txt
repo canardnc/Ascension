@@ -72,6 +72,23 @@ CREATE TABLE public.level_progress (
 );
 
 
+-- public.minigames definition
+
+-- Drop table
+
+-- DROP TABLE public.minigames;
+
+CREATE TABLE public.minigames (
+	minigame_id serial4 NOT NULL,
+	category_id int4 NOT NULL,
+	title varchar(255) NOT NULL,
+	description text NULL,
+	CONSTRAINT minigames_pkey PRIMARY KEY (minigame_id),
+	CONSTRAINT minigames_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.stat_categories(id)
+);
+CREATE INDEX idx_minigames_category_id ON public.minigames USING btree (category_id);
+
+
 -- public.minigames_progress definition
 
 -- Drop table
@@ -91,10 +108,8 @@ CREATE TABLE public.minigames_progress (
 	"cost" int4 DEFAULT 1 NULL,
 	time_played int4 DEFAULT 0 NULL,
 	CONSTRAINT minigames_progress_pkey PRIMARY KEY (id),
-	CONSTRAINT minigames_progress_unique UNIQUE (user_id, category_id, minigame_id, difficulty_level),
 	CONSTRAINT minigames_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
-CREATE INDEX idx_minigames_progress_category ON public.minigames_progress USING btree (category_id);
 CREATE INDEX idx_minigames_progress_minigame ON public.minigames_progress USING btree (minigame_id);
 CREATE INDEX idx_minigames_progress_user_id ON public.minigames_progress USING btree (user_id);
 
@@ -108,6 +123,26 @@ delete
 update
     on
     public.minigames_progress for each row execute function update_player_stats();
+
+
+-- public.minigames_requirements definition
+
+-- Drop table
+
+-- DROP TABLE public.minigames_requirements;
+
+CREATE TABLE public.minigames_requirements (
+	minigame_id int4 NOT NULL,
+	difficulty_level int4 NOT NULL,
+	minigame_id_required int4 NOT NULL,
+	difficulty_level_required int4 NOT NULL,
+	score_required int4 NOT NULL,
+	CONSTRAINT minigames_requirements_pkey PRIMARY KEY (minigame_id, difficulty_level, minigame_id_required, difficulty_level_required),
+	CONSTRAINT minigames_requirements_minigame_fkey FOREIGN KEY (minigame_id) REFERENCES public.minigames(minigame_id),
+	CONSTRAINT minigames_requirements_minigame_required_fkey FOREIGN KEY (minigame_id_required) REFERENCES public.minigames(minigame_id)
+);
+CREATE INDEX idx_minigames_requirements_minigame ON public.minigames_requirements USING btree (minigame_id, difficulty_level);
+CREATE INDEX idx_minigames_requirements_required ON public.minigames_requirements USING btree (minigame_id_required, difficulty_level_required);
 
 
 -- public.player_energy definition

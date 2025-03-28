@@ -373,6 +373,25 @@
             cursor: pointer;
         }
 
+       
+.touch-device .category-block {
+    cursor: pointer;
+}
+
+.touch-device .selected-category {
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--primary);
+    transform: scale(1.1);
+}
+
+.touch-device .help-text {
+    font-size: 0.9rem;
+    color: #666;
+    text-align: center;
+    margin-top: 8px;
+    padding: 0 10px;
+}
+
+
         /* Animation */
         @keyframes pulse {
             0% { transform: scale(1); }
@@ -472,6 +491,8 @@
         let currentSentence = null;
         let score = 0;
         let maxScore = 0;
+        let currentQuestionMaxScore = 0;
+
         let waitingForNextQuestion = false;
         let categoryToFind = '';
         let droppedItems = {}; // Pour le niveau 3
@@ -966,45 +987,51 @@
         }
 
         function startGame() {
-            // Sélectionner les phrases en fonction du niveau de difficulté
-            switch (difficultyLevel) {
-                case 1:
-                    sentences = shuffleArray([...levelOneSentences]).slice(0, SENTENCES_PER_GAME);
-                    break;
-                case 2:
-                    sentences = shuffleArray([...levelTwoSentences]).slice(0, SENTENCES_PER_GAME);
-                    break;
-                case 3:
-                    sentences = shuffleArray([...levelThreeSentences]).slice(0, SENTENCES_PER_GAME);
-                    break;
-                default:
-                    sentences = shuffleArray([...levelOneSentences]).slice(0, SENTENCES_PER_GAME);
-            }
+    // Sélectionner les phrases en fonction du niveau de difficulté
+    switch (difficultyLevel) {
+        case 1:
+            sentences = shuffleArray([...levelOneSentences]).slice(0, SENTENCES_PER_GAME);
+            break;
+        case 2:
+            sentences = shuffleArray([...levelTwoSentences]).slice(0, SENTENCES_PER_GAME);
+            break;
+        case 3:
+            sentences = shuffleArray([...levelThreeSentences]).slice(0, SENTENCES_PER_GAME);
+            break;
+        default:
+            sentences = shuffleArray([...levelOneSentences]).slice(0, SENTENCES_PER_GAME);
+    }
 
-            // Initialiser les variables
-            currentSentenceIndex = 0;
-            score = 0;
-            
-            // Calculer le score maximum possible
-            if (difficultyLevel === 3) {
-                // Pour le niveau 3, le score max est le nombre de mots à classifier
-                maxScore = sentences.reduce((total, sentence) => total + sentence.words.length, 0) * pointsPerLevel[3];
-            } else {
-                // Pour les niveaux 1 et 2, c'est le nombre de phrases
-                maxScore = SENTENCES_PER_GAME * pointsPerLevel[difficultyLevel];
-            }
+    // Initialiser les variables
+    currentSentenceIndex = 0;
+    score = 0;
+    
+    // Réinitialiser le score maximum
+    maxScore = 0;
+    
+    // Pour le niveau 1, le score max est fixe: 
+    // SENTENCES_PER_GAME phrases, un mot par phrase
+    if (difficultyLevel === 1) {
+        maxScore = SENTENCES_PER_GAME * pointsPerLevel[difficultyLevel];
+    }
+    // Pour les niveaux 2 et 3, le score max sera calculé au fil de l'eau
+    // dans displayLevel2Sentence() et displayLevel3Sentence()
 
-            document.getElementById('score').textContent = score;
-            updateProgressBar();
+    document.getElementById('score').textContent = score;
+    updateProgressBar();
 
-            // Enregistrer l'heure de début et démarrer le chronomètre
-            gameStartTime = new Date();
-            currentGameTime = 0;
-            startTimer();
+    // Enregistrer l'heure de début et démarrer le chronomètre
+    gameStartTime = new Date();
+    currentGameTime = 0;
+    startTimer();
 
-            // Démarrer avec la première phrase
-            showNextSentence();
-        }
+    // Démarrer avec la première phrase
+    showNextSentence();
+}
+
+function getMaxPossibleScore() {
+    return maxScore;
+}
 
         function startTimer() {
             // Afficher le temps initial
@@ -1127,209 +1154,306 @@
         }
 
         function displayLevel1Sentence() {
-            const sentenceDisplay = document.getElementById('sentence-display');
-            sentenceDisplay.innerHTML = '';
-            
-            // Créer les éléments de mot cliquables
-            currentSentence.words.forEach(wordObj => {
-                const wordSpan = document.createElement('span');
-                wordSpan.classList.add('word');
-                wordSpan.textContent = wordObj.word;
-                wordSpan.dataset.category = wordObj.category;
-                
-                // Ajouter le gestionnaire d'événement pour le clic
-                wordSpan.addEventListener('click', handleLevel1WordClick);
-                
-                sentenceDisplay.appendChild(wordSpan);
-            });
-        }
+    const sentenceDisplay = document.getElementById('sentence-display');
+    // Vider complètement le contenu précédent
+    sentenceDisplay.innerHTML = '';
+    
+    // Créer les éléments de mot cliquables
+    currentSentence.words.forEach(wordObj => {
+        const wordSpan = document.createElement('span');
+        wordSpan.classList.add('word');
+        wordSpan.textContent = wordObj.word;
+        wordSpan.dataset.category = wordObj.category;
+        
+        // Ajouter le gestionnaire d'événement pour le clic
+        wordSpan.addEventListener('click', handleLevel1WordClick);
+        
+        sentenceDisplay.appendChild(wordSpan);
+        // Ajouter un espace après chaque mot sauf le dernier
+        sentenceDisplay.appendChild(document.createTextNode(' '));
+    });
+}
 
-        function displayLevel2Sentence() {
-            const sentenceDisplay = document.getElementById('sentence-display');
-            sentenceDisplay.innerHTML = '';
+function displayLevel2Sentence() {
+    const sentenceDisplay = document.getElementById('sentence-display');
+    // Vider complètement le contenu précédent
+    sentenceDisplay.innerHTML = '';
+    
+    // Variables pour suivre les mots de la catégorie cible
+    const targetWords = currentSentence.words.filter(w => w.category === categoryToFind);
+    let selectedCount = 0;
+    let firstError = false;
+    
+    // Mettre à jour le score maximum pour ce niveau
+    // Chaque mot correct vaut pointsPerLevel[2] points
+    const questionMaxScore = targetWords.length * pointsPerLevel[2];
+    currentQuestionMaxScore = questionMaxScore;
+    maxScore += questionMaxScore;
+    
+    // Créer les éléments de mot cliquables
+    currentSentence.words.forEach(wordObj => {
+        const wordSpan = document.createElement('span');
+        wordSpan.classList.add('word');
+        wordSpan.textContent = wordObj.word;
+        wordSpan.dataset.category = wordObj.category;
+        
+        // Ajouter le gestionnaire d'événement pour le clic
+        wordSpan.addEventListener('click', function() {
+            // Si on attend la prochaine question ou si une erreur a déjà été faite, ignorer
+            if (waitingForNextQuestion || firstError) return;
             
-            // Variables pour suivre les mots de la catégorie cible
-            const targetWords = currentSentence.words.filter(w => w.category === categoryToFind);
-            let selectedCount = 0;
-            let firstError = false;
-            
-            // Créer les éléments de mot cliquables
-            currentSentence.words.forEach(wordObj => {
-                const wordSpan = document.createElement('span');
-                wordSpan.classList.add('word');
-                wordSpan.textContent = wordObj.word;
-                wordSpan.dataset.category = wordObj.category;
+            if (wordObj.category === categoryToFind) {
+                // Bonne réponse
+                wordSpan.classList.add('selected');
                 
-                // Ajouter le gestionnaire d'événement pour le clic
-                wordSpan.addEventListener('click', function() {
-                    // Si on attend la prochaine question ou si une erreur a déjà été faite, ignorer
-                    if (waitingForNextQuestion || firstError) return;
-                    
-                    if (wordObj.category === categoryToFind) {
-                        // Bonne réponse
-                        wordSpan.classList.add('selected');
-                        
-                        // Ajouter des points
-                        score += pointsPerLevel[2];
-                        document.getElementById('score').textContent = score;
-                        
-                        // Vérifier si tous les mots cibles ont été trouvés
-                        selectedCount++;
-                        if (selectedCount === targetWords.length) {
-                            waitingForNextQuestion = true;
-                            setTimeout(moveToNextQuestion, 5000);
-                        }
-                    } else {
-                        // Erreur
-                        wordSpan.classList.add('error');
-                        firstError = true;
-                        
-                        // Montrer tous les mots corrects qui n'ont pas été sélectionnés
-                        document.querySelectorAll('.word').forEach(span => {
-                            if (span.dataset.category === categoryToFind && !span.classList.contains('selected')) {
-                                span.classList.add('selected');
-                            }
-                        });
-                        
-                        waitingForNextQuestion = true;
-                        setTimeout(moveToNextQuestion, 5000);
+                // Ajouter des points
+                score += pointsPerLevel[2];
+                document.getElementById('score').textContent = score;
+                
+                // Vérifier si tous les mots cibles ont été trouvés
+                selectedCount++;
+                if (selectedCount === targetWords.length) {
+                    waitingForNextQuestion = true;
+                    setTimeout(moveToNextQuestion, 3000);
+                }
+            } else {
+                // Erreur
+                wordSpan.classList.add('error');
+                firstError = true;
+                
+                // Montrer tous les mots corrects qui n'ont pas été sélectionnés
+                document.querySelectorAll('.word').forEach(span => {
+                    if (span.dataset.category === categoryToFind && !span.classList.contains('selected')) {
+                        span.classList.add('selected');
                     }
                 });
                 
-                sentenceDisplay.appendChild(wordSpan);
-            });
-        }
+                waitingForNextQuestion = true;
+                setTimeout(moveToNextQuestion, 3000);
+            }
+        });
+        
+        sentenceDisplay.appendChild(wordSpan);
+        // Ajouter un espace après chaque mot sauf le dernier
+        sentenceDisplay.appendChild(document.createTextNode(' '));
+    });
+}
 
-        function displayLevel3Sentence() {
-            const sentenceDisplay = document.getElementById('sentence-display');
-            sentenceDisplay.innerHTML = '';
-            
-            // Créer les conteneurs de mots avec zones de dépôt
-            currentSentence.words.forEach((wordObj, index) => {
-                const wordContainer = document.createElement('div');
-                wordContainer.classList.add('word-container');
-                wordContainer.dataset.index = index;
-                
-                // Le mot lui-même
-                const wordSpan = document.createElement('span');
-                wordSpan.classList.add('word');
-                wordSpan.textContent = wordObj.word;
-                
-                // La zone de dépôt
-                const dropZone = document.createElement('div');
-                dropZone.classList.add('drop-zone');
-                dropZone.dataset.index = index;
-                dropZone.dataset.word = wordObj.word;
-                
-                // Ajouter les éléments au conteneur
-                wordContainer.appendChild(wordSpan);
-                wordContainer.appendChild(dropZone);
-                
-                sentenceDisplay.appendChild(wordContainer);
-            });
-            
-            // Ajouter un texte d'aide
-            const helpText = document.createElement('div');
-            helpText.classList.add('help-text');
-            helpText.innerHTML = "Astuce: Tu peux faire <strong>glisser-déposer</strong> les blocs de couleur sous chaque mot. " +
-                                "Double-clique sur un bloc pour le supprimer.";
-            sentenceDisplay.appendChild(helpText);
-        }
+function displayLevel3Sentence() {
+    const sentenceDisplay = document.getElementById('sentence-display');
+    // Vider complètement le contenu précédent
+    sentenceDisplay.innerHTML = '';
+    
+    // Pour le niveau 3, mettre à jour le score maximum
+    // Chaque mot correctement classé vaut pointsPerLevel[3] points
+    const questionMaxScore = currentSentence.words.length * pointsPerLevel[3];
+    currentQuestionMaxScore = questionMaxScore;
+    maxScore += questionMaxScore;
+    
+    // Créer les conteneurs de mots avec zones de dépôt
+    currentSentence.words.forEach((wordObj, index) => {
+        const wordContainer = document.createElement('div');
+        wordContainer.classList.add('word-container');
+        wordContainer.dataset.index = index;
+        
+        // Le mot lui-même
+        const wordSpan = document.createElement('span');
+        wordSpan.classList.add('word');
+        wordSpan.textContent = wordObj.word;
+        
+        // La zone de dépôt
+        const dropZone = document.createElement('div');
+        dropZone.classList.add('drop-zone');
+        dropZone.dataset.index = index;
+        dropZone.dataset.word = wordObj.word;
+        
+        // Ajouter les éléments au conteneur
+        wordContainer.appendChild(wordSpan);
+        wordContainer.appendChild(dropZone);
+        
+        sentenceDisplay.appendChild(wordContainer);
+    });
+    
+    // Ajouter un texte d'aide
+    const helpText = document.createElement('div');
+    helpText.classList.add('help-text');
+    helpText.innerHTML = "Astuce: Tu peux faire <strong>glisser-déposer</strong> les blocs de couleur sous chaque mot " +
+                        "ou <strong>toucher</strong> un bloc de catégorie puis toucher la zone sous un mot. " +
+                        "Double-clique/double-tape pour supprimer.";
+    sentenceDisplay.appendChild(helpText);
+}
 
-        function setupDragAndDrop() {
-            // Configurer le drag and drop
-            let draggedItem = null;
-            
-            // Gestionnaire pour les éléments traînables
-            document.addEventListener('dragstart', function(e) {
-                if (e.target.classList.contains('category-block')) {
-                    draggedItem = e.target;
-                    e.dataTransfer.setData('text/plain', e.target.dataset.category);
-                    setTimeout(() => {
-                        e.target.style.opacity = '0.5';
-                    }, 0);
-                }
-            });
-            
-            document.addEventListener('dragend', function(e) {
-                if (e.target.classList.contains('category-block')) {
-                    e.target.style.opacity = '1';
-                }
-            });
-            
-            // Gérer la zone de dépôt
-            document.addEventListener('dragover', function(e) {
-                if (e.target.classList.contains('drop-zone') || e.target.classList.contains('category-block')) {
-                    e.preventDefault();
-                    const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.parentElement;
-                    dropZone.style.backgroundColor = 'rgba(101, 66, 254, 0.15)';
-                }
-            });
-            
-            document.addEventListener('dragleave', function(e) {
-                if (e.target.classList.contains('drop-zone') || e.target.classList.contains('category-block')) {
-                    const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.parentElement;
-                    dropZone.style.backgroundColor = '';
-                }
-            });
-            
-            document.addEventListener('drop', function(e) {
-                let dropZone;
-                if (e.target.classList.contains('drop-zone')) {
-                    dropZone = e.target;
-                } else if (e.target.classList.contains('category-block') && e.target.parentElement.classList.contains('drop-zone')) {
-                    dropZone = e.target.parentElement;
-                } else {
-                    return;
-                }
-                
+function setupDragAndDrop() {
+    // Configurer le drag and drop
+    let draggedItem = null;
+    let selectedCategory = null;
+    
+    // Détection tactile
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // Si c'est un appareil tactile, on adapte l'UI
+    if (isTouchDevice) {
+        // Ajouter une classe au corps pour les styles spécifiques aux appareils tactiles
+        document.body.classList.add('touch-device');
+        
+        // Pour les appareils tactiles, on gère le clic sur les catégories
+        document.querySelectorAll('.category-block').forEach(block => {
+            block.addEventListener('click', function(e) {
                 e.preventDefault();
-                dropZone.style.backgroundColor = '';
                 
-                const category = e.dataTransfer.getData('text/plain');
+                // Si une catégorie est déjà sélectionnée, la désélectionner
+                if (selectedCategory) {
+                    document.querySelectorAll('.category-block').forEach(b => {
+                        b.classList.remove('selected-category');
+                    });
+                }
+                
+                // Sélectionner/désélectionner cette catégorie
+                if (selectedCategory === this.dataset.category) {
+                    selectedCategory = null;
+                } else {
+                    this.classList.add('selected-category');
+                    selectedCategory = this.dataset.category;
+                }
+            });
+        });
+        
+        // Pour les appareils tactiles, on gère le clic sur les zones de dépôt
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('drop-zone') && selectedCategory) {
+                // Simuler un drop lorsqu'on a une catégorie sélectionnée
+                const dropZone = e.target;
+                const category = selectedCategory;
                 const wordIndex = dropZone.dataset.index;
                 
                 // Créer ou mettre à jour l'élément dans la zone
-                let categoryElement = dropZone.querySelector('.category-block');
+                handleDropOperation(dropZone, category, wordIndex);
                 
-                if (!categoryElement) {
-                    categoryElement = document.createElement('div');
-                    categoryElement.classList.add('category-block');
-                    categoryElement.classList.add(category);
-                    categoryElement.dataset.category = category;
-                    categoryElement.draggable = true;
-                    dropZone.appendChild(categoryElement);
-                } else {
-                    // Remplacer la classe de catégorie
-                    categoryElement.className = '';
-                    categoryElement.classList.add('category-block');
-                    categoryElement.classList.add(category);
-                    categoryElement.dataset.category = category;
-                    categoryElement.draggable = true;
-                }
-                
-                // Mettre à jour le texte selon la catégorie
-                switch(category) {
-                    case 'verb': categoryElement.textContent = 'V'; break;
-                    case 'noun': categoryElement.textContent = 'N'; break;
-                    case 'determiner': categoryElement.textContent = 'D'; break;
-                    case 'adjective': categoryElement.textContent = 'A'; break;
-                    case 'adverb': categoryElement.textContent = 'Adv'; break;
-                    default: categoryElement.textContent = '?';
-                }
-                
-                // Ajouter un gestionnaire de double-clic pour supprimer
-                categoryElement.addEventListener('dblclick', function(e) {
-                    e.stopPropagation();
-                    dropZone.removeChild(categoryElement);
-                    delete droppedItems[wordIndex];
+                // Réinitialiser la sélection
+                selectedCategory = null;
+                document.querySelectorAll('.category-block').forEach(b => {
+                    b.classList.remove('selected-category');
                 });
+            }
+        });
+        
+        // Double tap pour supprimer
+        let lastTap = 0;
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('category-block') && e.target.parentElement.classList.contains('drop-zone')) {
+                const currentTime = new Date().getTime();
+                const tapLength = currentTime - lastTap;
                 
-                // Enregistrer l'élément déposé
-                droppedItems[wordIndex] = category;
-            });
-        }
+                if (tapLength < 500 && tapLength > 0) {
+                    // Double tap détecté
+                    const dropZone = e.target.parentElement;
+                    const wordIndex = dropZone.dataset.index;
+                    
+                    // Supprimer l'élément
+                    dropZone.innerHTML = '';
+                    delete droppedItems[wordIndex];
+                    
+                    e.preventDefault();
+                }
+                lastTap = currentTime;
+            }
+        });
+    } else {
+        // Gestionnaire pour les éléments traînables (ordinateur)
+        document.addEventListener('dragstart', function(e) {
+            if (e.target.classList.contains('category-block')) {
+                draggedItem = e.target;
+                e.dataTransfer.setData('text/plain', e.target.dataset.category);
+                setTimeout(() => {
+                    e.target.style.opacity = '0.5';
+                }, 0);
+            }
+        });
+        
+        document.addEventListener('dragend', function(e) {
+            if (e.target.classList.contains('category-block')) {
+                e.target.style.opacity = '1';
+            }
+        });
+        
+        // Gérer la zone de dépôt
+        document.addEventListener('dragover', function(e) {
+            if (e.target.classList.contains('drop-zone') || e.target.classList.contains('category-block')) {
+                e.preventDefault();
+                const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.parentElement;
+                dropZone.style.backgroundColor = 'rgba(101, 66, 254, 0.15)';
+            }
+        });
+        
+        document.addEventListener('dragleave', function(e) {
+            if (e.target.classList.contains('drop-zone') || e.target.classList.contains('category-block')) {
+                const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.parentElement;
+                dropZone.style.backgroundColor = '';
+            }
+        });
+        
+        document.addEventListener('drop', function(e) {
+            let dropZone;
+            if (e.target.classList.contains('drop-zone')) {
+                dropZone = e.target;
+            } else if (e.target.classList.contains('category-block') && e.target.parentElement.classList.contains('drop-zone')) {
+                dropZone = e.target.parentElement;
+            } else {
+                return;
+            }
+            
+            e.preventDefault();
+            dropZone.style.backgroundColor = '';
+            
+            const category = e.dataTransfer.getData('text/plain');
+            const wordIndex = dropZone.dataset.index;
+            
+            // Utiliser la fonction commune pour gérer le drop
+            handleDropOperation(dropZone, category, wordIndex);
+        });
+    }
 
+    function handleDropOperation(dropZone, category, wordIndex) {
+        // Créer ou mettre à jour l'élément dans la zone
+        let categoryElement = dropZone.querySelector('.category-block');
+        
+        if (!categoryElement) {
+            categoryElement = document.createElement('div');
+            categoryElement.classList.add('category-block');
+            categoryElement.classList.add(category);
+            categoryElement.dataset.category = category;
+            categoryElement.draggable = true;
+            dropZone.appendChild(categoryElement);
+        } else {
+            // Remplacer la classe de catégorie
+            categoryElement.className = '';
+            categoryElement.classList.add('category-block');
+            categoryElement.classList.add(category);
+            categoryElement.dataset.category = category;
+            categoryElement.draggable = true;
+        }
+        
+        // Mettre à jour le texte selon la catégorie
+        switch(category) {
+            case 'verb': categoryElement.textContent = 'V'; break;
+            case 'noun': categoryElement.textContent = 'N'; break;
+            case 'determiner': categoryElement.textContent = 'D'; break;
+            case 'adjective': categoryElement.textContent = 'A'; break;
+            case 'adverb': categoryElement.textContent = 'Adv'; break;
+            default: categoryElement.textContent = '?';
+        }
+        
+        // Ajouter un gestionnaire de double-clic pour supprimer
+        categoryElement.addEventListener('dblclick', function(e) {
+            e.stopPropagation();
+            dropZone.removeChild(categoryElement);
+            delete droppedItems[wordIndex];
+        });
+        
+        // Enregistrer l'élément déposé
+        droppedItems[wordIndex] = category;
+    }
+}
         function handleLevel1WordClick(event) {
             // Ignorer si on attend déjà la prochaine question
             if (waitingForNextQuestion) return;

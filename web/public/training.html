@@ -283,6 +283,30 @@
             color: #a9a9c9;
         }
         
+        /* Error message */
+        .error-message {
+            text-align: center;
+            padding: 30px;
+            font-size: 18px;
+            grid-column: 1 / -1;
+            color: #e04a4a;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            margin: 20px;
+        }
+        
+        /* Empty message */
+        .empty-message {
+            text-align: center;
+            padding: 30px;
+            font-size: 18px;
+            grid-column: 1 / -1;
+            color: #6542fe;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            margin: 20px;
+        }
+        
         /* Animations */
         @keyframes star-animation {
             0% {
@@ -409,6 +433,28 @@
             return categories[type] ? type : 'strength';
         }
         
+        // Convertir ID de catégorie en type de catégorie
+        function getCategoryTypeById(categoryId) {
+            const categoryMap = {
+                1: 'strength',
+                2: 'endurance',
+                3: 'recovery', 
+                4: 'agility'
+            };
+            return categoryMap[categoryId] || 'strength';
+        }
+        
+        // Convertir le type de catégorie en ID
+        function getCategoryIdByType(categoryType) {
+            const categoryMap = {
+                'strength': 1,
+                'endurance': 2,
+                'recovery': 3,
+                'agility': 4
+            };
+            return categoryMap[categoryType] || 1;
+        }
+        
         // Mettre à jour l'affichage des autres catégories
         function updateOtherCategories(currentCategory) {
             const container = document.getElementById('other-categories');
@@ -453,14 +499,7 @@
             container.innerHTML = '<div class="loading-indicator">Chargement des mini-jeux...</div>';
             
             // Convertir le type de catégorie en ID
-            let categoryId;
-            switch(categoryType) {
-                case 'strength': categoryId = 1; break;
-                case 'endurance': categoryId = 2; break;
-                case 'recovery': categoryId = 3; break;
-                case 'agility': categoryId = 4; break;
-                default: categoryId = 1;
-            }
+            const categoryId = getCategoryIdByType(categoryType);
             
             // Récupérer les mini-jeux disponibles
             fetch(`/api/minigames?category=${categoryId}`, {
@@ -602,22 +641,15 @@
         
         // Lancer un mini-jeu
         function launchMinigame(minigameId, difficultyLevel) {
-    // Obtenir le type de catégorie actuel
-    const categoryType = getTrainingType();
-    
-    // Convertir le type de catégorie en ID pour le mini-jeu
-    let categoryId;
-    switch(categoryType) {
-        case 'strength': categoryId = 1; break;
-        case 'endurance': categoryId = 2; break;
-        case 'recovery': categoryId = 3; break;
-        case 'agility': categoryId = 4; break;
-        default: categoryId = 1;
-    }
-    
-    // Rediriger vers le mini-jeu avec tous les paramètres nécessaires
-    window.location.href = `/games/game_${minigameId}/index.html?difficulty=${difficultyLevel}&category=${categoryType}&categoryId=${categoryId}`;
-}
+            // Obtenir le type de catégorie actuel
+            const categoryType = getTrainingType();
+            
+            // Convertir le type de catégorie en ID pour le mini-jeu
+            const categoryId = getCategoryIdByType(categoryType);
+            
+            // Rediriger vers le mini-jeu avec tous les paramètres nécessaires
+            window.location.href = `/games/game_${minigameId}/index.html?difficulty=${difficultyLevel}&category=${categoryType}&categoryId=${categoryId}`;
+        }
         
         // Vérifier s'il y a des résultats récents à animer
         function checkForRecentResults() {

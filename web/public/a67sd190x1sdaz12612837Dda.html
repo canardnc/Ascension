@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension - Administration</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6542fe">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #6542fe;
+            --primary-dark: #5234d9;
+            --secondary: #ff7e5f;
+            --background: #1f1f3a;
+            --card-bg: rgba(47, 47, 77, 0.9);
+            --text: #ffffff;
+            --text-secondary: #a9a9c9;
+            --success: #4ae07c;
+            --warning: #ffcc00;
+            --danger: #e04a4a;
+            --info: #4aa7e0;
+            --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            --sidebar-width: 260px;
+            --header-height: 70px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: var(--card-bg);
+            box-shadow: var(--card-shadow);
+            padding: 20px 0;
+            overflow-y: auto;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-brand {
+            padding: 15px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .sidebar-brand h2 {
+            color: var(--text);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
+        .sidebar-brand span {
+            color: var(--secondary);
+            font-size: 14px;
+        }
+        
+        .sidebar-menu {
+            padding: 0 15px;
+        }
+        
+        .menu-category {
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 0 10px 15px;
+            font-weight: 600;
+        }
+        
+        .menu-items {
+            list-style: none;
+            margin-bottom: 15px;
+        }
+        
+        .menu-item {
+            margin-bottom: 5px;
+        }
+        
+        .menu-item a {
+            display: flex;
+            align-items: center;
+            color: var(--text);
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        
+        .menu-item a:hover, .menu-item.active a {
+            background-color: rgba(101, 66, 254, 0.15);
+            color: var(--primary);
+        }
+        
+        .menu-item.active a {
+            font-weight: 600;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .menu-item-icon {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+        
+        /* Main content styles */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+        }
+        
+        .header {
+            position: fixed;
+            width: calc(100% - var(--sidebar-width));
+            height: var(--header-height);
+            background-color: var(--card-bg);
+            box-shadow: var(--card-shadow);
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 90;
+        }
+        
+        .toggle-menu {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .search-container {
+            flex: 1;
+            margin: 0 20px;
+            position: relative;
+        }
+        
+        .search-container input {
+            width: 100%;
+            max-width: 500px;
+            padding: 8px 12px 8px 35px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .search-container input::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .search-container input:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .user-role {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Dashboard content */
+        .content {
+            padding: calc(var(--header-height) + 20px) 30px 30px;
+        }
+        
+        .page-header {
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            list-style: none;
+        }
+        
+        .breadcrumb-item {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .breadcrumb-item:not(:last-child)::after {
+            content: '/';
+            margin: 0 8px;
+        }
+        
+        .breadcrumb-item a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(101, 66, 254, 0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 20px;
+        }
+        
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .card-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .content-section {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .section-action {
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-action select, .section-action input, .section-action button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            margin-left: 10px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .section-action button {
+            background-color: var(--primary);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .section-action button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        /* Tables */
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .admin-table th, .admin-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .admin-table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .admin-table tr:hover td {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .table-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .action-btn.edit {
+            color: var(--info);
+        }
+        
+        .action-btn.delete {
+            color: var(--danger);
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .status.active {
+            background-color: rgba(74, 224, 124, 0.15);
+            color: var(--success);
+        }
+        
+        .status.inactive {
+            background-color: rgba(169, 169, 201, 0.15);
+            color: var(--text-secondary);
+        }
+        
+        .status.warning {
+            background-color: rgba(255, 204, 0, 0.15);
+            color: var(--warning);
+        }
+        
+        /* Charts and graphs */
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        /* Forms */
+        .admin-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-note {
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .form-button {
+            padding: 10px 20px;
+            background-color: var(--primary);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .form-button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        /* Asset checker */
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .asset-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        .asset-preview {
+            width: 100%;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .asset-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .asset-preview.missing {
+            border: 2px dashed var(--danger);
+        }
+        
+        .asset-name {
+            font-size: 12px;
+            word-break: break-all;
+            margin-bottom: 5px;
+        }
+        
+        .asset-status {
+            font-size: 11px;
+            padding: 3px 5px;
+            border-radius: 3px;
+        }
+        
+        /* Tabs */
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .tab-button.active {
+            color: var(--primary);
+        }
+        
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                padding: 15px 0;
+            }
+            
+            .sidebar-brand h2 {
+                display: none;
+            }
+            
+            .sidebar-brand::after {
+                content: 'A';
+                font-size: 24px;
+                font-weight: 700;
+                color: var(--primary);
+            }
+            
+            .menu-category, .menu-item-text {
+                display: none;
+            }
+            
+            .menu-item-icon {
+                margin-right: 0;
+                font-size: 20px;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+            
+            .header {
+                width: calc(100% - 80px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 0 15px;
+            }
+            
+            .search-container {
+                display: none;
+            }
+            
+            .user-name, .user-role {
+                display: none;
+            }
+            
+            .content {
+                padding: calc(var(--header-height) + 20px) 15px 15px;
+            }
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow: auto;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--card-shadow);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>ASCENSION <span>Admin</span></h2>
+        </div>
+        
+        <div class="sidebar-menu">
+            <p class="menu-category">Général</p>
+            <ul class="menu-items">
+                <li class="menu-item active">
+                    <a href="#dashboard" onclick="showContent('dashboard')">
+                        <span class="menu-item-icon">📊</span>
+                        <span class="menu-item-text">Vue générale</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <p class="menu-category">Utilisateurs</p>
+            <ul class="menu-items">
+                <li class="menu-item">
+                    <a href="#users" onclick="showContent('users')">
+                        <span class="menu-item-icon">👥</span>
+                        <span class="menu-item-text">Gestion utilisateurs</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#stats" onclick="showContent('stats')">
+                        <span class="menu-item-icon">📈</span>
+                        <span class="menu-item-text">Statistiques joueurs</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <p class="menu-category">Jeu</p>
+            <ul class="menu-items">
+                <li class="menu-item">
+                    <a href="#minigames" onclick="showContent('minigames')">
+                        <span class="menu-item-icon">🎮</span>
+                        <span class="menu-item-text">Gestion mini-jeux</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#levels" onclick="showContent('levels')">
+                        <span class="menu-item-icon">🏆</span>
+                        <span class="menu-item-text">Niveaux de jeu</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#categories" onclick="showContent('categories')">
+                        <span class="menu-item-icon">📋</span>
+                        <span class="menu-item-text">Catégories</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <p class="menu-category">Système</p>
+            <ul class="menu-items">
+                <li class="menu-item">
+                    <a href="#assets" onclick="showContent('assets')">
+                        <span class="menu-item-icon">🖼️</span>
+                        <span class="menu-item-text">Vérification assets</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#config" onclick="showContent('config')">
+                        <span class="menu-item-icon">⚙️</span>
+                        <span class="menu-item-text">Configuration</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#logs" onclick="showContent('logs')">
+                        <span class="menu-item-icon">📝</span>
+                        <span class="menu-item-text">Logs système</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <button class="toggle-menu">☰</button>
+            
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Rechercher...">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <!-- User Modal -->
+    <div id="add-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Ajouter un utilisateur</h2>
+                <button class="modal-close" onclick="hideModal('add-user-modal')">&times;</button>
+            </div>
+            <form class="admin-form">
+                <div class="form-group">
+                    <label class="form-label">Nom d'utilisateur</label>
+                    <input type="text" class="form-input" placeholder="Nom d'utilisateur">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" placeholder="Email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom du héros</label>
+                    <input type="text" class="form-input" placeholder="Nom du héros">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Niveau initial</label>
+                    <input type="number" class="form-input" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select">
+                        <option selected>Actif</option>
+                        <option>Inactif</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-button" onclick="hideModal('add-user-modal')">Annuler</button>
+                    <button type="button" class="form-button">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Modifier l'utilisateur</h2>
+                <button class="modal-close" onclick="hideModal('edit-user-modal')">&times;</button>
+            </div>
+            <form class="admin-form">
+                <div class="form-group">
+                    <label class="form-label">Nom d'utilisateur</label>
+                    <input type="text" class="form-input" value="Léa Martin">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" value="lea.martin@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom du héros</label>
+                    <input type="text" class="form-input" value="SuperNova">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Niveau</label>
+                    <input type="number" class="form-input" value="7" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select">
+                        <option selected>Actif</option>
+                        <option>Inactif</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-button" onclick="hideModal('edit-user-modal')">Annuler</button>
+                    <button type="button" class="form-button">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add Minigame Modal -->
+    <div id="add-minigame-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Ajouter un mini-jeu</h2>
+                <button class="modal-close" onclick="hideModal('add-minigame-modal')">&times;</button>
+            </div>
+            <form class="admin-form">
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input type="text" class="form-input" placeholder="Nom du mini-jeu">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" placeholder="Description du mini-jeu"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Catégorie</label>
+                    <select class="form-select">
+                        <option>Force</option>
+                        <option>Endurance</option>
+                        <option>Récupération</option>
+                        <option>Agilité</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icône</label>
+                    <input type="file" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dossier du mini-jeu</label>
+                    <input type="text" class="form-input" placeholder="Dossier (ex: game_6)">
+                    <div class="form-note">Le dossier doit exister dans web/public/games/</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select">
+                        <option selected>Actif</option>
+                        <option>Maintenance</option>
+                        <option>Inactif</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-button" onclick="hideModal('add-minigame-modal')">Annuler</button>
+                    <button type="button" class="form-button">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit Minigame Modal -->
+    <div id="edit-minigame-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Modifier le mini-jeu</h2>
+                <button class="modal-close" onclick="hideModal('edit-minigame-modal')">&times;</button>
+            </div>
+            <form class="admin-form">
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input type="text" class="form-input" value="Tables de Multiplication">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea">Entraîne-toi aux tables de multiplication avec une grille interactive !</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Catégorie</label>
+                    <select class="form-select">
+                        <option selected>Force</option>
+                        <option>Endurance</option>
+                        <option>Récupération</option>
+                        <option>Agilité</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icône actuelle</label>
+                    <div style="margin-bottom: 10px;">multiplication-icon.svg</div>
+                    <label class="form-label">Nouvelle icône (optionnel)</label>
+                    <input type="file" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Niveaux de difficulté</label>
+                    <div style="margin-bottom: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
+                        <div style="background-color: rgba(101, 66, 254, 0.15); padding: 5px 10px; border-radius: 5px;">
+                            1 - Tables de 1 à 5 - Débutant
+                        </div>
+                        <div style="background-color: rgba(101, 66, 254, 0.15); padding: 5px 10px; border-radius: 5px;">
+                            2 - Tables de 1 à 10 - Intermédiaire
+                        </div>
+                        <div style="background-color: rgba(101, 66, 254, 0.15); padding: 5px 10px; border-radius: 5px;">
+                            3 - Tables de 1 à 12 avec temps limité - Avancé
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    <select class="form-select">
+                        <option selected>Actif</option>
+                        <option>Maintenance</option>
+                        <option>Inactif</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-button" onclick="hideModal('edit-minigame-modal')">Annuler</button>
+                    <button type="button" class="form-button">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add Level Modal -->
+    <div id="add-level-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Ajouter un niveau</h2>
+                <button class="modal-close" onclick="hideModal('add-level-modal')">&times;</button>
+            </div>
+            <form class="admin-form">
+                <div class="form-group">
+                    <label class="form-label">ID du niveau</label>
+                    <input type="number" class="form-input" value="6" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input type="text" class="form-input" placeholder="Nom du niveau">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" placeholder="Description du niveau"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Image</label>
+                    <input type="file" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Arrière-plan</label>
+                    <input type="file" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Coût en énergie</label>
+                    <input type="number" class="form-input" value="10" min="1">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-button" onclick="hideModal('add-level-modal')">Annuler</button>
+                    <button type="button" class="form-button">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit Level Modal -->
+    <div id="edit-level-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Modifier le niveau</h2>
+                <button class="modal-close" onclick="hideModal('edit-level-modal')">&times;</button>
+            </div>
+            <form class="admin-form">
+                <div class="form-group">
+                    <label class="form-label">ID du niveau</label>
+                    <input type="number" class="form-input" value="1" min="1" disabled>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom</label>
+                    <input type="text" class="form-input" value="La Cour d'École">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea">Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Image actuelle</label>
+                    <div style="margin-bottom: 10px;">level1.jpg</div>
+                    <label class="form-label">Nouvelle image (optionnel)</label>
+                    <input type="file" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Arrière-plan actuel</label>
+                    <div style="margin-bottom: 10px;">bg1.jpg</div>
+                    <label class="form-label">Nouvel arrière-plan (optionnel)</label>
+                    <input type="file" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Coût en énergie</label>
+                    <input type="number" class="form-input" value="5" min="1">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-button" onclick="hideModal('edit-level-modal')">Annuler</button>
+                    <button type="button" class="form-button">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add Category Modal -->
+    <div id="add-category-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Ajouter une catégorie</h2>
+                <button class="modal-close" onclick="hideModal('add-category-modal')">&times;</button>
+            </div>
+            <form class="admin-form">
+                <div class="form-group">
+                    <label class="form-label">Nom (identifiant)</label>
+                    <input type="text" class="form-input" placeholder="Ex: strategy">
+                    <div class="form-note">Identifiant technique, en minuscules sans accents ni espaces</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom d'affichage</label>
+                    <input type="text" class="form-input" placeholder="Ex: Stratégie">
+                    <div class="form-note">Nom affiché aux utilisateurs</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-button" onclick="hideModal('add-category-modal')">Annuler</button>
+                    <button type="button" class="form-button">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Add Subcategory Modal -->
+    <div id="add-subcategory-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Ajouter une sous-catégorie</h2>
+                <button class="modal-close" onclick="hideModal('add-subcategory-modal')">&times;</button>
+            </div>
+            <form class="admin-form">
+                <div class="form-group">
+                    <label class="form-label">Catégorie parente</label>
+                    <select class="form-select">
+                        <option>Force</option>
+                        <option>Endurance</option>
+                        <option>Récupération</option>
+                        <option>Agilité</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom (identifiant)</label>
+                    <input type="text" class="form-input" placeholder="Ex: criticalpower">
+                    <div class="form-note">Identifiant technique, en minuscules sans accents ni espaces</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom d'affichage</label>
+                    <input type="text" class="form-input" placeholder="Ex: Puissance critique">
+                    <div class="form-note">Nom affiché aux utilisateurs</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-button" onclick="hideModal('add-subcategory-modal')">Annuler</button>
+                    <button type="button" class="form-button">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Fonction pour afficher une section de contenu et masquer les autres
+        function showContent(contentId) {
+            // Cacher toutes les sections
+            document.querySelectorAll('.content-page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Afficher la section demandée
+            document.getElementById(contentId + '-content').classList.add('active');
+            
+            // Mettre à jour les éléments de menu actifs
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Trouver l'élément de menu correspondant et le marquer comme actif
+            const menuItem = document.querySelector(`.menu-item a[href="#${contentId}"]`).parentElement;
+            menuItem.classList.add('active');
+            
+            // Fermer la sidebar sur mobile après le clic
+            if (window.innerWidth <= 992) {
+                document.querySelector('.sidebar').classList.add('collapsed');
+                document.querySelector('.main-content').classList.add('sidebar-collapsed');
+            }
+        }
+        
+        // Fonction pour changer d'onglet
+        function switchTab(tabId, button) {
+            // Cacher tous les contenus d'onglets
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Afficher le contenu d'onglet demandé
+            document.getElementById(tabId).classList.add('active');
+            
+            // Mettre à jour les boutons d'onglets
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Marquer le bouton cliqué comme actif
+            button.classList.add('active');
+        }
+        
+        // Fonction pour afficher une modale
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        // Fonction pour masquer une modale
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // Fonction pour vérifier tous les assets
+        function checkAllAssets() {
+            alert('Vérification des assets en cours...');
+            // Cette fonction serait implémentée pour vérifier l'intégrité des assets
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle menu sur mobile
+            document.querySelector('.toggle-menu').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('collapsed');
+                document.querySelector('.main-content').classList.toggle('sidebar-collapsed');
+            });
+            
+            // Fermer les modales en cliquant à l'extérieur
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Vérifier si une section spécifique est demandée dans l'URL
+            const hash = window.location.hash.substring(1);
+            if (hash && document.getElementById(hash + '-content')) {
+                showContent(hash);
+            }
+        });
+    </script>
+</body>
+</html>
+            
+            <!-- Logs -->
+            <div id="logs-content" class="content-page">
+                <div class="page-header">
+                    <h1 class="page-title">Logs système</h1>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+                        <li class="breadcrumb-item">Logs système</li>
+                    </ul>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Journal des événements</h2>
+                        <div class="section-action">
+                            <select>
+                                <option>Tous</option>
+                                <option>INFO</option>
+                                <option>WARNING</option>
+                                <option>ERROR</option>
+                                <option>DEBUG</option>
+                            </select>
+                            <input type="date" value="2023-08-29">
+                            <button>Filtrer</button>
+                        </div>
+                    </div>
+                    
+                    <div style="background-color: rgba(47, 47, 77, 0.5); border-radius: 5px; padding: 10px; max-height: 500px; overflow-y: auto; font-family: monospace; font-size: 14px; line-height: 1.5;">
+                        <div style="color: #4aa7e0;">[2023-08-29 09:47:12] [INFO] Serveur démarré sur le port 8080</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 09:47:13] [INFO] Connexion à la base de données établie avec succès</div>
+                        <div style="color: #ffcc00;">[2023-08-29 09:48:23] [WARNING] Tentative d'accès à un mini-jeu désactivé (ID: 6)</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 09:52:05] [INFO] Nouvel utilisateur inscrit: emma.leroy@gmail.com</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 10:14:27] [INFO] Mini-jeu terminé: ID=1, Utilisateur=2, Score=85</div>
+                        <div style="color: #e04a4a;">[2023-08-29 10:23:18] [ERROR] Erreur lors de la mise à jour des statistiques: utilisateur non trouvé (ID: 127)</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 10:25:47] [INFO] Niveau débloqué: Utilisateur=2, Niveau=3</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 10:31:02] [INFO] Utilisateur déconnecté: ID=4</div>
+                        <div style="color: #ffcc00;">[2023-08-29 10:42:19] [WARNING] Tentative de connexion échouée: email invalide</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 10:55:37] [INFO] Token JWT généré pour utilisateur: ID=5</div>
+                        <div style="color: #a9a9c9;">[2023-08-29 11:02:48] [DEBUG] Chargement des configurations de jeu: configs/levels.json</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 11:15:12] [INFO] Mise à jour des statistiques: Utilisateur=3, Force=+10</div>
+                        <div style="color: #e04a4a;">[2023-08-29 11:22:36] [ERROR] Fichier d'asset introuvable: /assets/images/bg6.jpg</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 11:37:41] [INFO] Mini-jeu terminé: ID=2, Utilisateur=3, Score=72</div>
+                        <div style="color: #a9a9c9;">[2023-08-29 11:45:09] [DEBUG] Chargement des statistiques pour l'utilisateur: ID=1</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 11:58:22] [INFO] Batterie de niveau réussie: Utilisateur=5, Niveau=2</div>
+                        <div style="color: #ffcc00;">[2023-08-29 12:07:53] [WARNING] Énergie insuffisante pour l'utilisateur: ID=4</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 12:19:18] [INFO] Mises à jour des sous-stats: Utilisateur=1</div>
+                        <div style="color: #a9a9c9;">[2023-08-29 12:32:45] [DEBUG] Nettoyage des sessions expirées: 12 supprimées</div>
+                        <div style="color: #4aa7e0;">[2023-08-29 12:48:11] [INFO] Énergie rechargée automatiquement: Utilisateur=2, +3 points</div>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Résumé des erreurs</h2>
+                    </div>
+                    
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>Occurrences</th>
+                                <th>Dernière occurrence</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ERROR</td>
+                                <td>Erreur lors de la mise à jour des statistiques: utilisateur non trouvé</td>
+                                <td>3</td>
+                                <td>29/08/2023 10:23:18</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn">🔍</button>
+                                        <button class="action-btn">📋</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ERROR</td>
+                                <td>Fichier d'asset introuvable</td>
+                                <td>2</td>
+                                <td>29/08/2023 11:22:36</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn">🔍</button>
+                                        <button class="action-btn">📋</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>WARNING</td>
+                                <td>Tentative d'accès à un mini-jeu désactivé</td>
+                                <td>4</td>
+                                <td>29/08/2023 09:48:23</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn">🔍</button>
+                                        <button class="action-btn">📋</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>WARNING</td>
+                                <td>Tentative de connexion échouée</td>
+                                <td>7</td>
+                                <td>29/08/2023 10:42:19</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn">🔍</button>
+                                        <button class="action-btn">📋</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>WARNING</td>
+                                <td>Énergie insuffisante pour l'utilisateur</td>
+                                <td>12</td>
+                                <td>29/08/2023 12:07:53</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn">🔍</button>
+                                        <button class="action-btn">📋</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Assets Verification -->
+            <div id="assets-content" class="content-page">
+                <div class="page-header">
+                    <h1 class="page-title">Vérification des assets</h1>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+                        <li class="breadcrumb-item">Vérification des assets</li>
+                    </ul>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">État des assets</h2>
+                        <div class="section-action">
+                            <select>
+                                <option>Tous</option>
+                                <option>Images</option>
+                                <option>Icônes</option>
+                                <option>Arrière-plans</option>
+                            </select>
+                            <button onclick="checkAllAssets()">Vérifier tout</button>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-cards">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <div class="card-title">Total</div>
+                                <div class="card-icon">🖼️</div>
+                            </div>
+                            <div class="card-value">124</div>
+                            <div class="card-subtitle">Fichiers</div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <div class="card-title">OK</div>
+                                <div class="card-icon" style="color: var(--success); background-color: rgba(74, 224, 124, 0.15);">✅</div>
+                            </div>
+                            <div class="card-value">118</div>
+                            <div class="card-subtitle">Fichiers valides</div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <div class="card-title">Problématiques</div>
+                                <div class="card-icon" style="color: var(--warning); background-color: rgba(255, 204, 0, 0.15);">⚠️</div>
+                            </div>
+                            <div class="card-value">4</div>
+                            <div class="card-subtitle">Fichiers à optimiser</div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <div class="card-title">Manquants</div>
+                                <div class="card-icon" style="color: var(--danger); background-color: rgba(224, 74, 74, 0.15);">❌</div>
+                            </div>
+                            <div class="card-value">2</div>
+                            <div class="card-subtitle">Fichiers non trouvés</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Galerie d'assets</h2>
+                    </div>
+                    
+                    <div class="asset-grid">
+                        <div class="asset-item">
+                            <div class="asset-preview">
+                                <img src="/assets/images/level1.jpg" alt="Level 1">
+                            </div>
+                            <div class="asset-name">level1.jpg</div>
+                            <span class="status active">OK</span>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <div class="asset-preview">
+                                <img src="/assets/images/level2.jpg" alt="Level 2">
+                            </div>
+                            <div class="asset-name">level2.jpg</div>
+                            <span class="status active">OK</span>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <div class="asset-preview">
+                                <img src="/assets/images/level3.jpg" alt="Level 3">
+                            </div>
+                            <div class="asset-name">level3.jpg</div>
+                            <span class="status active">OK</span>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <div class="asset-preview">
+                                <img src="/assets/images/level4.jpg" alt="Level 4">
+                            </div>
+                            <div class="asset-name">level4.jpg</div>
+                            <span class="status warning">Trop grand</span>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <div class="asset-preview">
+                                <img src="/assets/images/level5.jpg" alt="Level 5">
+                            </div>
+                            <div class="asset-name">level5.jpg</div>
+                            <span class="status active">OK</span>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <div class="asset-preview missing">
+                                <span>❌</span>
+                            </div>
+                            <div class="asset-name">bg6.jpg</div>
+                            <span class="status inactive">Manquant</span>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <div class="asset-preview">
+                                <img src="/assets/images/force_icon_2.png" alt="Force Icon">
+                            </div>
+                            <div class="asset-name">force_icon_2.png</div>
+                            <span class="status active">OK</span>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <div class="asset-preview">
+                                <img src="/assets/images/stamina_icon_2.png" alt="Stamina Icon">
+                            </div>
+                            <div class="asset-name">stamina_icon_2.png</div>
+                            <span class="status active">OK</span>
+                        </div>
+                        
+                        <div class="asset-item">
+                            <div class="asset-preview">
+                                <img src="/assets/images/training_task.png" alt="Training Task">
+                            </div>
+                            <div class="asset-name">training_task.png</div>
+                            <span class="status warning">Non optimisé</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configuration Page -->
+            <div id="config-content" class="content-page">
+                <div class="page-header">
+                    <h1 class="page-title">Configuration du système</h1>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+                        <li class="breadcrumb-item">Configuration</li>
+                    </ul>
+                </div>
+                
+                <div class="content-section">
+                    <div class="tab-nav">
+                        <button class="tab-button active" onclick="switchTab('general-settings', this)">Général</button>
+                        <button class="tab-button" onclick="switchTab('game-settings', this)">Jeu</button>
+                        <button class="tab-button" onclick="switchTab('server-settings', this)">Serveur</button>
+                    </div>
+                    
+                    <div id="general-settings" class="tab-content active">
+                        <form class="admin-form">
+                            <div class="form-group">
+                                <label class="form-label">Nom du site</label>
+                                <input type="text" class="form-input" value="Ascension" placeholder="Nom du site">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Environnement</label>
+                                <select class="form-select">
+                                    <option>Production</option>
+                                    <option selected>Développement</option>
+                                    <option>Test</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">URL du site</label>
+                                <input type="text" class="form-input" value="https://ascension.example.com" placeholder="URL du site">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Mode maintenance</label>
+                                <select class="form-select">
+                                    <option selected>Désactivé</option>
+                                    <option>Activé</option>
+                                </select>
+                                <div class="form-note">Affiche une page de maintenance aux utilisateurs non-admin</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="button" class="form-button">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div id="game-settings" class="tab-content">
+                        <form class="admin-form">
+                            <div class="form-group">
+                                <label class="form-label">Énergie max par joueur</label>
+                                <input type="number" class="form-input" value="20" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Temps de recharge d'énergie (min)</label>
+                                <input type="number" class="form-input" value="5" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Score max par niveau</label>
+                                <input type="number" class="form-input" value="100" min="10">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Score requis pour étoile 1</label>
+                                <input type="number" class="form-input" value="30" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Score requis pour étoile 2</label>
+                                <input type="number" class="form-input" value="66" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Score requis pour étoile 3</label>
+                                <input type="number" class="form-input" value="95" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="button" class="form-button">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div id="server-settings" class="tab-content">
+                        <form class="admin-form">
+                            <div class="form-group">
+                                <label class="form-label">Port du serveur</label>
+                                <input type="number" class="form-input" value="8080" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Base de données - Hôte</label>
+                                <input type="text" class="form-input" value="localhost">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Base de données - Port</label>
+                                <input type="number" class="form-input" value="5432" min="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Base de données - Nom</label>
+                                <input type="text" class="form-input" value="ascension_db">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Base de données - Utilisateur</label>
+                                <input type="text" class="form-input" value="postgres">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Base de données - Mot de passe</label>
+                                <input type="password" class="form-input" value="********">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">JWT Secret</label>
+                                <input type="password" class="form-input" value="********************">
+                                <div class="form-note">Clé secrète pour signer les tokens JWT</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="button" class="form-button">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="user-profile">
+                <div class="user-avatar">A</div>
+                <div class="user-info">
+                    <div class="user-name">Admin</div>
+                    <div class="user-role">Administrateur</div>
+                </div>
+            </div>
+            
+            <!-- Game Levels -->
+            <div id="levels-content" class="content-page">
+                <div class="page-header">
+                    <h1 class="page-title">Niveaux de jeu</h1>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+                        <li class="breadcrumb-item">Niveaux de jeu</li>
+                    </ul>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Liste des niveaux</h2>
+                        <div class="section-action">
+                            <button onclick="showModal('add-level-modal')">+ Ajouter</button>
+                        </div>
+                    </div>
+                    
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Description</th>
+                                <th>Image</th>
+                                <th>Coût énergie</th>
+                                <th>Joueurs débloqués</th>
+                                <th>Taux complétion</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>La Cour d'École</td>
+                                <td>Votre première bataille contre les connaissances élémentaires...</td>
+                                <td>level1.jpg</td>
+                                <td>5</td>
+                                <td>589</td>
+                                <td>92%</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit" onclick="showModal('edit-level-modal')">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>La Bibliothèque Hantée</td>
+                                <td>Des livres plus avancés vous attendent dans cette bibliothèque...</td>
+                                <td>level2.jpg</td>
+                                <td>6</td>
+                                <td>432</td>
+                                <td>78%</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Le Laboratoire de Sciences</td>
+                                <td>Formules, équations et réactions chimiques prennent vie...</td>
+                                <td>level3.jpg</td>
+                                <td>7</td>
+                                <td>297</td>
+                                <td>61%</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>L'Amphithéâtre du Savoir</td>
+                                <td>Le lieu où les plus grands savants ont partagé leurs théories...</td>
+                                <td>level4.jpg</td>
+                                <td>8</td>
+                                <td>196</td>
+                                <td>43%</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>La Tour de l'Érudition</td>
+                                <td>Au sommet de cette tour se trouve le savoir ultime...</td>
+                                <td>level5.jpg</td>
+                                <td>9</td>
+                                <td>97</td>
+                                <td>29%</td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Progression par niveau</h2>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <!-- Placeholder pour un graphique -->
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background-color:rgba(255,255,255,0.05); border-radius:8px;">
+                            [Graphique: Progression des joueurs par niveau]
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Categories Management -->
+            <div id="categories-content" class="content-page">
+                <div class="page-header">
+                    <h1 class="page-title">Gestion des catégories</h1>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+                        <li class="breadcrumb-item">Gestion des catégories</li>
+                    </ul>
+                </div>
+                
+                <div class="content-section">
+                    <div class="tab-nav">
+                        <button class="tab-button active" onclick="switchTab('main-categories', this)">Catégories principales</button>
+                        <button class="tab-button" onclick="switchTab('sub-categories', this)">Sous-catégories</button>
+                    </div>
+                    
+                    <div id="main-categories" class="tab-content active">
+                        <div class="section-header">
+                            <h2 class="section-title">Catégories principales</h2>
+                            <div class="section-action">
+                                <button onclick="showModal('add-category-modal')">+ Ajouter</button>
+                            </div>
+                        </div>
+                        
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th>Nom d'affichage</th>
+                                    <th>Mini-jeux associés</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>strength</td>
+                                    <td>Force</td>
+                                    <td>2</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>endurance</td>
+                                    <td>Endurance</td>
+                                    <td>1</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>recovery</td>
+                                    <td>Récupération</td>
+                                    <td>1</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>agility</td>
+                                    <td>Agilité</td>
+                                    <td>1</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="sub-categories" class="tab-content">
+                        <div class="section-header">
+                            <h2 class="section-title">Sous-catégories</h2>
+                            <div class="section-action">
+                                <select>
+                                    <option>Toutes</option>
+                                    <option>Force</option>
+                                    <option>Endurance</option>
+                                    <option>Récupération</option>
+                                    <option>Agilité</option>
+                                </select>
+                                <button onclick="showModal('add-subcategory-modal')">+ Ajouter</button>
+                            </div>
+                        </div>
+                        
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nom</th>
+                                    <th>Nom d'affichage</th>
+                                    <th>Catégorie parente</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>attack</td>
+                                    <td>Attaque</td>
+                                    <td>Force</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>precision</td>
+                                    <td>Précision</td>
+                                    <td>Force</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>health</td>
+                                    <td>Vie</td>
+                                    <td>Endurance</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>7</td>
+                                    <td>regen</td>
+                                    <td>Régénération</td>
+                                    <td>Récupération</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>9</td>
+                                    <td>range</td>
+                                    <td>Portée</td>
+                                    <td>Agilité</td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <button class="action-btn edit">✏️</button>
+                                            <button class="action-btn delete">🗑️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </header>
+        
+        <!-- Content -->
+        <div class="content">
+            <!-- Dashboard -->
+            <div id="dashboard-content" class="content-page active">
+                <div class="page-header">
+                    <h1 class="page-title">Tableau de bord</h1>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+                        <li class="breadcrumb-item">Tableau de bord</li>
+                    </ul>
+                </div>
+                
+                <div class="dashboard-cards">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">Utilisateurs</div>
+                            <div class="card-icon">👥</div>
+                        </div>
+                        <div class="card-value">589</div>
+                        <div class="card-subtitle">+12 cette semaine</div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">Mini-jeux complétés</div>
+                            <div class="card-icon">🎮</div>
+                        </div>
+                        <div class="card-value">2,415</div>
+                        <div class="card-subtitle">+185 aujourd'hui</div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">Score moyen</div>
+                            <div class="card-icon">🏆</div>
+                        </div>
+                        <div class="card-value">347</div>
+                        <div class="card-subtitle">+5% vs semaine dernière</div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">Temps de jeu</div>
+                            <div class="card-icon">⏱️</div>
+                        </div>
+                        <div class="card-value">127h</div>
+                        <div class="card-subtitle">Cette semaine</div>
+                    </div>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Activité récente</h2>
+                        <div class="section-action">
+                            <select>
+                                <option>Aujourd'hui</option>
+                                <option>Cette semaine</option>
+                                <option>Ce mois</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Utilisateur</th>
+                                <th>Activité</th>
+                                <th>Mini-jeu</th>
+                                <th>Score</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Léa Martin</td>
+                                <td>Partie complétée</td>
+                                <td>Tables de Multiplication</td>
+                                <td>85/100</td>
+                                <td>Il y a 5 min</td>
+                            </tr>
+                            <tr>
+                                <td>Thomas Dubois</td>
+                                <td>Nouveau niveau débloqué</td>
+                                <td>Niveau 3</td>
+                                <td>-</td>
+                                <td>Il y a 12 min</td>
+                            </tr>
+                            <tr>
+                                <td>Emma Leroy</td>
+                                <td>Inscription</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>Il y a 27 min</td>
+                            </tr>
+                            <tr>
+                                <td>Lucas Bernard</td>
+                                <td>Partie complétée</td>
+                                <td>Grammaire en Folie</td>
+                                <td>72/100</td>
+                                <td>Il y a 45 min</td>
+                            </tr>
+                            <tr>
+                                <td>Camille Petit</td>
+                                <td>Statistiques mises à jour</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>Il y a 1h</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Statistiques des mini-jeux</h2>
+                        <div class="section-action">
+                            <select>
+                                <option>30 derniers jours</option>
+                                <option>7 derniers jours</option>
+                                <option>Cette année</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <!-- Placeholder pour un graphique -->
+                        <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background-color:rgba(255,255,255,0.05); border-radius:8px;">
+                            [Graphique: Activité des mini-jeux par jour]
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Management -->
+            <div id="users-content" class="content-page">
+                <div class="page-header">
+                    <h1 class="page-title">Gestion des utilisateurs</h1>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Accueil</a></li>
+                        <li class="breadcrumb-item">Gestion des utilisateurs</li>
+                    </ul>
+                </div>
+                
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Liste des utilisateurs</h2>
+                        <div class="section-action">
+                            <input type="text" placeholder="Rechercher un utilisateur">
+                            <button onclick="showModal('add-user-modal')">+ Ajouter</button>
+                        </div>
+                    </div>
+                    
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nom</th>
+                                <th>Email</th>
+                                <th>Héros</th>
+                                <th>Niveau</th>
+                                <th>Inscription</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Léa Martin</td>
+                                <td>lea.martin@gmail.com</td>
+                                <td>SuperNova</td>
+                                <td>7</td>
+                                <td>12/03/2023</td>
+                                <td><span class="status active">Actif</span></td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit" onclick="showModal('edit-user-modal')">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Thomas Dubois</td>
+                                <td>thomas.dubois@gmail.com</td>
+                                <td>MathWizard</td>
+                                <td>5</td>
+                                <td>28/04/2023</td>
+                                <td><span class="status active">Actif</span></td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Emma Leroy</td>
+                                <td>emma.leroy@gmail.com</td>
+                                <td>StarGazer</td>
+                                <td>3</td>
+                                <td>15/05/2023</td>
+                                <td><span class="status active">Actif</span></td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Lucas Bernard</td>
+                                <td>lucas.bernard@gmail.com</td>
+                                <td>TimeWalker</td>
+                                <td>4</td>
+                                <td>02/04/2023</td>
+                                <td><span class="status inactive">Inactif</span></td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>Camille Petit</td>
+                                <td>camille.petit@gmail.com</td>
+                                <td>BrainMaster</td>
+                                <td>8</td>
+                                <td>19/03/2023</td>
+                                <td><span class="status active">Actif</span></td>
+                                <td>
+                                    <div class="table-actions">
+                                        <button class="action-btn edit">✏️</button>
+                                        <button class="action-btn delete">🗑️</button>
+                                    </div>
+                                </td>
+                            </tr>
+                

@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Pic - Apprends l'Anglais</title>
+    <!-- Composant de fin de partie standard -->
+    <script src="/js/minigame-utils.js" defer></script>
+    <style>
+        :root {
+            --primary: #4a6ee0;
+            --secondary: #e07c4a;
+            --correct: #4ae07c;
+            --wrong: #e04a4a;
+            --background: #f5f7ff;
+            --disabled: #cccccc;
+        }
+
+        body {
+            font-family: 'Comic Neue', 'Arial', sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Arrière-plan selon la catégorie */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(3px) brightness(0.8);
+            z-index: -1;
+        }
+
+        body.strength::before {
+            background-image: url('/assets/images/background/training_force.jpeg');
+        }
+
+        body.endurance::before {
+            background-image: url('/assets/images/background/training_stamina.jpeg');
+        }
+
+        body.recovery::before {
+            background-image: url('/assets/images/background/training_recovery.jpeg');
+        }
+
+        body.agility::before {
+            background-image: url('/assets/images/background/training_agility.jpeg');
+        }
+
+        .container {
+            max-width: 800px;
+            width: 95%;
+            background-color: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 15px;
+            z-index: 1;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        /* Word display */
+        .word-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e8f0ff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .english-word {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 15px;
+        }
+
+        .sound-button {
+            background: none;
+            border: none;
+            color: var(--secondary);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .sound-button:hover {
+            transform: scale(1.2);
+        }
+
+        /* Image grid */
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .image-option {
+            position: relative;
+            height: 120px;
+            background-color: #fff;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+
+        .image-option.correct {
+            border-color: var(--correct);
+            pointer-events: none;
+        }
+
+        .image-option.wrong {
+            border-color: var(--wrong);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .image-option.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .image-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .feedback-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.5rem;
+            filter: drop-shadow(0 0 2px white);
+        }
+
+        /* Progress bar */
+        .progress-container {
+            margin-top: 15px;
+            width: 100%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        /* Stats and controls */
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .timer-display {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        /* Navigation buttons */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .nav-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            background-color: #3a5ec0;
+        }
+
+        /* Modal d'énergie insuffisante */
+        .energy-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .energy-modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .energy-error-message {
+            color: var(--wrong);
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .energy-back-button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Next question button */
+        .next-question-btn {
+            display: none;
+            margin: 15px auto;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .next-question-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Animation */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                padding: 10px;
+            }
+            
+            .english-word {
+                font-size: 2rem;
+            }
+            
+            .images-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .image-option {
+                height: 100px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .english-word {
+                font-size: 1.8rem;
+            }
+            
+            .sound-button {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="strength">
+    <div class="container">
+        <h1>Word Pic</h1>
+        <p class="subtitle">Apprends l'anglais en t'amusant !</p>
+
+        <!-- Word display area -->
+        <div class="word-container">
+            <div class="english-word" id="current-word">Loading...</div>
+            <button class="sound-button" id="sound-button" aria-label="Écouter la prononciation">🔊</button>
+        </div>
+
+        <!-- Images grid -->
+        <div class="images-grid" id="images-grid">
+            <!-- Images will be generated with JavaScript -->
+        </div>
+
+        <!-- Next question button -->
+        <button class="next-question-btn" id="next-question-btn">Question suivante →</button>
+
+        <!-- Progress bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-container">
+            <div>Score: <span id="score">0</span></div>
+            <div>Temps: <span id="timer" class="timer-display">00:00</span></div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-button" id="back-button">Quitter</button>
+        </div>
+    </div>
+
+    <!-- Modal d'énergie insuffisante -->
+    <div class="energy-modal" id="energy-modal">
+        <div class="energy-modal-content">
+            <h2>Énergie Insuffisante</h2>
+            <p class="energy-error-message">Tu n'as pas assez d'énergie pour jouer à ce mini-jeu.</p>
+            <button class="energy-back-button" id="energy-back-button">Retour à l'entraînement</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration du jeu
+        const GAME_ID = 3; // ID du mini-jeu
+        const QUESTIONS_PER_GAME = 10; // Nombre de questions par partie
+        
+        // Variables du jeu
+        let difficultyLevel = 1;
+        let currentQuestionIndex = 0;
+        let vocabulary = [];
+        let currentWord = null;
+        let score = 0;
+        let waitingForNextQuestion = false;
+        
+        // Variables pour la synthèse vocale
+        let speechSynthesis = window.speechSynthesis;
+        let speechUtterance = null;
+        
+        // Variables pour le suivi du temps
+        let gameStartTime;
+        let currentGameTime = 0;
+        let timeInterval;
+        
+        // Points par difficulté
+        const pointsPerCorrectAnswer = {
+            1: 10,  // 10 points par bonne réponse au niveau 1
+            2: 15,  // 15 points par bonne réponse au niveau 2
+            3: 20   // 20 points par bonne réponse au niveau 3
+        };
+
+        // Pénalité par mauvaise réponse
+        const pointsPerWrongAnswer = {
+            1: 5,   // -5 points par mauvaise réponse au niveau 1
+            2: 7,   // -7 points par mauvaise réponse au niveau 2
+            3: 10   // -10 points par mauvaise réponse au niveau 3
+        };
+
+        // Liste des mots avec URLs d'images fixes et vérifiées (pictogrammes)
+const wordImageMap = {
+    // Niveau 1
+    "cat": "https://cdn-icons-png.flaticon.com/256/616/616430.png",
+    "dog": "https://cdn-icons-png.flaticon.com/256/616/616408.png",
+    "bird": "https://cdn-icons-png.flaticon.com/256/616/616439.png",
+    "fish": "https://cdn-icons-png.flaticon.com/256/616/616432.png",
+    "horse": "https://cdn-icons-png.flaticon.com/256/616/616443.png",
+    "cow": "https://cdn-icons-png.flaticon.com/256/616/616452.png",
+    "house": "https://cdn-icons-png.flaticon.com/256/619/619034.png",
+    "car": "https://cdn-icons-png.flaticon.com/256/744/744465.png",
+    "tree": "https://cdn-icons-png.flaticon.com/256/489/489969.png",
+    "ball": "https://cdn-icons-png.flaticon.com/256/1595/1595245.png",
+    "book": "https://cdn-icons-png.flaticon.com/256/2232/2232688.png",
+    "apple": "https://cdn-icons-png.flaticon.com/256/415/415682.png",
+    "banana": "https://cdn-icons-png.flaticon.com/256/2909/2909788.png",
+    "sun": "https://cdn-icons-png.flaticon.com/256/869/869869.png",
+    "moon": "https://cdn-icons-png.flaticon.com/256/1823/1823397.png",
+    "star": "https://cdn-icons-png.flaticon.com/256/3103/3103390.png",
+    "flower": "https://cdn-icons-png.flaticon.com/256/1669/1669865.png",
+    "chair": "https://cdn-icons-png.flaticon.com/256/2400/2400072.png",
+    "table": "https://cdn-icons-png.flaticon.com/256/2280/2280774.png",
+    "door": "https://cdn-icons-png.flaticon.com/256/609/609803.png",
+    
+    // Niveau 2
+    "rabbit": "https://cdn-icons-png.flaticon.com/256/3069/3069172.png",
+    "monkey": "https://cdn-icons-png.flaticon.com/256/616/616434.png",
+    "elephant": "https://cdn-icons-png.flaticon.com/256/616/616441.png",
+    "lion": "https://cdn-icons-png.flaticon.com/256/616/616412.png",
+    "tiger": "https://cdn-icons-png.flaticon.com/256/2219/2219662.png",
+    "bear": "https://cdn-icons-png.flaticon.com/256/616/616455.png",
+    "pig": "https://cdn-icons-png.flaticon.com/256/616/616419.png",
+    "sheep": "https://cdn-icons-png.flaticon.com/256/2395/2395796.png",
+    "duck": "https://cdn-icons-png.flaticon.com/256/1864/1864705.png",
+    "chicken": "https://cdn-icons-png.flaticon.com/256/1864/1864499.png",
+    "window": "https://cdn-icons-png.flaticon.com/256/2983/2983915.png",
+    "bed": "https://cdn-icons-png.flaticon.com/256/2284/2284824.png",
+    "shoe": "https://cdn-icons-png.flaticon.com/256/1785/1785348.png",
+    "hat": "https://cdn-icons-png.flaticon.com/256/1974/1974109.png",
+    "shirt": "https://cdn-icons-png.flaticon.com/256/2503/2503380.png",
+    "pants": "https://cdn-icons-png.flaticon.com/256/2237/2237015.png",
+    "train": "https://cdn-icons-png.flaticon.com/256/2934/2934149.png",
+    "plane": "https://cdn-icons-png.flaticon.com/256/3125/3125713.png",
+    "boat": "https://cdn-icons-png.flaticon.com/256/2058/2058256.png",
+    "bus": "https://cdn-icons-png.flaticon.com/256/3392/3392377.png",
+    "cloud": "https://cdn-icons-png.flaticon.com/256/414/414927.png",
+    "rain": "https://cdn-icons-png.flaticon.com/256/3104/3104619.png",
+    "snow": "https://cdn-icons-png.flaticon.com/256/642/642000.png",
+    "orange": "https://cdn-icons-png.flaticon.com/256/415/415734.png",
+    "grape": "https://cdn-icons-png.flaticon.com/256/765/765544.png",
+    "strawberry": "https://cdn-icons-png.flaticon.com/256/590/590685.png",
+    "bread": "https://cdn-icons-png.flaticon.com/256/883/883515.png",
+    "cake": "https://cdn-icons-png.flaticon.com/256/992/992772.png",
+    "milk": "https://cdn-icons-png.flaticon.com/256/2906/2906889.png",
+    "water": "https://cdn-icons-png.flaticon.com/256/606/606797.png",
+    
+    // Quelques exemples du niveau 3
+    "pencil": "https://cdn-icons-png.flaticon.com/256/2354/2354573.png",
+    "pen": "https://cdn-icons-png.flaticon.com/256/3474/3474360.png",
+    "notebook": "https://cdn-icons-png.flaticon.com/256/3209/3209265.png",
+    "backpack": "https://cdn-icons-png.flaticon.com/256/546/546667.png",
+    "computer": "https://cdn-icons-png.flaticon.com/256/3474/3474360.png",
+    "phone": "https://cdn-icons-png.flaticon.com/256/545/545251.png",
+    "television": "https://cdn-icons-png.flaticon.com/256/942/942151.png",
+    "fork": "https://cdn-icons-png.flaticon.com/256/2521/2521716.png",
+    "spoon": "https://cdn-icons-png.flaticon.com/256/4288/4288257.png",
+    "knife": "https://cdn-icons-png.flaticon.com/256/1376/1376569.png",
+    "plate": "https://cdn-icons-png.flaticon.com/256/2083/2083243.png",
+    "cup": "https://cdn-icons-png.flaticon.com/256/924/924514.png",
+    "glass": "https://cdn-icons-png.flaticon.com/256/867/867880.png",
+    "potato": "https://cdn-icons-png.flaticon.com/256/2345/2345374.png",
+    "tomato": "https://cdn-icons-png.flaticon.com/256/1202/1202125.png",
+    "carrot": "https://cdn-icons-png.flaticon.com/256/1147/1147832.png",
+    "lettuce": "https://cdn-icons-png.flaticon.com/256/2909/2909787.png",
+    "boy": "https://cdn-icons-png.flaticon.com/256/145/145867.png",
+    "girl": "https://cdn-icons-png.flaticon.com/256/145/145866.png",
+    "man": "https://cdn-icons-png.flaticon.com/256/554/554857.png",
+    "woman": "https://cdn-icons-png.flaticon.com/256/554/554830.png",
+    "beach": "https://cdn-icons-png.flaticon.com/256/826/826070.png",
+    "mountain": "https://cdn-icons-png.flaticon.com/256/2942/2942078.png",
+    "forest": "https://cdn-icons-png.flaticon.com/256/616/616450.png",
+    "city": "https://cdn-icons-png.flaticon.com/256/4480/4480738.png"
+};
+
+// Fonction d'aide pour obtenir l'URL d'une image pour un mot donné
+function getImageUrl(word) {
+    if (wordImageMap[word]) {
+        return wordImageMap[word];
+    } else {
+        // Image générée pour les mots non listés
+        return `https://dummyimage.com/200x200/3498db/ffffff&text=${encodeURIComponent(word)}`;
+    }
+}
+
+        // Banque de vocabulaire
+        const vocabularyBank = {
+            // Niveau 1: 20 animaux et objets simples
+            level1: [
+                { word: "cat", translation: "chat" },
+                { word: "dog", translation: "chien" },
+                { word: "bird", translation: "oiseau" },
+                { word: "fish", translation: "poisson" },
+                { word: "horse", translation: "cheval" },
+                { word: "cow", translation: "vache" },
+                { word: "house", translation: "maison" },
+                { word: "car", translation: "voiture" },
+                { word: "tree", translation: "arbre" },
+                { word: "ball", translation: "balle" },
+                { word: "book", translation: "livre" },
+                { word: "apple", translation: "pomme" },
+                { word: "banana", translation: "banane" },
+                { word: "sun", translation: "soleil" },
+                { word: "moon", translation: "lune" },
+                { word: "star", translation: "étoile" },
+                { word: "flower", translation: "fleur" },
+                { word: "chair", translation: "chaise" },
+                { word: "table", translation: "table" },
+                { word: "door", translation: "porte" }
+            ],
+            
+            // Niveau 2: 30 mots supplémentaires (50 au total avec ceux du niveau 1)
+            level2: [
+                { word: "rabbit", translation: "lapin" },
+                { word: "monkey", translation: "singe" },
+                { word: "elephant", translation: "éléphant" },
+                { word: "lion", translation: "lion" },
+                { word: "tiger", translation: "tigre" },
+                { word: "bear", translation: "ours" },
+                { word: "pig", translation: "cochon" },
+                { word: "sheep", translation: "mouton" },
+                { word: "duck", translation: "canard" },
+                { word: "chicken", translation: "poulet" },
+                { word: "window", translation: "fenêtre" },
+                { word: "bed", translation: "lit" },
+                { word: "shoe", translation: "chaussure" },
+                { word: "hat", translation: "chapeau" },
+                { word: "shirt", translation: "chemise" },
+                { word: "pants", translation: "pantalon" },
+                { word: "train", translation: "train" },
+                { word: "plane", translation: "avion" },
+                { word: "boat", translation: "bateau" },
+                { word: "bus", translation: "bus" },
+                { word: "cloud", translation: "nuage" },
+                { word: "rain", translation: "pluie" },
+                { word: "snow", translation: "neige" },
+                { word: "orange", translation: "orange" },
+                { word: "grape", translation: "raisin" },
+                { word: "strawberry", translation: "fraise" },
+                { word: "bread", translation: "pain" },
+                { word: "cake", translation: "gâteau" },
+                { word: "milk", translation: "lait" },
+                { word: "water", translation: "eau" }
+            ],
+            
+            // Niveau 3: 50 mots supplémentaires (100 au total)
+            level3: [
+                { word: "pencil", translation: "crayon" },
+                { word: "pen", translation: "stylo" },
+                { word: "notebook", translation: "cahier" },
+                { word: "backpack", translation: "sac à dos" },
+                { word: "ruler", translation: "règle" },
+                { word: "eraser", translation: "gomme" },
+                { word: "scissors", translation: "ciseaux" },
+                { word: "computer", translation: "ordinateur" },
+                { word: "phone", translation: "téléphone" },
+                { word: "television", translation: "télévision" },
+                { word: "refrigerator", translation: "réfrigérateur" },
+                { word: "stove", translation: "cuisinière" },
+                { word: "fork", translation: "fourchette" },
+                { word: "spoon", translation: "cuillère" },
+                { word: "knife", translation: "couteau" },
+                { word: "plate", translation: "assiette" },
+                { word: "cup", translation: "tasse" },
+                { word: "glass", translation: "verre" },
+                { word: "potato", translation: "pomme de terre" },
+                { word: "tomato", translation: "tomate" },
+                { word: "carrot", translation: "carotte" },
+                { word: "lettuce", translation: "laitue" },
+                { word: "corn", translation: "maïs" },
+                { word: "peas", translation: "petits pois" },
+                { word: "cheese", translation: "fromage" },
+                { word: "egg", translation: "œuf" },
+                { word: "meat", translation: "viande" },
+                { word: "chicken", translation: "poulet (viande)" },
+                { word: "fish", translation: "poisson (plat)" },
+                { word: "rice", translation: "riz" },
+                { word: "pasta", translation: "pâtes" },
+                { word: "salt", translation: "sel" },
+                { word: "pepper", translation: "poivre" },
+                { word: "sugar", translation: "sucre" },
+                { word: "boy", translation: "garçon" },
+                { word: "girl", translation: "fille" },
+                { word: "man", translation: "homme" },
+                { word: "woman", translation: "femme" },
+                { word: "baby", translation: "bébé" },
+                { word: "family", translation: "famille" },
+                { word: "teacher", translation: "professeur" },
+                { word: "doctor", translation: "médecin" },
+                { word: "police", translation: "policier" },
+                { word: "firefighter", translation: "pompier" },
+                { word: "beach", translation: "plage" },
+                { word: "mountain", translation: "montagne" },
+                { word: "river", translation: "rivière" },
+                { word: "forest", translation: "forêt" },
+                { word: "city", translation: "ville" }
+            ]
+        };
+
+        // Initialisation
+        init();
+
+        function init() {
+            // Récupérer le niveau de difficulté depuis l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            difficultyLevel = parseInt(urlParams.get('difficulty') || '1');
+            
+            // Définir le titre avec le niveau
+            document.querySelector('h1').textContent = `Word Pic - Niveau ${difficultyLevel}`;
+
+            // Mettre à jour la classe du corps selon la catégorie
+            const category = urlParams.get('category') || 'strength';
+            document.body.className = category;
+
+            // Configurer les événements
+            document.getElementById('back-button').addEventListener('click', exitGame);
+            document.getElementById('energy-back-button').addEventListener('click', exitGame);
+            document.getElementById('sound-button').addEventListener('click', playCurrentWordSound);
+            document.getElementById('next-question-btn').addEventListener('click', nextQuestion);
+
+            // Vérifier l'énergie et démarrer le jeu
+            checkEnergyAndStartGame();
+        }
+
+        function checkEnergyAndStartGame() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showEnergyError();
+                return;
+            }
+
+            // Récupérer les statistiques du joueur pour vérifier l'énergie
+            fetch('/api/player/stats', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Erreur réseau');
+                return res.json();
+            })
+            .then(data => {
+                // Calculer le coût en énergie (nous utilisons 1 par défaut pour ce mini-jeu)
+                const energyCost = 1;
+                
+                if (data.currentEnergy < energyCost) {
+                    showEnergyError();
+                } else {
+                    // Déduire l'énergie (cette opération est gérée côté serveur)
+                    // Nous lançons simplement le jeu
+                    startGame();
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showEnergyError();
+            });
+        }
+
+        function showEnergyError() {
+            document.getElementById('energy-modal').style.display = 'flex';
+        }
+
+        function startGame() {
+            // Sélectionner le vocabulaire en fonction du niveau de difficulté
+            let wordsList = [];
+            
+            switch (difficultyLevel) {
+                case 1:
+                    wordsList = [...vocabularyBank.level1];
+                    break;
+                case 2:
+                    wordsList = [...vocabularyBank.level1, ...vocabularyBank.level2];
+                    break;
+                case 3:
+                    wordsList = [...vocabularyBank.level1, ...vocabularyBank.level2, ...vocabularyBank.level3];
+                    break;
+                default:
+                    wordsList = [...vocabularyBank.level1];
+            }
+            
+            // Mélanger le vocabulaire et prendre le nombre de questions nécessaires
+            vocabulary = shuffleArray(wordsList).slice(0, QUESTIONS_PER_GAME);
+
+            // Initialiser les variables
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('score').textContent = score;
+            updateProgressBar();
+
+            // Enregistrer l'heure de début et démarrer le chronomètre
+            gameStartTime = new Date();
+            currentGameTime = 0;
+            startTimer();
+
+            // Démarrer avec la première question
+            showNextQuestion();
+        }
+
+        function startTimer() {
+            // Afficher le temps initial
+            updateTimerDisplay();
+            
+            // Démarrer le chronomètre
+            timeInterval = setInterval(() => {
+                currentGameTime++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(currentGameTime / 60);
+            const seconds = currentGameTime % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function showNextQuestion() {
+            // Vérifier si toutes les questions ont été posées
+            if (currentQuestionIndex >= vocabulary.length) {
+                endGame();
+                return;
+            }
+            
+            // Cacher le bouton "Question suivante"
+            document.getElementById('next-question-btn').style.display = 'none';
+            
+            // Récupérer le mot actuel
+            currentWord = vocabulary[currentQuestionIndex];
+            
+            // Afficher le mot
+            document.getElementById('current-word').textContent = currentWord.word;
+            
+            // Prononcer le mot automatiquement
+            playCurrentWordSound();
+            
+            // Sélectionner 4 mots aléatoires différents du mot actuel
+            const optionsPool = vocabulary.filter(item => item.word !== currentWord.word);
+            const randomOptions = shuffleArray(optionsPool).slice(0, 4);
+            
+            // Ajouter le mot actuel et mélanger les options
+            const allOptions = shuffleArray([currentWord, ...randomOptions]);
+            
+            // Créer la grille d'images
+            createImagesGrid(allOptions);
+            
+            // Mettre à jour la barre de progression
+            updateProgressBar();
+        }
+
+        function createImagesGrid(options) {
+            const gridContainer = document.getElementById('images-grid');
+            gridContainer.innerHTML = '';
+            
+            // Créer un élément pour chaque option
+            options.forEach((option, index) => {
+                const imageOption = document.createElement('div');
+                imageOption.classList.add('image-option');
+                imageOption.dataset.word = option.word;
+                
+                // Créer l'image
+                const img = document.createElement('img');
+                img.src = getImageUrl(option.word);
+                img.alt = option.translation;
+                
+                // Ajouter un gestionnaire d'erreur pour les images qui ne se chargent pas
+                img.onerror = function() {
+                    console.log(`Erreur de chargement pour l'image de "${option.word}"`);
+                    img.src = `https://dummyimage.com/200x200/3498db/ffffff&text=${encodeURIComponent(option.word)}`;
+                };
+                
+                imageOption.appendChild(img);
+                
+                // Ajouter un gestionnaire d'événement pour le clic
+                imageOption.addEventListener('click', () => handleImageClick(imageOption));
+                
+                gridContainer.appendChild(imageOption);
+            });
+        }
+
+        function handleImageClick(imageElement) {
+            // Si on attend déjà la prochaine question, ignorer
+            if (waitingForNextQuestion) return;
+            
+            const selectedWord = imageElement.dataset.word;
+            const isCorrect = selectedWord === currentWord.word;
+            
+            if (isCorrect) {
+                // Bonne réponse
+                imageElement.classList.add('correct');
+                
+                // Ajouter un icône de validation
+                const feedbackIcon = document.createElement('div');
+                feedbackIcon.classList.add('feedback-icon');
+                feedbackIcon.textContent = '✓';
+                imageElement.appendChild(feedbackIcon);
+                
+                // Ajouter des points
+                score += pointsPerCorrectAnswer[difficultyLevel];
+                document.getElementById('score').textContent = score;
+                
+                // Désactiver toutes les autres options
+                document.querySelectorAll('.image-option').forEach(option => {
+                    if (option !== imageElement) {
+                        option.classList.add('disabled');
+                    }
+                });
+            } else {
+                // Mauvaise réponse
+                imageElement.classList.add('wrong');
+                
+                // Ajouter un icône d'erreur
+                const feedbackIcon = document.createElement('div');
+                feedbackIcon.classList.add('feedback-icon');
+                feedbackIcon.textContent = '✗';
+                imageElement.appendChild(feedbackIcon);
+                
+                // Soustraire des points (sans aller en dessous de zéro)
+                score = Math.max(0, score - pointsPerWrongAnswer[difficultyLevel]);
+                document.getElementById('score').textContent = score;
+                
+                // Trouver et mettre en évidence la bonne réponse
+                document.querySelectorAll('.image-option').forEach(option => {
+                    if (option.dataset.word === currentWord.word) {
+                        option.classList.add('correct');
+                        
+                        // Ajouter un icône de validation sur la bonne réponse
+                        const correctIcon = document.createElement('div');
+                        correctIcon.classList.add('feedback-icon');
+                        correctIcon.textContent = '✓';
+                        option.appendChild(correctIcon);
+                    } else if (option !== imageElement) {
+                        option.classList.add('disabled');
+                    }
+                });
+            }
+            
+            // Attendre avant d'afficher le bouton pour la question suivante
+            waitingForNextQuestion = true;
+            setTimeout(() => {
+                document.getElementById('next-question-btn').style.display = 'block';
+            }, 1500);
+        }
+
+        function nextQuestion() {
+            // Passer à la question suivante
+            currentQuestionIndex++;
+            waitingForNextQuestion = false;
+            showNextQuestion();
+        }
+
+        function playCurrentWordSound() {
+            // Arrêter toute prononciation en cours
+            if (speechSynthesis.speaking) {
+                speechSynthesis.cancel();
+            }
+            
+            // Créer un nouvel objet de prononciation
+            speechUtterance = new SpeechSynthesisUtterance(currentWord.word);
+            speechUtterance.lang = 'en-US';
+            speechUtterance.rate = 0.8; // Ralentir légèrement pour plus de clarté
+            
+            // Prononcer le mot
+            speechSynthesis.speak(speechUtterance);
+        }
+
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progress-bar');
+            const progress = (currentQuestionIndex / QUESTIONS_PER_GAME) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function getMaxPossibleScore() {
+            return QUESTIONS_PER_GAME * pointsPerCorrectAnswer[difficultyLevel];
+        }
+
+        function getGameDuration() {
+            return currentGameTime;
+        }
+
+        function resetGame() {
+            // Arrêter le timer
+            clearInterval(timeInterval);
+            
+            // Réinitialiser les variables
+            currentQuestionIndex = 0;
+            score = 0;
+            waitingForNextQuestion = false;
+            currentGameTime = 0;
+            
+            // Mettre à jour l'affichage
+            document.getElementById('score').textContent = score;
+            updateTimerDisplay();
+            document.getElementById('next-question-btn').style.display = 'none';
+            
+            // Démarrer une nouvelle partie
+            startGame();
+        }
+
+        function endGame() {
+            // Arrêter le timer
+            clearInterval(timeInterval);
+            
+            // Appeler le composant standardisé de fin de partie
+            showEndgameScreen(
+                score,                  // Score obtenu
+                getMaxPossibleScore(),  // Score maximum possible
+                'strength',             // Catégorie du mini-jeu
+                resetGame,              // Fonction pour réinitialiser le jeu
+                {
+                    minigameId: GAME_ID,        // ID du mini-jeu
+                    difficultyLevel: difficultyLevel,
+                    timeSpent: getGameDuration() // Temps en secondes
+                }
+            );
+        }
+
+        function exitGame() {
+            window.location.href = `/training.html?type=strength`;
+        }
+    </script>
+</body>
+
+</html>
