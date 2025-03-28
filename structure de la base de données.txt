@@ -1,3 +1,20 @@
+-- public.icons definition
+
+-- Drop table
+
+-- DROP TABLE public.icons;
+
+CREATE TABLE public.icons (
+	id serial4 NOT NULL,
+	filename varchar(255) NOT NULL,
+	"type" varchar(50) NOT NULL,
+	description text NULL,
+	CONSTRAINT icons_pkey PRIMARY KEY (id)
+);
+CREATE INDEX idx_icons_filename ON public.icons USING btree (filename);
+CREATE INDEX idx_icons_type ON public.icons USING btree (type);
+
+
 -- public.stat_categories definition
 
 -- Drop table
@@ -98,7 +115,6 @@ CREATE INDEX idx_minigames_category_id ON public.minigames USING btree (category
 CREATE TABLE public.minigames_progress (
 	id serial4 NOT NULL,
 	user_id int4 NOT NULL,
-	category_id int4 NOT NULL,
 	minigame_id int4 NOT NULL,
 	difficulty_level int4 NOT NULL,
 	points int4 DEFAULT 0 NULL,
