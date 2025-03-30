@@ -64,6 +64,22 @@ func SetupRoutes(mux *http.ServeMux) {
 		http.ServeFile(w, r, "./web/public/manifest.json")
 	})
 
+	mux.HandleFunc("/api/icons/random", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			middleware.JWTAuth(handlers.GetRandomIcons)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/minigame/metadata", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			middleware.JWTAuth(handlers.GetMinigameMetadata)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
 	// Routes authentifiées
 	mux.HandleFunc("/api/user", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

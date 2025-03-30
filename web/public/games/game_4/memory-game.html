@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Mémoire Audio</title>
+    <!-- Composant de fin de partie standard -->
+    <script src="/js/minigame-utils.js" defer></script>
+    <style>
+        :root {
+            --primary: #4a6ee0;
+            --secondary: #e07c4a;
+            --correct: #4ae07c;
+            --wrong: #e04a4a;
+            --background: #f5f7ff;
+            --disabled: #cccccc;
+        }
+
+        body {
+            font-family: 'Comic Neue', 'Arial', sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Arrière-plan selon la catégorie */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(3px) brightness(0.8);
+            z-index: -1;
+        }
+
+        body.strength::before {
+            background-image: url('/assets/images/background/training_force.jpeg');
+        }
+
+        body.endurance::before {
+            background-image: url('/assets/images/background/training_stamina.jpeg');
+        }
+
+        body.recovery::before {
+            background-image: url('/assets/images/background/training_recovery.jpeg');
+        }
+
+        body.agility::before {
+            background-image: url('/assets/images/background/training_agility.jpeg');
+        }
+
+        .container {
+            max-width: 800px;
+            width: 95%;
+            background-color: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 15px;
+            z-index: 1;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        /* Word display */
+        .word-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e8f0ff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .english-word {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 15px;
+        }
+
+        .sound-button {
+            background: none;
+            border: none;
+            color: var(--secondary);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .sound-button:hover {
+            transform: scale(1.2);
+        }
+
+        /* Image grid */
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .image-option {
+            position: relative;
+            height: 120px;
+            background-color: #fff;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+
+        .image-option.correct {
+            border-color: var(--correct);
+            pointer-events: none;
+        }
+
+        .image-option.wrong {
+            border-color: var(--wrong);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .image-option.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .image-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 10px;
+        }
+
+        .feedback-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.5rem;
+            filter: drop-shadow(0 0 2px white);
+        }
+
+        /* Progress bar */
+        .progress-container {
+            margin-top: 15px;
+            width: 100%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        /* Stats and controls */
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .timer-display {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        /* Navigation buttons */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .nav-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            background-color: #3a5ec0;
+        }
+
+        /* Modal d'énergie insuffisante */
+        .energy-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .energy-modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .energy-error-message {
+            color: var(--wrong);
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .energy-back-button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Next question button */
+        .next-question-btn {
+            display: none;
+            margin: 15px auto;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .next-question-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Game Type Selection */
+        .game-type-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .game-type-option {
+            background-color: white;
+            border: 3px solid var(--primary);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .game-type-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-type-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .game-type-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .game-type-description {
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Animation */
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        .word-container img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+        }
+
+        .emoji-option-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            border: 2px solid #4a6ee0;
+            border-radius: 8px;
+            padding: 15px 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .emoji-option-button:hover {
+            border-color: #2a4ba0;
+            background-color: #f0f5ff;
+            transform: translateY(-3px);
+        }
+
+        .emoji-option-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .emoji-container {
+            margin-bottom: 10px;
+            width: 80px;
+            height: 80px;
+        }
+
+        .emoji-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .countdown {
+            font-size: 72px;
+            font-weight: bold;
+            color: #4a6de5;
+            animation: pulse 1s infinite;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                padding: 10px;
+            }
+
+            .english-word {
+                font-size: 2rem;
+            }
+
+            .emoji-option-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .emoji-container {
+                width: 70px;
+                height: 70px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .english-word {
+                font-size: 1.8rem;
+            }
+
+            .sound-button {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="endurance">
+    <div class="container">
+        <h1>Jeu de Mémoire Audio</h1>
+        <p class="subtitle">Écoute et Mémorise</p>
+
+        <div id="game-content">
+            <!-- Le contenu du jeu sera inséré ici par JavaScript -->
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-container">
+            <div>Score: <span id="score">0</span></div>
+            <div>Temps: <span id="timer" class="timer-display">00:00</span></div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-button" id="back-button">Quitter</button>
+        </div>
+    </div>
+
+    <!-- Modal d'énergie insuffisante -->
+    <div class="energy-modal" id="energy-modal">
+        <div class="energy-modal-content">
+            <h2>Énergie Insuffisante</h2>
+            <p class="energy-error-message">Tu n'as pas assez d'énergie pour jouer à ce mini-jeu.</p>
+            <button class="energy-back-button" id="energy-back-button">Retour à l'entraînement</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration du jeu
+        const GAME_ID = 2; // ID du mini-jeu
+        let difficultyLevel = 1;
+        let categoryType = 'endurance';
+        let categoryId = 2;
+
+        // Données du jeu
+        const gameData = {
+            syllabes: [
+                "ba", "bi", "bo", "bu", "ca", "co", "da", "de", "di", "do", "du",
+                "fa", "fe", "fi", "fo", "fu", "ga", "ge", "gi", "go", "gu",
+                "ja", "je", "ji", "jo", "ju", "ka", "ke", "ki", "ko", "ku",
+                "la", "le", "li", "lo", "lu", "ma", "me", "mi", "mo", "mu",
+                "na", "ne", "ni", "no", "nu", "pa", "pe", "pi", "po", "pu",
+                "ra", "re", "ri", "ro", "ru", "sa", "se", "si", "so", "su",
+                "ta", "te", "ti", "to", "tu", "va", "ve", "vi", "vo", "vu",
+                "za", "ze", "zi", "zo", "zu", "cha", "che", "chi", "cho", "chu"
+            ],
+            mots: [
+                "chat", "chien", "maison", "école", "livre", "jeu", "arbre", "fleur",
+                "porte", "ballon", "soleil", "lune", "étoile", "nuage", "pluie", "neige",
+                "voiture", "vélo", "train", "avion", "bateau", "téléphone", "robot",
+                "pomme", "orange", "banane", "carotte", "tomate", "gâteau", "pain"
+            ],
+            chiffres: [
+                "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+                "11", "12", "13", "14", "15", "16", "17", "18", "19", "20",
+                "30", "40", "50", "60", "70", "80", "90", "100"
+            ]
+        };
+
+        // Images pour les mots (utilisation d'icônes locales)
+        const wordIcons = {
+            "chat": "/assets/images/icons/cat.png",
+            "chien": "/assets/images/icons/dog.png",
+            "maison": "/assets/images/icons/house.png",
+            "école": "/assets/images/icons/school.png",
+            "livre": "/assets/images/icons/book.png",
+            "jeu": "/assets/images/icons/game.png",
+            "arbre": "/assets/images/icons/tree.png",
+            "fleur": "/assets/images/icons/flower.png",
+            "porte": "/assets/images/icons/door.png",
+            "ballon": "/assets/images/icons/ball.png",
+            "soleil": "/assets/images/icons/sun.png",
+            "lune": "/assets/images/icons/moon.png",
+            "étoile": "/assets/images/icons/star.png",
+            "nuage": "/assets/images/icons/cloud.png",
+            "pluie": "/assets/images/icons/rain.png",
+            "neige": "/assets/images/icons/snow.png",
+            "voiture": "/assets/images/icons/car.png",
+            "vélo": "/assets/images/icons/bicycle.png",
+            "train": "/assets/images/icons/train.png",
+            "avion": "/assets/images/icons/plane.png",
+            "bateau": "/assets/images/icons/boat.png",
+            "téléphone": "/assets/images/icons/phone.png",
+            "robot": "/assets/images/icons/robot.png",
+            "pomme": "/assets/images/icons/apple.png",
+            "orange": "/assets/images/icons/orange.png",
+            "banane": "/assets/images/icons/banana.png",
+            "carotte": "/assets/images/icons/carrot.png",
+            "tomate": "/assets/images/icons/tomato.png",
+            "gâteau": "/assets/images/icons/cake.png",
+            "pain": "/assets/images/icons/bread.png"
+        };
+
+        // Variables du jeu
+        let gameType = null;
+        let sequence = [];
+        let currentIndex = 0;
+        let score = 0;
+        let isShowingItem = false;
+        let waitingForNextQuestion = false;
+        let currentGameTime = 0;
+        let timeInterval;
+        let maxSequenceLength = 0;
+
+        // Référence au conteneur du jeu
+        const gameContentContainer = document.getElementById('game-content');
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', init);
+
+        function init() {
+            // Récupérer les paramètres de l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            difficultyLevel = parseInt(urlParams.get('difficulty') || '1');
+            categoryType = urlParams.get('category') || 'endurance';
+            categoryId = parseInt(urlParams.get('categoryId') || '2');
+
+            // Définir la difficulté du jeu
+            switch (difficultyLevel) {
+                case 1:
+                    maxSequenceLength = 5; // Facile: Séquence de 5 max
+                    break;
+                case 2:
+                    maxSequenceLength = 8; // Moyen: Séquence de 8 max
+                    break;
+                case 3:
+                    maxSequenceLength = 12; // Difficile: Séquence de 12 max
+                    break;
+                default:
+                    maxSequenceLength = 5;
+            }
+
+            // Mettre à jour la classe du body selon la catégorie
+            document.body.className = categoryType;
+
+            // Mettre à jour le titre avec la difficulté
+            document.querySelector('h1').textContent = `Mémoire Audio - Niveau ${difficultyLevel}`;
+
+            // Configurer les événements
+            document.getElementById('back-button').addEventListener('click', exitGame);
+            document.getElementById('energy-back-button').addEventListener('click', exitGame);
+
+            // Vérifier l'énergie et démarrer le jeu
+            checkEnergyAndStartGame();
+        }
+
+        function checkEnergyAndStartGame() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showEnergyError();
+                return;
+            }
+
+            // Récupérer les statistiques du joueur pour vérifier l'énergie
+            fetch('/api/player/stats', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('Erreur réseau');
+                    return res.json();
+                })
+                .then(data => {
+                    // Coût en énergie (1 point)
+                    const energyCost = 1;
+
+                    if (data.currentEnergy < energyCost) {
+                        showEnergyError();
+                    } else {
+                        // Démarrer le jeu
+                        showGameTypeSelection();
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showEnergyError();
+                });
+        }
+
+        function showEnergyError() {
+            document.getElementById('energy-modal').style.display = 'flex';
+        }
+
+        function showGameTypeSelection() {
+            gameContentContainer.innerHTML = `
+                <div class="game-type-container">
+                    <div class="game-type-option" onclick="startGame('syllabes')">
+                        <div class="game-type-icon">🔤</div>
+                        <div class="game-type-title">Syllabes</div>
+                        <div class="game-type-description">Mémorise des séquences de syllabes</div>
+                    </div>
+                    <div class="game-type-option" onclick="startGame('mots')">
+                        <div class="game-type-icon">🖼️</div>
+                        <div class="game-type-title">Mots</div>
+                        <div class="game-type-description">Mémorise des séquences de mots avec images</div>
+                    </div>
+                    <div class="game-type-option" onclick="startGame('chiffres')">
+                        <div class="game-type-icon">🔢</div>
+                        <div class="game-type-title">Chiffres</div>
+                        <div class="game-type-description">Mémorise des séquences de chiffres</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function startGame(type) {
+            gameType = type;
+            sequence = [];
+            currentIndex = 0;
+            score = 0;
+            document.getElementById('score').textContent = score;
+
+            // Enregistrer l'heure de début et démarrer le chronomètre
+            currentGameTime = 0;
+            startTimer();
+
+            // Démarrer avec le compte à rebours
+            startCountdown();
+        }
+
+        function startTimer() {
+            // Afficher le temps initial
+            updateTimerDisplay();
+
+            // Démarrer le chronomètre
+            timeInterval = setInterval(() => {
+                currentGameTime++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(currentGameTime / 60);
+            const seconds = currentGameTime % 60;
+            document.getElementById('timer').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startCountdown() {
+            let count = 3;
+            gameContentContainer.innerHTML = `<div class="countdown">${count}</div>`;
+
+            const countdownInterval = setInterval(() => {
+                count -= 1;
+                if (count <= 0) {
+                    clearInterval(countdownInterval);
+                    startRound();
+                } else {
+                    gameContentContainer.innerHTML = `<div class="countdown">${count}</div>`;
+                }
+            }, 1000);
+        }
+
+        function startRound() {
+            // Vérifier si on a atteint la limite maximale de la séquence
+            if (sequence.length >= maxSequenceLength) {
+                // Jeu gagné! Le joueur a réussi la séquence complète
+                endGame(true);
+                return;
+            }
+
+            // Sélectionner un élément aléatoire du type de jeu choisi
+            const items = gameData[gameType];
+            const newItem = items[Math.floor(Math.random() * items.length)];
+
+            // Ajouter le nouvel élément à la séquence
+            sequence.push(newItem);
+
+            // Afficher la séquence
+            showSequence(0);
+        }
+
+        function showSequence(index) {
+            if (index >= sequence.length) {
+                // Fin de la séquence, démarrer les questions
+                setTimeout(() => {
+                    showQuestion(0);
+                }, 1000);
+                return;
+            }
+
+            const currentItem = sequence[index];
+
+            // Afficher l'élément actuel
+            if (gameType === 'mots') {
+                const iconPath = wordIcons[currentItem] || "/assets/images/icons/question.png";
+                gameContentContainer.innerHTML = `
+                    <div class="word-container">
+                        <img src="${iconPath}" alt="${currentItem}">
+                        <div class="english-word">${currentItem}</div>
+                        <button class="sound-button" onclick="speak('${currentItem}')">🔊</button>
+                    </div>
+                `;
+            } else {
+                gameContentContainer.innerHTML = `
+                    <div class="word-container">
+                        <div class="english-word">${currentItem}</div>
+                        <button class="sound-button" onclick="speak('${currentItem}')">🔊</button>
+                    </div>
+                `;
+            }
+
+            // Lire l'élément
+            speak(currentItem);
+
+            // Passer au prochain élément de la séquence après un délai
+            setTimeout(() => {
+                showSequence(index + 1);
+            }, 1500);
+        }
+
+        function showQuestion(index) {
+            // Vérifier si toutes les questions ont été posées
+            if (index >= sequence.length) {
+                // Séquence réussie, passer au niveau suivant
+                currentIndex = 0;
+                score = sequence.length;
+                document.getElementById('score').textContent = score;
+
+                // Afficher un message de succès avant de passer au niveau suivant
+                gameContentContainer.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">✓</div>
+                        <h2>Bravo!</h2>
+                        <p>Tu as réussi la séquence de ${sequence.length} éléments.</p>
+                    </div>
+                `;
+
+                setTimeout(() => {
+                    startRound();
+                }, 1500);
+                return;
+            }
+
+            const currentItem = sequence[index];
+            const options = generateOptions(currentItem, gameType);
+
+            if (gameType === 'mots') {
+                showOptionsWithIcons(options, index);
+            } else {
+                showTextOptions(options, index);
+            }
+        }
+
+        function showOptionsWithIcons(options, questionIndex) {
+            let optionsHTML = '<div class="emoji-option-grid">';
+
+            options.forEach(option => {
+                const iconPath = wordIcons[option] || "/assets/images/icons/question.png";
+
+                optionsHTML += `
+                    <div class="emoji-option-button" onclick="checkAnswer('${option}', ${questionIndex})">
+                        <div class="emoji-container">
+                            <img src="${iconPath}" alt="${option}">
+                        </div>
+                        <div>${option}</div>
+                        <button class="sound-button" style="font-size: 1.2rem; margin-top: 5px;" 
+                                onclick="event.stopPropagation(); speak('${option}')">🔊</button>
+                    </div>
+                `;
+            });
+
+            optionsHTML += '</div>';
+
+            gameContentContainer.innerHTML = `
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h3>Quel est l'élément #${questionIndex + 1} ?</h3>
+                </div>
+                ${optionsHTML}
+            `;
+        }
+
+        function showTextOptions(options, questionIndex) {
+            let optionsHTML = '<div class="options-container">';
+
+            options.forEach(option => {
+                optionsHTML += `
+                    <button class="option-button" onclick="checkAnswer('${option}', ${questionIndex})">
+                        ${option} <span class="sound-button" onclick="event.stopPropagation(); speak('${option}')">🔊</span>
+                    </button>
+                `;
+            });
+
+            optionsHTML += '</div>';
+
+            gameContentContainer.innerHTML = `
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h3>Quel est l'élément #${questionIndex + 1} ?</h3>
+                </div>
+                ${optionsHTML}
+            `;
+        }
+
+        function checkAnswer(selectedOption, questionIndex) {
+            const correctAnswer = sequence[questionIndex];
+
+            if (selectedOption === correctAnswer) {
+                // Bonne réponse
+                if (questionIndex < sequence.length - 1) {
+                    // Passer à la question suivante
+                    showQuestion(questionIndex + 1);
+                } else {
+                    // Séquence complète réussie
+                    showQuestion(questionIndex + 1); // Cela déclenchera le message de succès
+                }
+            } else {
+                // Mauvaise réponse, fin de la partie
+                endGame(false);
+            }
+        }
+
+        function generateOptions(correctItem, type) {
+            const itemPool = gameData[type];
+            const options = [correctItem];
+            const availableItems = itemPool.filter(item => item !== correctItem);
+
+            // Mélanger les éléments disponibles
+            for (let i = availableItems.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availableItems[i], availableItems[j]] = [availableItems[j], availableItems[i]];
+            }
+
+            // Ajouter 3 autres options aléatoires
+            for (let i = 0; i < 3 && i < availableItems.length; i++) {
+                options.push(availableItems[i]);
+            }
+
+            // Mélanger les options
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            return options;
+        }
+
+        function endGame(success) {
+            // Arrêter le timer
+            clearInterval(timeInterval);
+
+            // Calculer le score final (nombre d'éléments mémorisés avec succès)
+            const finalScore = score;
+            const maxPossibleScore = maxSequenceLength; // Maximum possible selon le niveau de difficulté
+
+            // Appeler le composant standardisé de fin de partie
+            showEndgameScreen(
+                finalScore,          // Score obtenu
+                maxPossibleScore,    // Score maximum possible
+                categoryType,        // Catégorie du mini-jeu
+                resetGame,           // Fonction pour réinitialiser le jeu
+                {
+                    minigameId: GAME_ID,        // ID du mini-jeu
+                    difficultyLevel: difficultyLevel,
+                    timeSpent: currentGameTime  // Temps en secondes
+                }
+            );
