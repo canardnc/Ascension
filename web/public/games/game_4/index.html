@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Pic - Mémorisation d'Icônes</title>
+    <!-- Composant de fin de partie standard -->
+    <script src="/js/minigame-utils.js" defer></script>
+    <style>
+        :root {
+            --primary: #4a6ee0;
+            --secondary: #e07c4a;
+            --correct: #4ae07c;
+            --wrong: #e04a4a;
+            --background: #f5f7ff;
+            --disabled: #cccccc;
+        }
+
+        body {
+            font-family: 'Comic Neue', 'Arial', sans-serif;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Arrière-plan selon la catégorie */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(3px) brightness(0.8);
+            z-index: -1;
+        }
+
+        body.strength::before {
+            background-image: url('/assets/images/background/training_force.jpeg');
+        }
+
+        body.endurance::before {
+            background-image: url('/assets/images/background/training_stamina.jpeg');
+        }
+
+        body.recovery::before {
+            background-image: url('/assets/images/background/training_recovery.jpeg');
+        }
+
+        body.agility::before {
+            background-image: url('/assets/images/background/training_agility.jpeg');
+        }
+
+        .container {
+            max-width: 800px;
+            width: 95%;
+            background-color: rgba(255, 255, 255, 0.92);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-bottom: 15px;
+            z-index: 1;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        /* Word display */
+        .word-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e8f0ff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .english-word {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 15px;
+        }
+
+        .sound-button {
+            background: none;
+            border: none;
+            color: var(--secondary);
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .sound-button:hover {
+            transform: scale(1.2);
+        }
+
+        /* Images grid */
+        .images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .image-option {
+            position: relative;
+            height: 120px;
+            background-color: #fff;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
+
+        .image-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary);
+        }
+
+        .image-option.correct {
+            border-color: var(--correct);
+            pointer-events: none;
+        }
+
+        .image-option.wrong {
+            border-color: var(--wrong);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .image-option.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .image-option img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+
+        .image-label {
+            font-size: 14px;
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .feedback-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 1.5rem;
+            filter: drop-shadow(0 0 2px white);
+        }
+
+        /* Progress bar */
+        .progress-container {
+            margin-top: 15px;
+            width: 100%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--primary);
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        /* Stats and controls */
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .timer-display {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        /* Navigation buttons */
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .nav-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            background-color: #3a5ec0;
+        }
+
+        /* Modal d'énergie insuffisante */
+        .energy-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .energy-modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .energy-error-message {
+            color: var(--wrong);
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .energy-back-button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Next question button */
+        .next-question-btn {
+            display: none;
+            margin: 15px auto;
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .next-question-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Sequence display */
+        .sequence-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .sequence-item {
+            width: 60px;
+            height: 60px;
+            background-color: #fff;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sequence-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .sequence-item.current {
+            border-color: var(--secondary);
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sequence-item.completed {
+            border-color: var(--correct);
+            opacity: 0.7;
+        }
+
+        /* Icon display */
+        .icon-display {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+
+        .icon-display img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+        }
+
+        /* Animation */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+                padding: 10px;
+            }
+            
+            .english-word {
+                font-size: 2rem;
+            }
+            
+            .images-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .image-option {
+                height: 100px;
+            }
+
+            .image-option img {
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .english-word {
+                font-size: 1.8rem;
+            }
+            
+            .sound-button {
+                font-size: 1.5rem;
+            }
+
+            .sequence-item {
+                width: 40px;
+                height: 40px;
+            }
+
+            .sequence-item img {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body class="strength">
+    <div class="container">
+        <h1>Word Pic</h1>
+        <p class="subtitle">Mémorise les icônes et leur nom en anglais !</p>
+
+        <!-- Current sequence display -->
+        <div class="sequence-container" id="sequence-container">
+            <!-- Generated dynamically -->
+        </div>
+
+        <!-- Main content area - will be updated by JavaScript -->
+        <div id="game-content">
+            <!-- Generated dynamically -->
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-container">
+            <div>Score: <span id="score">0</span></div>
+            <div>Temps: <span id="timer" class="timer-display">00:00</span></div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-button" id="back-button">Quitter</button>
+        </div>
+    </div>
+
+    <!-- Modal d'énergie insuffisante -->
+    <div class="energy-modal" id="energy-modal">
+        <div class="energy-modal-content">
+            <h2>Énergie Insuffisante</h2>
+            <p class="energy-error-message">Tu n'as pas assez d'énergie pour jouer à ce mini-jeu.</p>
+            <button class="energy-back-button" id="energy-back-button">Retour à l'entraînement</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuration du jeu
+        const GAME_ID = 3; // ID du mini-jeu
+        const MAX_SEQUENCE_LENGTH = 10; // Longueur maximale de la séquence
+        const POINTS_PER_LEVEL = 5; // Points de base par niveau
+        
+        // Variables du jeu
+        let difficultyLevel = 1;
+        let sequence = []; // La séquence d'icônes à mémoriser
+        let iconsPool = []; // Pool d'icônes disponibles pour le jeu
+        let currentIndex = 0; // Index actuel dans la séquence
+        let currentStage = 'learning'; // 'learning', 'testing', ou 'review'
+        let score = 0;
+        let totalPossibleScore = 0;
+        
+        // Variables pour la synthèse vocale
+        let speechSynthesis = window.speechSynthesis;
+        
+        // Variables pour le suivi du temps
+        let gameStartTime;
+        let currentGameTime = 0;
+        let timeInterval;
+
+        // Initialisation
+        init();
+
+        // Fonction d'initialisation
+        function init() {
+            // Récupérer le niveau de difficulté depuis l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            difficultyLevel = parseInt(urlParams.get('difficulty') || '1');
+            
+            // Définir le titre avec le niveau
+            document.querySelector('h1').textContent = `Word Pic - Niveau ${difficultyLevel}`;
+
+            // Mettre à jour la classe du corps selon la catégorie
+            const category = urlParams.get('category') || 'strength';
+            document.body.className = category;
+
+            // Configurer les événements
+            document.getElementById('back-button').addEventListener('click', exitGame);
+            document.getElementById('energy-back-button').addEventListener('click', exitGame);
+
+            // Vérifier l'énergie et démarrer le jeu
+            checkEnergyAndStartGame();
+        }
+
+        // Vérifier l'énergie et démarrer le jeu
+        function checkEnergyAndStartGame() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showEnergyError();
+                return;
+            }
+
+            // Récupérer les statistiques du joueur pour vérifier l'énergie
+            fetch('/api/player/stats', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Erreur réseau');
+                return res.json();
+            })
+            .then(data => {
+                // Calculer le coût en énergie (nous utilisons 1 par défaut pour ce mini-jeu)
+                const energyCost = 1;
+                
+                if (data.currentEnergy < energyCost) {
+                    showEnergyError();
+                } else {
+                    // Déduire l'énergie (cette opération est gérée côté serveur)
+                    // Nous lançons simplement le jeu en récupérant d'abord les icônes
+                    loadIcons();
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showEnergyError();
+            });
+        }
+
+        // Afficher l'erreur d'énergie insuffisante
+        function showEnergyError() {
+            document.getElementById('energy-modal').style.display = 'flex';
+        }
+
+        // Charger les icônes depuis la base de données
+        function loadIcons() {
+            const token = localStorage.getItem('token');
+            
+            // Récupérer 20 icônes aléatoires
+            fetch('/api/icons/random?count=20', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Erreur lors de la récupération des icônes');
+                return res.json();
+            })
+            .then(data => {
+                // Stocker les icônes récupérées
+                iconsPool = data;
+                
+                // Démarrer le jeu
+                startGame();
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                // En cas d'erreur, utiliser des icônes de secours
+                useFallbackIcons();
+            });
+        }
+
+        // Utiliser des icônes de secours en cas d'erreur
+        function useFallbackIcons() {
+            // Liste d'icônes de secours
+            iconsPool = [
+                { id: 1, filename: "cat.svg", type: "animal", description: "cat" },
+                { id: 2, filename: "dog.svg", type: "animal", description: "dog" },
+                { id: 3, filename: "house.svg", type: "building", description: "house" },
+                { id: 4, filename: "tree.svg", type: "nature", description: "tree" },
+                { id: 5, filename: "car.svg", type: "transport", description: "car" },
+                { id: 6, filename: "book.svg", type: "education", description: "book" },
+                { id: 7, filename: "apple.svg", type: "food", description: "apple" },
+                { id: 8, filename: "ball.svg", type: "sport", description: "ball" },
+                { id: 9, filename: "sun.svg", type: "nature", description: "sun" },
+                { id: 10, filename: "moon.svg", type: "nature", description: "moon" }
+            ];
+            
+            // Démarrer le jeu
+            startGame();
+        }
+
+        // Démarrer le jeu
+        function startGame() {
+            // Initialiser les variables
+            sequence = [];
+            currentIndex = 0;
+            score = 0;
+            totalPossibleScore = 0;
+            currentStage = 'learning';
+            
+            // Mettre à jour l'affichage
+            document.getElementById('score').textContent = score;
+            updateProgressBar(0);
+            
+            // Enregistrer l'heure de début et démarrer le chronomètre
+            gameStartTime = new Date();
+            currentGameTime = 0;
+            startTimer();
+            
+            // Ajouter la première icône à la séquence
+            addNextIconToSequence();
+        }
+
+        // Démarrer le timer
+        function startTimer() {
+            // Afficher le temps initial
+            updateTimerDisplay();
+            
+            // Démarrer le chronomètre
+            timeInterval = setInterval(() => {
+                currentGameTime++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        // Mettre à jour l'affichage du timer
+        function updateTimerDisplay() {
+            const minutes = Math.floor(currentGameTime / 60);
+            const seconds = currentGameTime % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Ajouter une nouvelle icône à la séquence
+        function addNextIconToSequence() {
+            // Sélectionner une icône aléatoire
+            const randomIndex = Math.floor(Math.random() * iconsPool.length);
+            const newIcon = iconsPool[randomIndex];
+            
+            // Ajouter l'icône à la séquence
+            sequence.push(newIcon);
+            
+            // Mettre à jour l'affichage de la séquence
+            updateSequenceDisplay();
+            
+            // Calculer le score possible
+            totalPossibleScore = 0;
+            for (let i = 1; i <= sequence.length; i++) {
+                totalPossibleScore += i * POINTS_PER_LEVEL;
+            }
+            
+            // Passer à l'étape d'apprentissage
+            showLearningStage(0);
+        }
+
+        // Mettre à jour l'affichage de la séquence
+        function updateSequenceDisplay() {
+            const container = document.getElementById('sequence-container');
+            container.innerHTML = '';
+            
+            // Créer un élément pour chaque icône de la séquence
+            sequence.forEach((icon, index) => {
+                const item = document.createElement('div');
+                item.className = 'sequence-item';
+                
+                // Ajouter des classes selon l'état
+                if (index < currentIndex) {
+                    item.classList.add('completed');
+                } else if (index === currentIndex && currentStage === 'testing') {
+                    item.classList.add('current');
+                }
+                
+                // Créer l'image
+                const img = document.createElement('img');
+                img.src = `/web/public/assets/images/icons/${icon.filename}`;
+                img.alt = icon.description;
+                
+                item.appendChild(img);
+                container.appendChild(item);
+            });
+        }
+
+        // Afficher l'étape d'apprentissage
+        function showLearningStage(index) {
+            currentStage = 'learning';
+            currentIndex = index;
+            
+            // Mettre à jour l'affichage de la séquence
+            updateSequenceDisplay();
+            
+            const icon = sequence[index];
+            const iconPath = `/web/public/assets/images/icons/${icon.filename}`;
+            const iconName = icon.description; // Nom en anglais
+            
+            // Mettre à jour le contenu du jeu
+            const gameContent = document.getElementById('game-content');
+            gameContent.innerHTML = `
+                <h2>Mémorise cette icône (${index + 1}/${sequence.length})</h2>
+                <div class="icon-display">
+                    <img src="${iconPath}" alt="${iconName}">
+                </div>
+                <div class="word-container">
+                    <div class="english-word">${iconName}</div>
+                    <button class="sound-button" onclick="playWord('${iconName}')">🔊</button>
+                </div>
+                <button class="nav-button" style="margin: 15px auto; display: block;" onclick="handleLearningComplete(${index})">Suivant</button>
+            `;
+            
+            // Lire le mot automatiquement
+            playWord(iconName);
+        }
+
+        // Gérer la fin de l'étape d'apprentissage
+        function handleLearningComplete(index) {
+            // Si c'est la dernière icône de la séquence, passer à l'étape de test
+            if (index >= sequence.length - 1) {
+                currentIndex = 0;
+                currentStage = 'testing';
+                showTestingStage(0);
+            } else {
+                // Sinon, passer à l'icône suivante
+                showLearningStage(index + 1);
+            }
+        }
+
+        // Afficher l'étape de test
+        function showTestingStage(index) {
+            currentStage = 'testing';
+            currentIndex = index;
+            
+            // Mettre à jour l'affichage de la séquence
+            updateSequenceDisplay();
+            
+            const currentIcon = sequence[index];
+            
+            // Sélectionner 4 icônes aléatoires différentes de l'icône actuelle
+            let optionsPool = iconsPool.filter(icon => icon.id !== currentIcon.id);
+            
+            // Mélanger et prendre 3 options
+            optionsPool = shuffleArray(optionsPool).slice(0, 3);
+            
+            // Ajouter l'icône actuelle et mélanger
+            const options = shuffleArray([currentIcon, ...optionsPool]);
+            
+            // Mettre à jour le contenu du jeu
+            const gameContent = document.getElementById('game-content');
+            gameContent.innerHTML = `
+                <h2>Quelle icône correspond à "${currentIcon.description}" ?</h2>
+                <div class="images-grid">
+                    ${options.map((option, optIndex) => `
+                        <div class="image-option" data-id="${option.id}" onclick="checkAnswer(${option.id})">
+                            <img src="/web/public/assets/images/icons/${option.filename}" alt="${option.description}">
+                            <div class="image-label">${option.description}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            // Mettre à jour la barre de progression
+            updateProgressBar((index / sequence.length) * 100);
+        }
+
+        // Vérifier la réponse
+        function checkAnswer(selectedId) {
+            const correctId = sequence[currentIndex].id;
+            const isCorrect = selectedId === correctId;
+            
+            // Mettre à jour visuellement les options
+            const options = document.querySelectorAll('.image-option');
+            options.forEach(option => {
+                const optionId = parseInt(option.dataset.id);
+                
+                if (optionId === correctId) {
+                    // Marquer la réponse correcte
+                    option.classList.add('correct');
+                    const feedbackIcon = document.createElement('div');
+                    feedbackIcon.className = 'feedback-icon';
+                    feedbackIcon.textContent = '✓';
+                    option.appendChild(feedbackIcon);
+                } else if (optionId === selectedId && !isCorrect) {
+                    // Marquer la réponse incorrecte
+                    option.classList.add('wrong');
+                    const feedbackIcon = document.createElement('div');
+                    feedbackIcon.className = 'feedback-icon';
+                    feedbackIcon.textContent = '✗';
+                    option.appendChild(feedbackIcon);
+                } else {
+                    // Désactiver les autres options
+                    option.classList.add('disabled');
+                }
+            });
+            
+            // Attendre un moment avant de continuer
+            setTimeout(() => {
+                if (isCorrect) {
+                    // Calculer les points gagnés (index + 1) * POINTS_PER_LEVEL
+                    const pointsEarned = (currentIndex + 1) * POINTS_PER_LEVEL;
+                    score += pointsEarned;
+                    document.getElementById('score').textContent = score;
+                    
+                    // Passer à l'icône suivante ou terminer la séquence
+                    if (currentIndex >= sequence.length - 1) {
+                        // Séquence complétée avec succès
+                        if (sequence.length >= MAX_SEQUENCE_LENGTH) {
+                            // Le joueur a atteint la longueur maximale de séquence
+                            endGame();
+                        } else {
+                            // Ajouter une nouvelle icône à la séquence
+                            addNextIconToSequence();
+                        }
+                    } else {
+                        // Passer à l'icône suivante dans la séquence
+                        showTestingStage(currentIndex + 1);
+                    }
+                } else {
+                    // Réponse incorrecte - fin de partie
+                    endGame();
+                }
+            }, 1500);
+        }
+
+        // Mélanger un tableau (algorithme de Fisher-Yates)
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Lire un mot avec la synthèse vocale
+        function playWord(word) {
+            if (speechSynthesis) {
+                // Annuler toute synthèse vocale en cours
+                speechSynthesis.cancel();
+                
+                // Créer un nouvel objet de synthèse vocale
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9; // Ralentir légèrement pour plus de clarté
+                
+                // Lire le mot
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Mettre à jour la barre de progression
+        function updateProgressBar(percentage) {
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${percentage}%`;
+        }
+
+        // Terminer le jeu
+        function endGame() {
+            // Arrêter le timer
+            clearInterval(timeInterval);
+            
+            // Appeler le composant standardisé de fin de partie
+            showEndgameScreen(
+                score,                  // Score obtenu
+                totalPossibleScore,     // Score maximum possible
+                'strength',             // Catégorie du mini-jeu
+                resetGame,              // Fonction pour réinitialiser le jeu
+                {
+                    minigameId: GAME_ID,        // ID du mini-jeu
+                    difficultyLevel: difficultyLevel,
+                    timeSpent: currentGameTime  // Temps en secondes
+                }
+            );
+        }
+
+        // Réinitialiser le jeu
+        function resetGame() {
+            // Arrêter le timer
+            clearInterval(timeInterval);
+            
+            // Recommencer le jeu
+            startGame();
+        }
+
+        // Quitter le jeu
+        function exitGame() {
+            window.location.href = `/training.html?type=strength`;
+        }
+
+        // Fonction pour obtenir le score maximum possible
+        function getMaxPossibleScore() {
+            return totalPossibleScore;
+        }
+
+        // Fonction pour obtenir la durée du jeu
+        function getGameDuration() {
+            return currentGameTime;
+        }
+    </script>
+</body>
+
+</html>

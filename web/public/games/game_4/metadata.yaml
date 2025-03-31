@@ -2,13 +2,13 @@ name: "Mémoire"
 description: "Entraîne ta mémoire !"
 difficulty_levels:
   1:
-    description: "20 mots simples d'animaux et objets courants"
+    description: "Va aussi loin que tu peux !"
     difficulty: 1
   2:
-    description: "50 mots avec vocabulaire étendu"
+    description: "Va aussi loin que tu peux !"
     difficulty: 2
   3:
-    description: "100 mots pour les plus avancés"
+    description: "Va aussi loin que tu peux !"
     difficulty: 3
 category: 1  # Catégorie Force
 icon: "wordpic-icon.svg"
