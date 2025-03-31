@@ -9,6 +9,7 @@ CREATE TABLE public.icons (
 	filename varchar(255) NOT NULL,
 	"type" varchar(50) NOT NULL,
 	description text NULL,
+	description_en varchar(255) NULL,
 	CONSTRAINT icons_pkey PRIMARY KEY (id)
 );
 CREATE INDEX idx_icons_filename ON public.icons USING btree (filename);

@@ -13,6 +13,7 @@ type User struct {
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	HeroName  string    `json:"heroName,omitempty"`
+	Year      string    `json:"year,omitempty"` // Nouveau champ
 	Level     int       `json:"level"`
 	CreatedAt time.Time `json:"createdAt"`
 }
@@ -20,13 +21,13 @@ type User struct {
 // Create crée un nouvel utilisateur dans la base de données
 func (u *User) Create() error {
 	query := `
-		INSERT INTO users (username, email, hero_name, level, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO users (username, email, hero_name, year, level, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at
 	`
 	now := time.Now()
 	return db.DB.QueryRow(
-		query, u.Username, u.Username+"@gmail.com", u.HeroName, 1, now,
+		query, u.Username, u.Username+"@gmail.com", u.HeroName, u.Year, 1, now,
 	).Scan(&u.ID, &u.CreatedAt)
 }
 
@@ -34,25 +35,25 @@ func (u *User) Create() error {
 func (u *User) Update() error {
 	query := `
 		UPDATE users
-		SET hero_name = $1, level = $2
-		WHERE id = $3
+		SET hero_name = $1, year = $2, level = $3
+		WHERE id = $4
 	`
 
-	_, err := db.DB.Exec(query, u.HeroName, u.Level, u.ID)
+	_, err := db.DB.Exec(query, u.HeroName, u.Year, u.Level, u.ID)
 	return err
 }
 
 // GetUserByID récupère un utilisateur par son ID
 func GetUserByID(id int) (*User, error) {
 	query := `
-		SELECT id, username, hero_name, level, created_at
+		SELECT id, username, hero_name, year, level, created_at
 		FROM users
 		WHERE id = $1
 	`
 
 	var user User
 	err := db.DB.QueryRow(query, id).Scan(
-		&user.ID, &user.Username, &user.HeroName, &user.Level, &user.CreatedAt,
+		&user.ID, &user.Username, &user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -64,14 +65,14 @@ func GetUserByID(id int) (*User, error) {
 // GetUserByUsername récupère un utilisateur par son nom d'utilisateur
 func GetUserByUsername(username string) (*User, error) {
 	query := `
-		SELECT id, username, hero_name, level, created_at
+		SELECT id, username, hero_name, year, level, created_at
 		FROM users
 		WHERE username = $1
 	`
 
 	var user User
 	err := db.DB.QueryRow(query, username).Scan(
-		&user.ID, &user.Username, &user.HeroName, &user.Level, &user.CreatedAt,
+		&user.ID, &user.Username, &user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
 	)
 	if err != nil {
 		log.Printf("Erreur lors de la récupération de l'utilisateur : %v", err)
