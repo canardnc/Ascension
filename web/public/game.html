@@ -18,7 +18,7 @@
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
-
+    <script src="/js/auth-utils.js"></script>
     <script>
         // 1. Classe pour gérer le chargement et l'accès aux sprites
         class SpriteManager {
@@ -777,11 +777,10 @@
                 };
                 
                 // Envoyer les résultats au serveur
-                fetch('/api/battle/complete', {
+                fetchWithAuth('/api/battle/complete', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
                     },
                     body: JSON.stringify(data)
                 })
@@ -885,11 +884,7 @@
         // Nouvelle méthode pour charger les statistiques du joueur
         async loadPlayerStats() {
             try {
-                const response = await fetch('/api/player/stats', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('token')
-                    }
-                });
+                const response = await fetchWithAuth('/api/player/stats');
                 
                 if (!response.ok) {
                     throw new Error('Erreur lors du chargement des statistiques');
@@ -1480,6 +1475,7 @@
 
         // Démarrer le jeu lorsque la page est chargée
         window.onload = function() {
+            if (!checkAuth()) return;
             const canvas = document.getElementById('gameCanvas');
             const game = new Game(canvas);
         };

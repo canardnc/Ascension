@@ -405,6 +405,8 @@
         </div>
     </div>
 
+    <script src="/js/auth-utils.js"></script>
+
     <script>
         // Catégories avec leurs icônes d'images
         const categories = {
@@ -495,58 +497,50 @@
         
         // Chargement des mini-jeux selon la catégorie
         function loadMinigames(categoryType) {
-            const container = document.getElementById('exercises-container');
-            container.innerHTML = '<div class="loading-indicator">Chargement des mini-jeux...</div>';
-            
-            // Convertir le type de catégorie en ID
-            const categoryId = getCategoryIdByType(categoryType);
-            
-            // Récupérer les mini-jeux disponibles
-            fetch(`/api/minigames?category=${categoryId}`, {
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Erreur lors du chargement des mini-jeux');
-                }
-                return response.json();
-            })
-            .then(minigames => {
-                // Trier les mini-jeux par ID
-                minigames.sort((a, b) => a.id - b.id);
-                
-                // Vider le conteneur
-                container.innerHTML = '';
-                
-                // Afficher les mini-jeux
-                if (minigames.length === 0) {
-                    container.innerHTML = '<div class="empty-message">Aucun mini-jeu disponible pour le moment.</div>';
-                    return;
-                }
-                
-                // Créer les éléments pour chaque mini-jeu
-                minigames.forEach(minigame => {
-                    // Trier les niveaux de difficulté
-                    minigame.difficultyLevels.sort((a, b) => a.level - b.level);
-                    
-                    // Créer une carte pour chaque niveau de difficulté
-                    minigame.difficultyLevels.forEach(level => {
-                        const frame = createExerciseFrame(minigame, level);
-                        container.appendChild(frame);
-                    });
-                });
-                
-                // Vérifier s'il y a des résultats récents à animer
-                checkForRecentResults();
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                container.innerHTML = '<div class="error-message">Erreur lors du chargement des mini-jeux. Veuillez réessayer.</div>';
-            });
-        }
+        const container = document.getElementById('exercises-container');
+        container.innerHTML = '<div class="loading-indicator">Chargement des mini-jeux...</div>';
         
+        // Convert category type to ID
+        const categoryId = getCategoryIdByType(categoryType);
+        
+        // Get available minigames using fetchWithAuth
+        fetchWithAuth(`/api/minigames?category=${categoryId}`)
+        .then(minigames => {
+            // Sort minigames by ID
+            minigames.sort((a, b) => a.id - b.id);
+            
+            // Clear container
+            container.innerHTML = '';
+            
+            // Display minigames
+            if (minigames.length === 0) {
+                container.innerHTML = '<div class="empty-message">Aucun mini-jeu disponible pour le moment.</div>';
+                return;
+            }
+            
+            // Create elements for each minigame
+            minigames.forEach(minigame => {
+                // Sort difficulty levels
+                minigame.difficultyLevels.sort((a, b) => a.level - b.level);
+                
+                // Create a card for each difficulty level
+                minigame.difficultyLevels.forEach(level => {
+                    const frame = createExerciseFrame(minigame, level);
+                    container.appendChild(frame);
+                });
+            });
+            
+            // Check for recent results to animate
+            checkForRecentResults();
+        })
+        .catch(error => {
+            // Only handle errors if we're still authenticated
+            if (localStorage.getItem('token')) {
+                console.error('Error:', error);
+                container.innerHTML = '<div class="error-message">Erreur lors du chargement des mini-jeux. Veuillez réessayer.</div>';
+            }
+        });
+    }
         // Créer un cadre d'exercice
         function createExerciseFrame(minigame, level) {
             const frame = document.createElement('div');
@@ -748,46 +742,36 @@
         
         // Mettre à jour l'affichage de l'énergie
         function updateEnergyDisplay() {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-            
-            fetch('/api/player/stats', {
-                headers: {
-                    'Authorization': 'Bearer ' + token
-                }
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('energy-value').textContent = `${data.currentEnergy}/${data.maxEnergy}`;
-            })
-            .catch(error => {
+        fetchWithAuth('/api/player/stats')
+        .then(data => {
+            document.getElementById('energy-value').textContent = `${data.currentEnergy}/${data.maxEnergy}`;
+        })
+        .catch(error => {
+            // Only handle errors if we're still authenticated
+            if (localStorage.getItem('token')) {
                 console.error('Erreur lors de la récupération de l\'énergie:', error);
-            });
-        }
-        
+            }
+        });
+    }
         // Initialiser la page
         window.onload = function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/';
-                return;
-            }
-            
-            const type = getTrainingType();
-            document.body.className = type;
-            
-            // Mettre à jour l'icône de la catégorie active
-            document.getElementById('active-category').innerHTML = categories[type].icon;
-            
-            // Mettre à jour les autres catégories
-            updateOtherCategories(type);
-            
-            // Mettre à jour l'affichage de l'énergie
-            updateEnergyDisplay();
-            
-            // Charger les mini-jeux
-            loadMinigames(type);
-        };
+        if (!checkAuth()) return;
+        
+        const type = getTrainingType();
+        document.body.className = type;
+        
+        // Update the active category icon
+        document.getElementById('active-category').innerHTML = categories[type].icon;
+        
+        // Update other categories
+        updateOtherCategories(type);
+        
+        // Update energy display
+        updateEnergyDisplay();
+        
+        // Load minigames
+        loadMinigames(type);
+    };
     </script>
 </body>
 </html>

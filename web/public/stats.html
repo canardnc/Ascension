@@ -667,6 +667,8 @@
         </div>
     </div>
 
+    <script src="/js/auth-utils.js"></script>
+
     <script>
         // Données des statistiques
         const statsData = {
@@ -906,171 +908,145 @@
         
         // Sauvegarder la distribution des points
         function savePointsDistribution() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Vous devez être connecté pour sauvegarder vos statistiques');
-                return;
+        if (!checkAuth()) return;
+        
+        // Get statistics by category
+        const categories = ['strength', 'endurance', 'recovery', 'agility'];
+        
+        // For each category, send a separate update
+        let updatesCompleted = 0;
+        
+        categories.forEach(category => {
+            // Prepare sub-statistics for this category
+            const subStats = {};
+            
+            switch(category) {
+                case 'strength':
+                    subStats.attack = statsData.subStats.attack;
+                    subStats.precision = statsData.subStats.precision;
+                    subStats.critical = statsData.subStats.critical;
+                    break;
+                case 'endurance':
+                    subStats.health = statsData.subStats.health;
+                    subStats.armor = statsData.subStats.armor;
+                    subStats.dodge = statsData.subStats.dodge;
+                    break;
+                case 'recovery':
+                    subStats.regen = statsData.subStats.regen;
+                    subStats.lifesteal = statsData.subStats.lifesteal;
+                    break;
+                case 'agility':
+                    subStats.range = statsData.subStats.range;
+                    subStats.speed = statsData.subStats.speed;
+                    break;
             }
             
-            // Récupérer les statistiques par catégorie
-            const categories = ['strength', 'endurance', 'recovery', 'agility'];
-            
-            // Pour chaque catégorie, envoyer une mise à jour séparée
-            let updatesCompleted = 0;
-            
-            categories.forEach(category => {
-                // Préparer les sous-statistiques de cette catégorie
-                const subStats = {};
+            // Send update to server
+            fetchWithAuth('/api/player/stats', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    category: category,
+                    subStats: subStats
+                })
+            })
+            .then(data => {
+                updatesCompleted++;
                 
-                switch(category) {
-                    case 'strength':
-                        subStats.attack = statsData.subStats.attack;
-                        subStats.precision = statsData.subStats.precision;
-                        subStats.critical = statsData.subStats.critical;
-                        break;
-                    case 'endurance':
-                        subStats.health = statsData.subStats.health;
-                        subStats.armor = statsData.subStats.armor;
-                        subStats.dodge = statsData.subStats.dodge;
-                        break;
-                    case 'recovery':
-                        subStats.regen = statsData.subStats.regen;
-                        subStats.lifesteal = statsData.subStats.lifesteal;
-                        break;
-                    case 'agility':
-                        subStats.range = statsData.subStats.range;
-                        subStats.speed = statsData.subStats.speed;
-                        break;
+                // If all updates are completed, show message
+                if (updatesCompleted === categories.length) {
+                    alert('Statistiques sauvegardées avec succès !');
+                    // Update initial statistics
+                    Object.assign(statsData.initialSubStats, statsData.subStats);
                 }
-                
-                // Envoyer la mise à jour au serveur
-                fetch('/api/player/stats', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + token
-                    },
-                    body: JSON.stringify({
-                        category: category,
-                        subStats: subStats
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    updatesCompleted++;
-                    
-                    // Si toutes les mises à jour sont terminées, afficher un message
-                    if (updatesCompleted === categories.length) {
-                        alert('Statistiques sauvegardées avec succès !');
-                        // Mettre à jour les statistiques initiales
-                        Object.assign(statsData.initialSubStats, statsData.subStats);
-                    }
-                })
-                .catch(error => {
+            })
+            .catch(error => {
+                // Only handle error if we're still authenticated
+                if (localStorage.getItem('token')) {
                     console.error('Erreur:', error);
                     alert('Erreur lors de la sauvegarde des statistiques: ' + category);
-                });
+                }
             });
-        }
+        });
+    }
         
         // Charger les données utilisateur au chargement de la page
         window.onload = function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/';
-                return;
-            }
-        
-            // Récupérer les informations de l'utilisateur
-            fetch('/api/user', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Erreur d\'authentification');
-                }
-                return res.json();
-            })
-            .then(data => {
-                // Mettre à jour le nom du héros
-                document.getElementById('hero-name').textContent = data.heroName || 'Héros sans nom';
-                // Mettre à jour le niveau du joueur
-                document.getElementById('player-level').textContent = data.level || 1;
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                localStorage.removeItem('token');
-                window.location.href = '/';
-            });
-        
-            // Récupérer les statistiques du joueur
-            fetch('/api/player/stats', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Erreur lors de la récupération des statistiques');
-                }
-                return res.json();
-            })
-            .then(data => {
-                // Mettre à jour les stats principales
-                statsData.mainStats = {
-                    strength: { available: data.availableStrengthPoints },
-                    endurance: { available: data.availableEndurancePoints },
-                    recovery: { available: data.availableRecoveryPoints },
-                    agility: { available: data.availableAgilityPoints }
-                };
-        
-                // Mettre à jour les sous-statistiques
-                statsData.subStats = {
-                    attack: data.attack,
-                    precision: data.precision,
-                    critical: data.critical,
-                    health: data.health,
-                    armor: data.armor,
-                    dodge: data.dodge,
-                    regen: data.regen,
-                    lifesteal: data.lifesteal,
-                    range: data.range,
-                    speed: data.speed
-                };
-                
-                // Mettre à jour l'énergie
-                const energyDisplay = `${data.currentEnergy}/${data.maxEnergy}`;
-                document.getElementById('energy-display').textContent = energyDisplay;
-                document.getElementById('energy-info-display').textContent = energyDisplay;
-                
-                // Mettre à jour le niveau maximal débloqué
-                const maxLevel = Math.max(...data.unlockedLevels) || 1;
-                document.getElementById('max-level').textContent = maxLevel;
-                
-                // Mettre à jour l'affichage
-                updateStatsDisplay();
-                
-                // Récupérer le score total (somme des scores de tous les mini-jeux)
-                return fetch('/api/scores?limit=100', {
-                    headers: { 'Authorization': 'Bearer ' + token }
+        if (!checkAuth()) return;
+    
+        // Get user information
+        fetchWithAuth('/api/user')
+        .then(data => {
+            // Update hero name
+            document.getElementById('hero-name').textContent = data.heroName || 'Héros sans nom';
+            // Update player level
+            document.getElementById('player-level').textContent = data.level || 1;
+            
+            // Get player statistics
+            return fetchWithAuth('/api/player/stats');
+        })
+        .then(data => {
+            // Update main stats
+            statsData.mainStats = {
+                strength: { available: data.availableStrengthPoints },
+                endurance: { available: data.availableEndurancePoints },
+                recovery: { available: data.availableRecoveryPoints },
+                agility: { available: data.availableAgilityPoints }
+            };
+    
+            // Update sub-statistics
+            statsData.subStats = {
+                attack: data.attack,
+                precision: data.precision,
+                critical: data.critical,
+                health: data.health,
+                armor: data.armor,
+                dodge: data.dodge,
+                regen: data.regen,
+                lifesteal: data.lifesteal,
+                range: data.range,
+                speed: data.speed
+            };
+            
+            // Copy current stats to initial stats
+            Object.assign(statsData.initialSubStats, statsData.subStats);
+            
+            // Update energy
+            const energyDisplay = `${data.currentEnergy}/${data.maxEnergy}`;
+            document.getElementById('energy-display').textContent = energyDisplay;
+            document.getElementById('energy-info-display').textContent = energyDisplay;
+            
+            // Update maximum unlocked level
+            const maxLevel = Math.max(...data.unlockedLevels) || 1;
+            document.getElementById('max-level').textContent = maxLevel;
+            
+            // Update display
+            updateStatsDisplay();
+            
+            // Get total score (sum of all mini-game scores)
+            return fetchWithAuth('/api/scores?limit=100');
+        })
+        .then(scores => {
+            // Calculate total score
+            let totalScore = 0;
+            if (Array.isArray(scores)) {
+                scores.forEach(score => {
+                    totalScore += score.score || 0;
                 });
-            })
-            .then(res => res.json())
-            .then(scores => {
-                // Calculer le score total
-                let totalScore = 0;
-                if (Array.isArray(scores)) {
-                    scores.forEach(score => {
-                        totalScore += score.score || 0;
-                    });
-                }
-                
-                // Mettre à jour l'affichage du score total
-                document.getElementById('total-score').textContent = totalScore;
-            })
-            .catch(error => {
+            }
+            
+            // Update total score display
+            document.getElementById('total-score').textContent = totalScore;
+        })
+        .catch(error => {
+            // Only handle error if we're still authenticated
+            if (localStorage.getItem('token')) {
                 console.error('Erreur:', error);
-            });
-        };
-        
+            }
+        });
+    };
         // Naviguer vers la page de combat
         function navigateToBattle() {
             window.location.href = '/battle.html';

@@ -957,9 +957,7 @@
             }
 
             // Récupérer les statistiques du joueur pour vérifier l'énergie
-            fetch('/api/player/stats', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
+            fetchWithAuth('/api/player/stats')
             .then(res => {
                 if (!res.ok) throw new Error('Erreur réseau');
                 return res.json();

@@ -14,20 +14,17 @@
  */
 function saveMinigameResults(results) {
     return new Promise((resolve, reject) => {
-        // Récupérer le token d'authentification
-        const token = localStorage.getItem('token');
-        if (!token) {
-            console.error("Erreur d'authentification: aucun token trouvé");
+        // Vérifier l'authentification d'abord
+        if (!checkAuth()) {
             reject(new Error("Vous devez être connecté pour enregistrer vos résultats"));
             return;
         }
 
-        // Appeler l'API pour enregistrer les résultats
-        fetch('/api/minigame/complete', {
+        // Appeler l'API pour enregistrer les résultats en utilisant fetchWithAuth
+        fetchWithAuth('/api/minigame/complete', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 minigameId: results.minigameId,
@@ -35,14 +32,6 @@ function saveMinigameResults(results) {
                 score: results.score,
                 timeSpent: results.timeSpent
             })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(data.error || "Erreur lors de l'enregistrement des résultats");
-                });
-            }
-            return response.json();
         })
         .then(data => {
             // Stocker les résultats pour l'animation après redirection
@@ -64,8 +53,11 @@ function saveMinigameResults(results) {
             resolve(data);
         })
         .catch(error => {
-            console.error("Erreur lors de l'enregistrement des résultats:", error);
-            reject(error);
+            // Seulement traiter l'erreur si nous sommes toujours authentifiés
+            if (localStorage.getItem('token')) {
+                console.error("Erreur lors de l'enregistrement des résultats:", error);
+                reject(error);
+            }
         });
     });
 }
@@ -97,12 +89,18 @@ function showEndgameScreen(score, maxScore, categoryType, resetGameFunction, gam
             window.location.href = `/training.html?type=${categoryType}`;
         };
         
+        // Vérifier l'authentification d'abord
+        if (!localStorage.getItem('token')) {
+            console.log('No authentication token found, redirecting to login');
+            window.location.href = '/';
+            return;
+        }
+        
         // Enregistrer les résultats de façon asynchrone sans bloquer
-        const savePromise = fetch('/api/minigame/complete', {
+        fetchWithAuth('/api/minigame/complete', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('token')
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 minigameId: gameData.minigameId,
@@ -110,14 +108,16 @@ function showEndgameScreen(score, maxScore, categoryType, resetGameFunction, gam
                 score: score,
                 timeSpent: gameData.timeSpent
             })
-        });
-        
-        // Gérer les erreurs silencieusement
-        savePromise.catch(error => {
-            console.error("Erreur lors de l'enregistrement des résultats:", error);
+        }).catch(error => {
+            // Seulement traiter l'erreur si nous sommes toujours authentifiés
+            if (localStorage.getItem('token')) {
+                console.error("Erreur lors de l'enregistrement des résultats:", error);
+            }
         });
     } catch (error) {
-        console.error("Erreur lors de la sauvegarde:", error);
+        if (localStorage.getItem('token')) {
+            console.error("Erreur lors de la sauvegarde:", error);
+        }
     }
     
     // Calculer le pourcentage de réussite
@@ -289,4 +289,50 @@ function showEndgameScreen(score, maxScore, categoryType, resetGameFunction, gam
     } catch (error) {
         console.warn("Impossible de charger la police:", error);
     }
+}
+
+// Vérifier si l'utilisateur est authentifié
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.log('No authentication token found, redirecting to login');
+        window.location.href = '/';
+        return false;
+    }
+    return true;
+}
+
+// Fonction pour faire des appels API authentifiés
+function fetchWithAuth(url, options = {}) {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        console.log('No authentication token found, redirecting to login');
+        window.location.href = '/';
+        return Promise.reject(new Error('Authentication required'));
+    }
+    
+    const authOptions = {
+        ...options,
+        headers: {
+            ...options.headers,
+            'Authorization': 'Bearer ' + token
+        }
+    };
+    
+    return fetch(url, authOptions)
+        .then(response => {
+            if (response.status === 401 || response.status === 403) {
+                console.log('Authentication failed, redirecting to login');
+                localStorage.removeItem('token');
+                window.location.href = '/';
+                return Promise.reject(new Error('Authentication failed'));
+            }
+            
+            if (!response.ok) {
+                throw new Error('Request failed with status: ' + response.status);
+            }
+            
+            return response.json();
+        });
 }

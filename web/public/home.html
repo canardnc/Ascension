@@ -283,6 +283,7 @@
         </div>
     </div>
 
+    <script src="/js/auth-utils.js"></script>
     <script>
         // Données du joueur (données d'exemple pour la démonstration)
         let playerData = {
@@ -344,75 +345,52 @@
         
         // Charger les données du joueur depuis l'API si possible
         function loadPlayerData() {
-            // D'abord afficher les données par défaut
-            updateUI();
+        // Use fetchWithAuth for all API calls
+        fetchWithAuth('/api/user')
+        .then(data => {
+            // Update the name of the hero
+            playerData.heroName = data.heroName || 'Héros sans nom';
+            playerData.level = data.level || 1;
             
-            // Essayer de récupérer le token
-            const token = getAuthToken();
-            if (!token) {
-                console.log("Mode démonstration: utilisation des données d'exemple");
-                hideLoadingScreen();
-                return;
+            // Continue with the next API call
+            return fetchWithAuth('/api/player/stats');
+        })
+        .then(data => {
+            // Update the statistics
+            playerData.stats = {
+                strength: data.strength || 1,
+                endurance: data.endurance || 1,
+                recovery: data.recovery || 1,
+                agility: data.agility || 1
+            };
+            
+            // Get the maximum unlocked level
+            playerData.maxLevel = data.unlockedLevels && data.unlockedLevels.length > 0 
+                ? Math.max(...data.unlockedLevels) 
+                : 1;
+            
+            // Get the total score
+            return fetchWithAuth('/api/scores?limit=100');
+        })
+        .then(scores => {
+            // Calculate the total score
+            if (Array.isArray(scores)) {
+                playerData.totalScore = scores.reduce((sum, score) => sum + (score.score || 0), 0);
             }
             
-            // Récupérer les informations de l'utilisateur
-            fetch('/api/user', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Erreur d\'authentification');
-                }
-                return res.json();
-            })
-            .then(data => {
-                // Mettre à jour le nom du héros
-                playerData.heroName = data.heroName || 'Héros sans nom';
-                playerData.level = data.level || 1;
-                
-                // Continuer avec les statistiques
-                return fetch('/api/player/stats', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-            })
-            .then(res => res.json())
-            .then(data => {
-                // Mettre à jour les statistiques
-                playerData.stats = {
-                    strength: data.strength || 1,
-                    endurance: data.endurance || 1,
-                    recovery: data.recovery || 1,
-                    agility: data.agility || 1
-                };
-                
-                // Récupérer le niveau maximum débloqué
-                playerData.maxLevel = data.unlockedLevels && data.unlockedLevels.length > 0 
-                    ? Math.max(...data.unlockedLevels) 
-                    : 1;
-                
-                // Récupérer le score total
-                return fetch('/api/scores?limit=100', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-            })
-            .then(res => res.json())
-            .then(scores => {
-                // Calculer le score total
-                if (Array.isArray(scores)) {
-                    playerData.totalScore = scores.reduce((sum, score) => sum + (score.score || 0), 0);
-                }
-                
-                // Mettre à jour l'interface
-                updateUI();
-                hideLoadingScreen();
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
+            // Update the interface
+            updateUI();
+            hideLoadingScreen();
+        })
+        .catch(error => {
+            // Only handle error if the token still exists (user wasn't redirected)
+            if (localStorage.getItem('token')) {
+                console.error('Error:', error);
                 console.log("Mode démonstration activé suite à une erreur");
                 hideLoadingScreen();
-            });
-        }
-        
+            }
+        });
+    }
         function hideLoadingScreen() {
             const loadingScreen = document.getElementById('loading-screen');
             loadingScreen.style.opacity = '0';
@@ -443,6 +421,7 @@
         
         // Au chargement de la page
         window.onload = function() {
+            if (!checkAuth()) return;
             loadPlayerData();
             setupNavigation();
             

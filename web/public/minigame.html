@@ -237,6 +237,8 @@
         </section>
     </div>
 
+    <script src="/js/auth-utils.js"></script>
+
     <script>
         // Variables pour stocker les paramètres du mini-jeu
         let gameType;
@@ -266,9 +268,7 @@
     
     // Vérifier si le joueur a assez d'énergie pour cet exercice
     const token = localStorage.getItem('token');
-    fetch('/api/player/stats', {
-        headers: { 'Authorization': 'Bearer ' + token }
-    })
+    fetchWithAuth('/api/player/stats')
     .then(res => res.json())
     .then(data => {
         if (data.currentEnergy < 1) {
@@ -334,11 +334,10 @@
     }
     
     // Envoyer le résultat au serveur
-    fetch('/api/training/complete', {
+    fetchWithAuth('/api/training/complete', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify({
             category: gameType,
@@ -371,11 +370,7 @@
         
         // Initialiser la page
         window.onload = function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/';
-                return;
-            }
+            if (!checkAuth()) return;
             
             getGameParams();
         };

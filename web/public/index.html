@@ -162,7 +162,42 @@
         </div>
     </div>
     
+    <script src="/js/auth-utils.js"></script>
+
+
+    
     <script>
+        // Fonction pour vérifier si le token est valide via un appel API
+    function validateToken() {
+        const token = localStorage.getItem('token');
+        
+        // Si pas de token, pas besoin de vérifier
+        if (!token) {
+            return Promise.resolve(false);
+        }
+        
+        // Faire un appel API simple pour vérifier la validité du token
+        return fetch('/api/user', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(response => {
+            // Si on reçoit 401 ou 403, le token est invalide
+            if (response.status === 401 || response.status === 403) {
+                console.log('Token invalide, suppression du token');
+                localStorage.removeItem('token'); // Supprimer le token invalide
+                return false;
+            }
+            
+            // Sinon, le token est valide
+            return response.ok;
+        })
+        .catch(error => {
+            console.error('Erreur lors de la validation du token:', error);
+            // En cas d'erreur réseau, on considère le token comme potentiellement valide
+            // et on laisse la page d'accueil gérer les erreurs API
+            return true;
+        });
+    }
         // Cacher tous les écrans sauf celui de login
         function showScreen(screenId) {
             document.getElementById('login-area').style.display = 'none';
@@ -219,56 +254,42 @@
         
         // Sauvegarder le nom du héros
         function saveHeroName() {
-            const heroName = document.getElementById('hero-name').value;
-            if (!heroName) {
-                alert('Veuillez entrer un nom pour votre héros');
-                return;
-            }
-            
-            // Afficher l'écran de chargement
-            showScreen('loading-area');
-            
-            // Cacher les messages d'erreur
-            document.getElementById('hero-error').style.display = 'none';
-            
-            fetch('/api/user', {
-                method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                },
-                body: JSON.stringify({ heroName: heroName })
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Réponse réseau non valide');
-                }
-                return res.json();
-            })
-            .then(() => {
-                loadUserData();
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                document.getElementById('hero-error').style.display = 'block';
-                showScreen('onboarding-area');
-            });
-        }
+    const heroName = document.getElementById('hero-name').value;
+    if (!heroName) {
+        alert('Veuillez entrer un nom pour votre héros');
+        return;
+    }
+    
+    // Afficher l'écran de chargement
+    showScreen('loading-area');
+    
+    // Cacher les messages d'erreur
+    document.getElementById('hero-error').style.display = 'none';
+    
+    fetchWithAuth('/api/user', {
+        method: 'PUT',
+        headers: { 
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ heroName: heroName })
+    })
+    .then(data => {
+        // Redirection directe vers la page d'accueil
+        window.location.href = '/home.html';
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        document.getElementById('hero-error').style.display = 'block';
+        showScreen('onboarding-area');
+    });
+}
         
         // Charger les données utilisateur
         function loadUserData() {
     // Afficher l'écran de chargement
     showScreen('loading-area');
     
-    fetch('/api/user', {
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-    })
-    .then(res => {
-        if (!res.ok) {
-            throw new Error('Réponse réseau non valide');
-        }
-        return res.json();
-    })
+    fetchWithAuth('/api/user')
     .then(data => {
         // Redirection vers la nouvelle page d'accueil
         window.location.href = '/home.html';
@@ -303,13 +324,26 @@
         
         // Vérifier si déjà connecté au chargement
         window.onload = function() {
-    const token = localStorage.getItem('token');
-    if (token) {
-        window.location.href = '/home.html';
-    } else {
-        showScreen('login-area');
-    }
-};
+    // D'abord afficher l'écran de chargement
+    showScreen('loading-area');
+        
+        // Vérifier si le token est valide
+        validateToken()
+            .then(isValid => {
+                if (isValid) {
+                    // Si le token est valide, rediriger vers la page d'accueil
+                    window.location.href = '/home.html';
+                } else {
+                    // Sinon afficher la page de connexion
+                    showScreen('login-area');
+                }
+            })
+            .catch(error => {
+                // En cas d'erreur, afficher la page de connexion
+                console.error('Erreur lors de la vérification du token:', error);
+                showScreen('login-area');
+            });
+    };
     </script>
 </body>
 </html>

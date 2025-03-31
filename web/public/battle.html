@@ -256,7 +256,7 @@
             <button class="start-battle-btn" onclick="startBattle()">COMMENCER</button>
         </div>
     </div>
-
+    <script src="/js/auth-utils.js"></script>
     <script>
         // Variables globales pour les niveaux
         let levels = [];
@@ -264,157 +264,108 @@
         let maxUnlockedLevel = 1;
         
         // Initialiser la page
-        window.onload = function() {
-            // Vérifier l'authentification
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/';
-                return;
-            }
+        window.onload = async function() {
+        if (!checkAuth()) return;
+        
+        try {
+            // Load level configuration
+            await fetchLevelsConfig();
             
-            // Récupérer la configuration des niveaux depuis le serveur
-            fetchLevelsConfig()
-                .then(() => {
-                    // Récupérer les statistiques du joueur, y compris les niveaux débloqués
-                    return fetchPlayerStats();
-                })
-                .then(() => {
-                    // Mettre à jour l'affichage avec le premier niveau débloqué
-                    updateLevelDisplay();
-                })
-                .catch(error => {
-                    console.error('Erreur lors de l\'initialisation:', error);
-                    alert('Erreur lors du chargement des données. Veuillez réessayer.');
-                });
-        };
+            // Load player statistics, including unlocked levels
+            await fetchPlayerStats();
+            
+            // Update display with first unlocked level
+            updateLevelDisplay();
+        } catch (error) {
+            console.error('Error during initialization:', error);
+            alert('Error loading data. Please try again.');
+        }
+    };
         
         // Récupérer la configuration des niveaux depuis le fichier JSON
         async function fetchLevelsConfig() {
-            try {
-                // Charger le fichier JSON avec un paramètre anti-cache
-                const response = await fetch('/configs/levels.json?nocache=' + Date.now());
-                if (!response.ok) {
-                    throw new Error('Erreur lors du chargement de la configuration des niveaux');
-                }
-                
-                const levelsData = await response.json();
-                
-                if (!levelsData || !levelsData.levels || !Array.isArray(levelsData.levels)) {
-                    throw new Error('Format de données invalide: la structure attendue est { levels: [...] }');
-                }
-                
-                // Transformer les données en format utilisable
-                levels = levelsData.levels.map(level => ({
-                    id: level.id,
-                    name: level.name || `Niveau ${level.id}`,
-                    description: level.description || "Description non disponible",
-                    // Gérer les cas où image ou background sont undefined
-                    image: level.image ? (level.image.startsWith('/') ? level.image : `/assets/images/${level.image}`) : `/assets/images/level${level.id}.jpg`,
-                    background: level.background ? (level.background.startsWith('/') ? level.background : `/assets/images/${level.background}`) : `/assets/images/bg${level.id}.jpg`,
-                    // Utilise energyCost du fichier s'il existe, sinon calcule basé sur l'ID
-                    energyCost: level.energyCost || (5 + (level.id - 1)),
-                    // Conserver les informations de tuiles pour le jeu
-                    tiles: level.tiles || { base: "iso_dirt", special: [] },
-                    monsters: level.monsters || [],
-                    obstacles: level.obstacles || [],
-                    boss: level.boss
-                }));
-            } catch (error) {
-                console.error("Erreur lors du chargement des niveaux:", error);
-                
-                // En cas d'erreur, utiliser des données par défaut pour éviter de bloquer l'interface
-                levels = [
-                    {
-                        id: 1,
-                        name: "La Cour d'École",
-                        description: "Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.",
-                        image: "/assets/images/level1.jpg",
-                        background: "/assets/images/bg1.jpg",
-                        energyCost: 5
-                    },
-                    {
-                        id: 2,
-                        name: "La Bibliothèque Hantée",
-                        description: "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
-                        image: "/assets/images/level2.jpg",
-                        background: "/assets/images/bg2.jpg",
-                        energyCost: 6
-                    },
-                    {
-                        id: 3,
-                        name: "Le Laboratoire de Sciences",
-                        description: "Formules, équations et réactions chimiques prennent vie dans ce laboratoire. Attention aux explosions de connaissances!",
-                        image: "/assets/images/level3.jpg",
-                        background: "/assets/images/bg3.jpg",
-                        energyCost: 7
-                    },
-                    {
-                        id: 4,
-                        name: "L'Amphithéâtre du Savoir",
-                        description: "Le lieu où les plus grands savants ont partagé leurs théories. Préparez-vous à affronter des connaissances de niveau universitaire.",
-                        image: "/assets/images/level4.jpg",
-                        background: "/assets/images/bg4.jpg",
-                        energyCost: 8
-                    },
-                    {
-                        id: 5,
-                        name: "La Tour de l'Érudition",
-                        description: "Au sommet de cette tour se trouve le savoir ultime. Seuls les plus déterminés pourront gravir ses étages et affronter le gardien des connaissances.",
-                        image: "/assets/images/level5.jpg",
-                        background: "/assets/images/bg5.jpg",
-                        energyCost: 9
-                    }
-                ];
+        try {
+            // Load JSON file with anti-cache parameter
+            const response = await safeFetch('/configs/levels.json?nocache=' + Date.now());
+            if (!response.ok) {
+                throw new Error('Error loading level configuration');
             }
+            
+            const levelsData = await response.json();
+            
+            if (!levelsData || !levelsData.levels || !Array.isArray(levelsData.levels)) {
+                throw new Error('Invalid data format: expected structure is { levels: [...] }');
+            }
+            
+            // Transform data into usable format
+            levels = levelsData.levels.map(level => ({
+                id: level.id,
+                name: level.name || `Level ${level.id}`,
+                description: level.description || "Description not available",
+                // Handle cases where image or background are undefined
+                image: level.image ? (level.image.startsWith('/') ? level.image : `/assets/images/${level.image}`) : `/assets/images/level${level.id}.jpg`,
+                background: level.background ? (level.background.startsWith('/') ? level.background : `/assets/images/${level.background}`) : `/assets/images/bg${level.id}.jpg`,
+                // Use energyCost from file if it exists, otherwise calculate based on ID
+                energyCost: level.energyCost || (5 + (level.id - 1)),
+                // Keep tile information for the game
+                tiles: level.tiles || { base: "iso_dirt", special: [] },
+                monsters: level.monsters || [],
+                obstacles: level.obstacles || [],
+                boss: level.boss
+            }));
+        } catch (error) {
+            console.error("Error loading levels:", error);
+            
+            // If error, use default data to avoid blocking the interface
+            levels = [
+                {
+                    id: 1,
+                    name: "La Cour d'École",
+                    description: "Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.",
+                    image: "/assets/images/level1.jpg",
+                    background: "/assets/images/bg1.jpg",
+                    energyCost: 5
+                },
+                // ... additional default levels
+            ];
         }
-        
+    }
         // Récupérer les statistiques du joueur, y compris les niveaux débloqués
         async function fetchPlayerStats() {
-            try {
-                const response = await fetch('/api/player/stats', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('token')
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Erreur lors de la récupération des statistiques');
-                }
-                
-                const data = await response.json();
-                
-                // Mettre à jour le niveau maximum débloqué
-                if (data.unlockedLevels && data.unlockedLevels.length > 0) {
-                    maxUnlockedLevel = Math.max(...data.unlockedLevels);
-                } else {
-                    maxUnlockedLevel = 1; // Par défaut, seulement le niveau 1 est débloqué
-                }
-                
-                // Ajuster currentLevelIndex pour pointer vers le niveau maximum débloqué
-                // On cherche le niveau correspondant à maxUnlockedLevel dans notre tableau levels
-                const levelIndex = levels.findIndex(level => level.id === maxUnlockedLevel);
-                if (levelIndex !== -1) {
-                    currentLevelIndex = levelIndex;
-                } else {
-                    // Si nous ne trouvons pas le niveau exact, chercher le plus proche disponible
-                    const availableLevels = levels.filter(level => level.id <= maxUnlockedLevel);
-                    if (availableLevels.length > 0) {
-                        // Prendre le niveau le plus élevé disponible
-                        const highestAvailable = availableLevels.reduce((max, level) => 
-                            level.id > max.id ? level : max, availableLevels[0]);
-                        currentLevelIndex = levels.findIndex(level => level.id === highestAvailable.id);
-                    } else {
-                        // Fallback vers le niveau 1 si aucun niveau n'est trouvé
-                        currentLevelIndex = levels.findIndex(level => level.id === 1) || 0;
-                    }
-                }
-            } catch (error) {
-                console.error("Erreur lors de la récupération des statistiques:", error);
-                // En cas d'erreur, on suppose que seul le niveau 1 est débloqué
-                maxUnlockedLevel = 1;
+        try {
+            const data = await fetchWithAuth('/api/player/stats');
+            
+            // Update maximum unlocked level
+            if (data.unlockedLevels && data.unlockedLevels.length > 0) {
+                maxUnlockedLevel = Math.max(...data.unlockedLevels);
+            } else {
+                maxUnlockedLevel = 1; // Default, only level 1 is unlocked
             }
+            
+            // Adjust currentLevelIndex to point to maximum unlocked level
+            // Look for the level corresponding to maxUnlockedLevel in our levels array
+            const levelIndex = levels.findIndex(level => level.id === maxUnlockedLevel);
+            if (levelIndex !== -1) {
+                currentLevelIndex = levelIndex;
+            } else {
+                // If we don't find the exact level, look for the closest available
+                const availableLevels = levels.filter(level => level.id <= maxUnlockedLevel);
+                if (availableLevels.length > 0) {
+                    // Take the highest available level
+                    const highestAvailable = availableLevels.reduce((max, level) => 
+                        level.id > max.id ? level : max, availableLevels[0]);
+                    currentLevelIndex = levels.findIndex(level => level.id === highestAvailable.id);
+                } else {
+                    // Fallback to level 1 if no level is found
+                    currentLevelIndex = levels.findIndex(level => level.id === 1) || 0;
+                }
+            }
+        } catch (error) {
+            console.error("Error retrieving statistics:", error);
+            // If error, assume only level 1 is unlocked
+            maxUnlockedLevel = 1;
         }
-        
+    }
         // Mettre à jour l'affichage du niveau
         function updateLevelDisplay() {
             if (levels.length === 0) {
@@ -473,71 +424,59 @@
         
         // Lancer le combat
         function startBattle() {
-            const level = levels[currentLevelIndex];
-            
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Vous devez être connecté pour démarrer un combat');
-                return;
-            }
-            
-            // Vérifier si le joueur a assez d'énergie et démarrer le combat
-            fetch('/api/battle/start', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({
-                    levelId: level.id
-                })
+        const level = levels[currentLevelIndex];
+        
+        // Check and start battle
+        fetchWithAuth('/api/battle/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                levelId: level.id
             })
-            .then(res => {
-                if (!res.ok) {
-                    return res.json().then(data => {
-                        throw new Error(data.error || 'Erreur serveur');
-                    });
-                }
-                return res.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Stockage temporaire des données de niveau dans localStorage pour que game.html puisse y accéder
-                    try {
-                        // Ne stocker que les informations essentielles pour éviter de dépasser la limite de localStorage
-                        const levelData = {
-                            id: level.id,
-                            name: level.name,
-                            tiles: level.tiles,
-                            monsters: level.monsters,
-                            obstacles: level.obstacles || []
-                        };
-                        
-                        if (level.boss) {
-                            levelData.boss = level.boss;
-                        }
-                        
-                        localStorage.setItem('currentLevelData', JSON.stringify(levelData));
-                    } catch (e) {
-                        console.warn("Impossible de stocker les données de niveau dans localStorage:", e);
+        })
+        .then(data => {
+            if (data.success) {
+                // Store temporary level data in localStorage for game.html
+                try {
+                    // Store only essential information to avoid exceeding localStorage limit
+                    const levelData = {
+                        id: level.id,
+                        name: level.name,
+                        tiles: level.tiles,
+                        monsters: level.monsters,
+                        obstacles: level.obstacles || []
+                    };
+                    
+                    if (level.boss) {
+                        levelData.boss = level.boss;
                     }
                     
-                    // Rediriger vers la page de jeu avec les paramètres du niveau
-                    window.location.href = `/game.html?level=${level.id}`;
+                    localStorage.setItem('currentLevelData', JSON.stringify(levelData));
+                } catch (e) {
+                    console.warn("Unable to store level data in localStorage:", e);
                 }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                // Gérer les différentes erreurs possibles
-                if (error.message.includes('énergie')) {
+                
+                // Redirect to game page with level parameters
+                window.location.href = `/game.html?level=${level.id}`;
+            }
+        })
+        .catch(error => {
+            // Only handle if still authenticated
+            if (localStorage.getItem('token')) {
+                console.error('Error:', error);
+                // Handle different possible errors
+                if (error.message && error.message.includes('énergie')) {
                     alert("Vous n'avez pas assez d'énergie pour ce niveau!");
-                } else if (error.message.includes('niveau')) {
+                } else if (error.message && error.message.includes('niveau')) {
                     alert("Ce niveau n'est pas encore débloqué!");
                 } else {
-                    alert("Erreur lors du démarrage du combat: " + error.message);
+                    alert("Erreur lors du démarrage du combat");
                 }
-            });
-        }
+            }
+        });
+    }
     </script>
 </body>
 </html>

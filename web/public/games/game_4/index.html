@@ -510,9 +510,7 @@
             }
 
             // Récupérer les statistiques du joueur pour vérifier l'énergie
-            fetch('/api/player/stats', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
+            fetchWithAuth('/api/player/stats')
             .then(res => {
                 if (!res.ok) throw new Error('Erreur réseau');
                 return res.json();
@@ -545,9 +543,7 @@
             const token = localStorage.getItem('token');
             
             // Récupérer 20 icônes aléatoires
-            fetch('/api/icons/random?count=20', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
+            fetchWithAuth('/api/icons/random?count=20')
             .then(res => {
                 if (!res.ok) throw new Error('Erreur lors de la récupération des icônes');
                 return res.json();
