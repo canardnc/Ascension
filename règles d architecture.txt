@@ -1,5 +1,6 @@
 règles d'architecture pour l'implémentation d'un mini-jeu :
 - Chaque mini-jeu peut être appelé avec un paramètre "difficulty" allant de 1 à 3. Il prendra en compte cette valeur pour proposer des modes de jeu plus ou moins difficiles.
+- Chaque page devra inclure <script src="/js/auth-utils.js"></script> pour pouvoir faire appel à fetchWithAuth
 - au lancement de la partie, on vérifie que le joueur a suffisament d'énergie pour lancer le jeu et on déduit le cout du jeu (minigames_progress => cost) de son énergie disponible (player_energy => current_energy). Si il n'a pas assez d'énergie, on lui affiche une page d'erreur lui indiquant qu'il n'a plus assez d'énergie avec un bouton "quitter"
 - Le mini-jeu doit enregistrer la durée du jeu pour pouvoir s'en servir en fin de jeu
 - A la fin du jeu, on affiche au joueur une page de fin de partie avec son score et la possibilité de rejouer ou de quitter le jeu. On met également à jour ses statistiques dans minigames_progress : on ajoute le score dans points sur les lignes (user = ID_du joueur, mini_game_id = jeu en cours, difficulty_level <= difficulté en cours) => cela augmentera le score de la difficulté actuelle et celles inférieures, on met la date dans "last_played", on incrémente le total_played et on ajoute à time_played le nombre de minutes passé sur la partie.

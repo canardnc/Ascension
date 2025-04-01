@@ -369,6 +369,7 @@
         </div>
     </div>
 
+    <script src="/js/auth-utils.js"></script>
     <script>
         // Configuration du jeu
         const MAX_TABLE = 10;
@@ -475,36 +476,32 @@
         }
 
         function checkEnergyAndStartGame() {
-            const token = localStorage.getItem('token');
-            if (!token) {
+    // Vérifier l'authentification
+    if (!localStorage.getItem('token')) {
+        showEnergyError();
+        return;
+    }
+
+    // Récupérer les statistiques du joueur pour vérifier l'énergie
+    fetchWithAuth('/api/player/stats')
+        .then(data => {
+            // data est déjà un objet JSON avec fetchWithAuth
+            // Calculer le coût en énergie (nous utilisons 1 par défaut pour ce mini-jeu)
+            const energyCost = 1;
+            
+            if (data.currentEnergy < energyCost) {
                 showEnergyError();
-                return;
+            } else {
+                // Déduire l'énergie (cette opération est gérée côté serveur)
+                // Nous lançons simplement le jeu
+                startGame();
             }
-
-            // Récupérer les statistiques du joueur pour vérifier l'énergie
-            fetchWithAuth('/api/player/stats')
-            .then(res => {
-                if (!res.ok) throw new Error('Erreur réseau');
-                return res.json();
-            })
-            .then(data => {
-                // Calculer le coût en énergie (nous utilisons 1 par défaut pour ce mini-jeu)
-                const energyCost = 1;
-                
-                if (data.currentEnergy < energyCost) {
-                    showEnergyError();
-                } else {
-                    // Déduire l'énergie (cette opération est gérée côté serveur)
-                    // Nous lançons simplement le jeu
-                    startGame();
-                }
-            })
-            .catch(error => {
-                console.error('Erreur:', error);
-                showEnergyError();
-            });
-        }
-
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showEnergyError();
+        });
+}
         function showEnergyError() {
             document.getElementById('energy-modal').style.display = 'flex';
         }
