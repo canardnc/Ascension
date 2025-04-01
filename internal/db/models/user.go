@@ -75,7 +75,7 @@ func GetUserByUsername(username string) (*User, error) {
 		&user.ID, &user.Username, &user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
 	)
 	if err != nil {
-		log.Printf("Erreur lors de la récupération de l'utilisateur : %v", err)
+		log.Printf("Getuserbyname, Erreur lors de la récupération de l'utilisateur : %v", err)
 		return nil, err
 	}
 

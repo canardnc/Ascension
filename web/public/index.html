@@ -53,6 +53,7 @@
             font-size: 16px; 
             cursor: pointer; 
             transition: background-color 0.3s;
+            margin-top: 15px;
         }
         .game-button:hover {
             background-color: #303f9f;
@@ -65,6 +66,25 @@
             width: 250px;
             margin-right: 10px;
             margin-bottom: 10px;
+        }
+        .select-field {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 250px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-align: left;
+            padding-left: 20%;
         }
         .stats {
             display: flex;
@@ -130,9 +150,25 @@
         
         <div id="onboarding-area" class="login-container">
             <h2>Bienvenue dans l'aventure !</h2>
-            <p>Comment s'appelle votre héros ?</p>
-            <input type="text" id="hero-name" class="input-field" placeholder="Nom du héros">
-            <button class="game-button" onclick="saveHeroName()">Commencer</button>
+            
+            <div class="input-group">
+                <label class="label" for="hero-name">Comment s'appelle votre héros ?</label>
+                <input type="text" id="hero-name" class="input-field" placeholder="Nom du héros">
+            </div>
+            
+            <div class="input-group">
+                <label class="label" for="school-year">Votre niveau scolaire :</label>
+                <select id="school-year" class="select-field">
+                    <option value="CP">CP</option>
+                    <option value="CE1">CE1</option>
+                    <option value="CE2">CE2</option>
+                    <option value="CM1">CM1</option>
+                    <option value="CM2">CM2</option>
+                    <option value="DYS">DYS</option>
+                </select>
+            </div>
+            
+            <button class="game-button" onclick="saveHeroInfo()">Commencer</button>
             <div id="hero-error" class="error-message">Erreur de sauvegarde. Veuillez réessayer.</div>
         </div>
         
@@ -164,40 +200,39 @@
     
     <script src="/js/auth-utils.js"></script>
 
-
-    
     <script>
         // Fonction pour vérifier si le token est valide via un appel API
-    function validateToken() {
-        const token = localStorage.getItem('token');
-        
-        // Si pas de token, pas besoin de vérifier
-        if (!token) {
-            return Promise.resolve(false);
-        }
-        
-        // Faire un appel API simple pour vérifier la validité du token
-        return fetch('/api/user', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        })
-        .then(response => {
-            // Si on reçoit 401 ou 403, le token est invalide
-            if (response.status === 401 || response.status === 403) {
-                console.log('Token invalide, suppression du token');
-                localStorage.removeItem('token'); // Supprimer le token invalide
-                return false;
+        function validateToken() {
+            const token = localStorage.getItem('token');
+            
+            // Si pas de token, pas besoin de vérifier
+            if (!token) {
+                return Promise.resolve(false);
             }
             
-            // Sinon, le token est valide
-            return response.ok;
-        })
-        .catch(error => {
-            console.error('Erreur lors de la validation du token:', error);
-            // En cas d'erreur réseau, on considère le token comme potentiellement valide
-            // et on laisse la page d'accueil gérer les erreurs API
-            return true;
-        });
-    }
+            // Faire un appel API simple pour vérifier la validité du token
+            return fetch('/api/user', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            })
+            .then(response => {
+                // Si on reçoit 401 ou 403, le token est invalide
+                if (response.status === 401 || response.status === 403) {
+                    console.log('Token invalide, suppression du token');
+                    localStorage.removeItem('token'); // Supprimer le token invalide
+                    return false;
+                }
+                
+                // Sinon, le token est valide
+                return response.ok;
+            })
+            .catch(error => {
+                console.error('Erreur lors de la validation du token:', error);
+                // En cas d'erreur réseau, on considère le token comme potentiellement valide
+                // et on laisse la page d'accueil gérer les erreurs API
+                return true;
+            });
+        }
+        
         // Cacher tous les écrans sauf celui de login
         function showScreen(screenId) {
             document.getElementById('login-area').style.display = 'none';
@@ -210,7 +245,7 @@
         
         // Connexion simple avec un pseudo
         function login() {
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             if (!username) {
                 alert('Veuillez entrer un pseudo');
                 return;
@@ -252,55 +287,66 @@
             });
         }
         
-        // Sauvegarder le nom du héros
-        function saveHeroName() {
-    const heroName = document.getElementById('hero-name').value;
-    if (!heroName) {
-        alert('Veuillez entrer un nom pour votre héros');
-        return;
-    }
-    
-    // Afficher l'écran de chargement
-    showScreen('loading-area');
-    
-    // Cacher les messages d'erreur
-    document.getElementById('hero-error').style.display = 'none';
-    
-    fetchWithAuth('/api/user', {
-        method: 'PUT',
-        headers: { 
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ heroName: heroName })
-    })
-    .then(data => {
-        // Redirection directe vers la page d'accueil
-        window.location.href = '/home.html';
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        document.getElementById('hero-error').style.display = 'block';
-        showScreen('onboarding-area');
-    });
-}
+        // Sauvegarder le nom du héros et l'année scolaire - UTILISE DIRECTEMENT initialize
+        function saveHeroInfo() {
+            const heroName = document.getElementById('hero-name').value.trim();
+            const schoolYear = document.getElementById('school-year').value;
+            
+            if (!heroName) {
+                alert('Veuillez entrer un nom pour votre héros');
+                return;
+            }
+            
+            // Afficher l'écran de chargement
+            showScreen('loading-area');
+            
+            // Cacher les messages d'erreur
+            document.getElementById('hero-error').style.display = 'none';
+            
+            // Appeler DIRECTEMENT la fonction d'initialisation complète
+            fetchWithAuth('/api/user/initialize', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    heroName: heroName,
+                    year: schoolYear
+                })
+            })
+            .then(data => {
+                if (data.success) {
+                    // Redirection directe vers la page d'accueil
+                    window.location.href = '/home.html';
+                } else {
+                    throw new Error(data.message || "Échec de l'initialisation");
+                }
+            })
+            .catch(error => {
+                console.error('Erreur d\'initialisation:', error);
+                document.getElementById('hero-error').style.display = 'block';
+                document.getElementById('hero-error').textContent = 'Erreur de sauvegarde: ' + error.message;
+                showScreen('onboarding-area');
+            });
+        }
         
         // Charger les données utilisateur
         function loadUserData() {
-    // Afficher l'écran de chargement
-    showScreen('loading-area');
-    
-    fetchWithAuth('/api/user')
-    .then(data => {
-        // Redirection vers la nouvelle page d'accueil
-        window.location.href = '/home.html';
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        // En cas d'erreur d'authentification, revenir à l'écran de login
-        localStorage.removeItem('token');
-        showScreen('login-area');
-    });
-}
+            // Afficher l'écran de chargement
+            showScreen('loading-area');
+            
+            fetchWithAuth('/api/user')
+            .then(data => {
+                // Redirection vers la nouvelle page d'accueil
+                window.location.href = '/home.html';
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                // En cas d'erreur d'authentification, revenir à l'écran de login
+                localStorage.removeItem('token');
+                showScreen('login-area');
+            });
+        }
         
         // Calculer le niveau du joueur basé sur son score
         function calculateLevel(score) {
@@ -319,31 +365,31 @@
         
         // Démarrer le jeu
         function startGame() {
-    window.location.href = '/battle.html';
-}
+            window.location.href = '/battle.html';
+        }
         
         // Vérifier si déjà connecté au chargement
         window.onload = function() {
-    // D'abord afficher l'écran de chargement
-    showScreen('loading-area');
-        
-        // Vérifier si le token est valide
-        validateToken()
-            .then(isValid => {
-                if (isValid) {
-                    // Si le token est valide, rediriger vers la page d'accueil
-                    window.location.href = '/home.html';
-                } else {
-                    // Sinon afficher la page de connexion
+            // D'abord afficher l'écran de chargement
+            showScreen('loading-area');
+                
+            // Vérifier si le token est valide
+            validateToken()
+                .then(isValid => {
+                    if (isValid) {
+                        // Si le token est valide, rediriger vers la page d'accueil
+                        window.location.href = '/home.html';
+                    } else {
+                        // Sinon afficher la page de connexion
+                        showScreen('login-area');
+                    }
+                })
+                .catch(error => {
+                    // En cas d'erreur, afficher la page de connexion
+                    console.error('Erreur lors de la vérification du token:', error);
                     showScreen('login-area');
-                }
-            })
-            .catch(error => {
-                // En cas d'erreur, afficher la page de connexion
-                console.error('Erreur lors de la vérification du token:', error);
-                showScreen('login-area');
-            });
-    };
+                });
+        };
     </script>
 </body>
 </html>

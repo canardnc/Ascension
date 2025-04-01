@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/canardnc/Ascension/internal/db"
@@ -9,33 +11,31 @@ import (
 // User représente un utilisateur dans le système
 type User struct {
 	ID        int       `json:"id"`
-	GoogleID  string    `json:"googleId,omitempty"`
-	Email     string    `json:"email"`
 	Username  string    `json:"username"`
+	Email     string    `json:"email"`
 	HeroName  string    `json:"heroName,omitempty"`
-	Year      string    `json:"year,omitempty"` // Nouveau champ
+	Year      string    `json:"year,omitempty"`
+	Level     int       `json:"level"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
 // Create crée un nouvel utilisateur dans la base de données
 func (u *User) Create() error {
 	query := `
-		INSERT INTO users (google_id, email, hero_name, year, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO users (username, email, hero_name, year, level, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at
 	`
-
-	// Pour une authentification simple, on utilise le username comme email et un google_id généré
-	if u.GoogleID == "" {
-		u.GoogleID = "local_" + u.Username
-	}
-	if u.Email == "" {
-		u.Email = u.Username + "@local.auth"
-	}
-
 	now := time.Now()
+
+	// Si l'email est vide, utiliser le username comme email de substitution
+	email := u.Email
+	if email == "" {
+		email = u.Username + "@example.com"
+	}
+
 	return db.DB.QueryRow(
-		query, u.GoogleID, u.Email, u.HeroName, u.Year, now,
+		query, u.Username, email, u.HeroName, u.Year, 1, now,
 	).Scan(&u.ID, &u.CreatedAt)
 }
 
@@ -43,58 +43,84 @@ func (u *User) Create() error {
 func (u *User) Update() error {
 	query := `
 		UPDATE users
-		SET hero_name = $1, year = $2
-		WHERE id = $3
+		SET hero_name = $1, year = $2, level = $3
+		WHERE id = $4
 	`
 
-	_, err := db.DB.Exec(query, u.HeroName, u.Year, u.ID)
+	_, err := db.DB.Exec(query, u.HeroName, u.Year, u.Level, u.ID)
 	return err
 }
 
 // GetUserByID récupère un utilisateur par son ID
 func GetUserByID(id int) (*User, error) {
+	// Log détaillé pour debugging
+	log.Printf("GetUserByID: Tentative de récupération de l'utilisateur avec ID=%d", id)
+
+	// Vérifier d'abord si l'ID est valide
+	if id <= 0 {
+		log.Printf("GetUserByID: ID invalide (%d)", id)
+		return nil, fmt.Errorf("ID utilisateur invalide: %d", id)
+	}
+
+	// Requête simplifiée pour s'assurer qu'elle fonctionne
 	query := `
-		SELECT id, google_id, email, hero_name, year, created_at
+		SELECT id, username, COALESCE(hero_name, ''), COALESCE(year, ''), COALESCE(level, 1), created_at
 		FROM users
 		WHERE id = $1
 	`
 
 	var user User
 	err := db.DB.QueryRow(query, id).Scan(
-		&user.ID, &user.GoogleID, &user.Email, &user.HeroName, &user.Year, &user.CreatedAt,
+		&user.ID,
+		&user.Username,
+		&user.HeroName,
+		&user.Year,
+		&user.Level,
+		&user.CreatedAt,
 	)
+
 	if err != nil {
+		log.Printf("GetUserByID: Erreur lors de la récupération de l'utilisateur ID=%d: %v", id, err)
 		return nil, err
 	}
 
-	// Définir le username basé sur l'email pour l'authentification simple
-	user.Username = user.Email
-	if len(user.Email) > 0 && user.Email[len(user.Email)-10:] == "@local.auth" {
-		user.Username = user.Email[:len(user.Email)-10]
-	}
-
+	log.Printf("GetUserByID: Utilisateur ID=%d récupéré avec succès: %s", id, user.Username)
 	return &user, nil
 }
 
-// GetUserByUsername récupère un utilisateur par son nom d'utilisateur (pour l'auth simple)
+// GetUserByUsername récupère un utilisateur par son nom d'utilisateur
 func GetUserByUsername(username string) (*User, error) {
-	email := username + "@local.auth"
+	log.Printf("GetUserByUsername: Tentative de récupération de l'utilisateur avec username=%s", username)
 
+	// Vérifier si username est valide
+	if username == "" {
+		log.Printf("GetUserByUsername: Username vide")
+		return nil, fmt.Errorf("nom d'utilisateur vide")
+	}
+
+	// Requête simplifiée
 	query := `
-		SELECT id, google_id, email, hero_name, year, created_at
+		SELECT id, username, COALESCE(hero_name, ''), COALESCE(year, ''), COALESCE(level, 1), created_at
 		FROM users
-		WHERE email = $1
+		WHERE username = $1
 	`
 
 	var user User
-	err := db.DB.QueryRow(query, email).Scan(
-		&user.ID, &user.GoogleID, &user.Email, &user.HeroName, &user.Year, &user.CreatedAt,
+	err := db.DB.QueryRow(query, username).Scan(
+		&user.ID,
+		&user.Username,
+		&user.HeroName,
+		&user.Year,
+		&user.Level,
+		&user.CreatedAt,
 	)
+
 	if err != nil {
+		log.Printf("GetUserByUsername: Erreur lors de la récupération de l'utilisateur username=%s: %v", username, err)
 		return nil, err
 	}
 
-	user.Username = username
+	log.Printf("GetUserByUsername: Utilisateur username=%s récupéré avec succès: ID=%d", username, user.ID)
 	return &user, nil
 }
 

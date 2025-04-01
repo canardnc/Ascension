@@ -92,6 +92,15 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
+	// Route d'initialisation des données du joueur
+	mux.HandleFunc("/api/user/initialize", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			middleware.JWTAuth(handlers.InitializePlayer)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
 	// Scores
 	mux.HandleFunc("/api/scores", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
