@@ -40,7 +40,6 @@ type PlayerSubStat struct {
 }
 
 type PlayerEnergy struct {
-	ID            int       `json:"id"`
 	UserID        int       `json:"userId"`
 	CurrentEnergy int       `json:"currentEnergy"`
 	MaxEnergy     int       `json:"maxEnergy"`
@@ -433,14 +432,14 @@ func UpdatePlayerSubStatsForCategory(userID int, categoryID int, subStats map[st
 // GetPlayerEnergyByUserID récupère l'énergie d'un joueur
 func GetPlayerEnergyByUserID(userID int) (*PlayerEnergy, error) {
 	query := `
-		SELECT id, user_id, current_energy, max_energy, last_refresh
+		SELECT user_id, current_energy, max_energy, last_refresh
 		FROM player_energy
 		WHERE user_id = $1
 	`
 
 	var energy PlayerEnergy
 	err := db.DB.QueryRow(query, userID).Scan(
-		&energy.ID, &energy.UserID, &energy.CurrentEnergy,
+		&energy.UserID, &energy.CurrentEnergy,
 		&energy.MaxEnergy, &energy.LastRefresh,
 	)
 	if err != nil {

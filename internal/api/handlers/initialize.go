@@ -137,8 +137,9 @@ func completePlayerInitialization(userID int, heroName, year string) error {
 	// 4. Initialiser player_energy
 	_, err = db.DB.Exec(`
 		INSERT INTO player_energy (user_id, current_energy, max_energy, last_refresh)
-		VALUES ($1, 20, 20, NOW())
-		
+	VALUES ($1, 20, 20, NOW())
+	ON CONFLICT (user_id) DO UPDATE
+	SET current_energy = 20, max_energy = 20, last_refresh = NOW()
 	`, userID)
 	if err != nil {
 		log.Printf("Erreur non critique: Initialisation énergie: %v", err)
