@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Jeu Isométrique – Version épurée</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #222; }
+    canvas { display: block; margin: auto; background: #000; }
+  </style>
+  <!-- Inclusion du fichier de configuration pour blockMap et heightMap -->
+  <script src="config.js"></script>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <script>
+
+    
+    // ===== Paramètres du terrain et des tuiles =====
+    const gridWidth = 80;
+    const gridHeight = 80;
+    const tileWidth = 32;
+    const tileHeight = 16;
+    
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    // ===== Chargement du fond =====
+    const backgroundImage = new Image();
+
+    function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+    backgroundImage.src = "school.png"; // l'image doit être dans le même dossier
+    
+    function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+    // ===== Définition de la fonction isBlocked =====
+    function isBlocked(tileX, tileY) {
+      if (tileX < 0 || tileX >= gridWidth || tileY < 0 || tileY >= gridHeight) return true;
+      return blockMap[tileX + "," + tileY];
+    }
+    
+    // ===== Gestion des entrées clavier =====
+    let keys = {};
+    window.addEventListener("keydown", e => { keys[e.key] = true; });
+    window.addEventListener("keyup", e => { keys[e.key] = false; });
+    
+    // ===== Contrôle tactile pour le déplacement =====
+    let touchInput = { x: 0, y: 0 };
+    let touchStart = null;
+    canvas.addEventListener("touchstart", function(e) {
+      e.preventDefault();
+      let touch = e.touches[0];
+      touchStart = { x: touch.clientX, y: touch.clientY };
+    });
+    canvas.addEventListener("touchmove", function(e) {
+      e.preventDefault();
+      if(touchStart) {
+        let touch = e.touches[0];
+        let dx = touch.clientX - touchStart.x;
+        let dy = touch.clientY - touchStart.y;
+        let mag = Math.hypot(dx, dy);
+        if(mag > 0) {
+          touchInput.x = dx / mag;
+          touchInput.y = dy / mag;
+        } else {
+          touchInput.x = 0;
+          touchInput.y = 0;
+        }
+      }
+    });
+    canvas.addEventListener("touchend", function(e) {
+      touchStart = null;
+      touchInput.x = 0;
+      touchInput.y = 0;
+    });
+    
+    // ===== Conversion des coordonnées =====
+    // De grille → monde (projection isométrique)
+    function gridToWorld(x, y) {
+      return {
+        x: (x - y) * tileWidth / 2,
+        y: (x + y) * tileHeight / 2
+      };
+    }
+    // De monde → écran (avec l'offset de la caméra)
+    function worldToScreen(worldX, worldY, cameraOffset) {
+      return { x: worldX + cameraOffset.x, y: worldY + cameraOffset.y };
+    }
+    // De grille → écran
+    function gridToScreen(x, y, cameraOffset) {
+      const worldPos = gridToWorld(x, y);
+      return worldToScreen(worldPos.x, worldPos.y, cameraOffset);
+    }
+    
+    // ===== Caméra centrée sur le héros =====
+    function getCameraOffset() {
+  // Calcul classique pour centrer le héros
+  const heroWorld = gridToWorld(hero.x, hero.y);
+  let offset = {
+    x: canvas.width / 2 - heroWorld.x - tileWidth / 2,
+    y: canvas.height / 2 - heroWorld.y - tileHeight / 2
+  };
+  // Calculer la position de l'image de fond (centrée sur la grille)
+  let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
+  let bgX = gridCenter.x - backgroundImage.width / 2;
+  let bgY = gridCenter.y - backgroundImage.height / 2;
+  
+  // Clamp de l'offset pour que le canvas reste dans l'image de fond
+  offset.x = clamp(offset.x, canvas.width - backgroundImage.width - bgX, -bgX);
+  offset.y = clamp(offset.y, canvas.height - backgroundImage.height - bgY, -bgY);
+  
+  return offset;
+}
+    
+    // ===== Définition du héros et des monstres =====
+    // Positions en valeurs continues pour un déplacement fluide.
+    const hero = {
+      x: gridWidth / 2,
+      y: gridHeight / 2,
+      hp: 100,
+      damage: 0,
+      range: 10,
+      attackSpeed: 1,   // 1 tir/s
+      moveSpeed: 100,    // vitesse ajustée
+      attackTimer: 0
+    };
+    let monsters = [];
+    function spawnMonsters() {
+      monsters = [];
+      let count = 0;
+      while (count < 10) {
+        let mx = Math.random() * gridWidth;
+        let my = Math.random() * gridHeight;
+        if (Math.hypot(mx - hero.x, my - hero.y) < 5) continue;
+        if (isBlocked(Math.floor(mx), Math.floor(my))) continue;
+        monsters.push({
+          x: mx,
+          y: my,
+          hp: 50,
+          damage: 0,
+          range: 5,
+          attackSpeed: 1,
+          moveSpeed: 6,    // vitesse des monstres
+          attackTimer: 0,
+          lastPathTime: 0,
+          path: []
+        });
+        count++;
+      }
+    }
+    spawnMonsters();
+    
+    // ===== Amélioration du pathfinder (8 directions) =====
+    function findPath(start, goal) {
+      let openSet = [];
+      let closedSet = new Set();
+      function nodeKey(n) { return n.x + "," + n.y; }
+      function heuristic(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+      openSet.push({ x: start.x, y: start.y, g: 0, h: heuristic(start, goal), f: heuristic(start, goal), cameFrom: null });
+      let openMap = {};
+      openMap[nodeKey(openSet[0])] = openSet[0];
+      while (openSet.length > 0) {
+        let currentIndex = 0;
+        for (let i = 1; i < openSet.length; i++){
+          if (openSet[i].f < openSet[currentIndex].f) currentIndex = i;
+        }
+        let current = openSet[currentIndex];
+        if (current.x === goal.x && current.y === goal.y) {
+          let path = [];
+          while (current) {
+            path.push({ x: current.x, y: current.y });
+            current = current.cameFrom;
+          }
+          path.reverse();
+          if (path.length > 0) path.shift();
+          return path;
+        }
+        openSet.splice(currentIndex, 1);
+        delete openMap[nodeKey(current)];
+        closedSet.add(nodeKey(current));
+        // Considérer 8 voisins
+        let neighbors = [];
+        for (let dx = -1; dx <= 1; dx++){
+          for (let dy = -1; dy <= 1; dy++){
+            if (dx === 0 && dy === 0) continue;
+            neighbors.push({ x: current.x + dx, y: current.y + dy });
+          }
+        }
+        for (let neighbor of neighbors) {
+          let key = neighbor.x + "," + neighbor.y;
+          if (neighbor.x < 0 || neighbor.x >= gridWidth || neighbor.y < 0 || neighbor.y >= gridHeight) continue;
+          if (isBlocked(neighbor.x, neighbor.y)) continue;
+          if (closedSet.has(key)) continue;
+          let moveCost = (neighbor.x !== current.x && neighbor.y !== current.y) ? Math.SQRT2 : 1;
+          let tentative_g = current.g + moveCost;
+          let neighborNode = openMap[key];
+          if (!neighborNode) {
+            neighborNode = {
+              x: neighbor.x,
+              y: neighbor.y,
+              g: tentative_g,
+              h: heuristic(neighbor, goal),
+              f: tentative_g + heuristic(neighbor, goal),
+              cameFrom: current
+            };
+            openSet.push(neighborNode);
+            openMap[key] = neighborNode;
+          } else if (tentative_g < neighborNode.g) {
+            neighborNode.g = tentative_g;
+            neighborNode.f = tentative_g + neighborNode.h;
+            neighborNode.cameFrom = current;
+          }
+        }
+      }
+      return []; // Aucun chemin trouvé
+    }
+    
+    // ===== Système de projectiles =====
+    let projectiles = [];
+    const projectileSpeed = 10; // tuiles par seconde
+    function spawnProjectile(source, target, owner) {
+      let dx = target.x - source.x;
+      let dy = target.y - source.y;
+      let dist = Math.hypot(dx, dy);
+      if (dist === 0) return;
+      let vx = dx / dist;
+      let vy = dy / dist;
+      projectiles.push({
+        x: source.x,
+        y: source.y,
+        vx: vx,
+        vy: vy,
+        damage: source.damage,
+        owner: owner, // "hero" ou "monster"
+        targetEntity: target.entity || null
+      });
+    }
+    function updateProjectiles(dt) {
+      for (let i = projectiles.length - 1; i >= 0; i--) {
+        let p = projectiles[i];
+        p.x += p.vx * projectileSpeed * dt;
+        p.y += p.vy * projectileSpeed * dt;
+        if (p.x < 0 || p.x >= gridWidth || p.y < 0 || p.y >= gridHeight) {
+          projectiles.splice(i, 1);
+          continue;
+        }
+        let tileX = Math.floor(p.x);
+        let tileY = Math.floor(p.y);
+        if (isBlocked(tileX, tileY)) {
+          projectiles.splice(i, 1);
+          continue;
+        }
+        if (p.owner === "hero") {
+          for (let j = 0; j < monsters.length; j++) {
+            let m = monsters[j];
+            if (Math.hypot(p.x - m.x, p.y - m.y) < 0.5) {
+              m.hp -= p.damage;
+              projectiles.splice(i, 1);
+              break;
+            }
+          }
+        } else if (p.owner === "monster") {
+          if (Math.hypot(p.x - hero.x, p.y - hero.y) < 0.5) {
+            hero.hp -= p.damage;
+            projectiles.splice(i, 1);
+          }
+        }
+      }
+    }
+    function drawProjectiles(cameraOffset) {
+      projectiles.forEach(p => {
+        let screenPos = gridToScreen(p.x, p.y, cameraOffset);
+        ctx.beginPath();
+        ctx.arc(screenPos.x + tileWidth/2, screenPos.y + tileHeight/2, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "yellow";
+        ctx.fill();
+      });
+    }
+    
+    // ===== Boucle principale =====
+    let lastTime = performance.now();
+    function gameLoop(timestamp) {
+      let dt = (timestamp - lastTime) / 1000;
+      lastTime = timestamp;
+      updateGame(dt);
+      drawGame();
+      requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
+    
+    // ===== Mise à jour du jeu =====
+    function updateGame(dt) {
+      // --- Traitement de l'input pour le déplacement ---
+      let screenInput = { x: 0, y: 0 };
+      if (keys["ArrowUp"]) { screenInput.y -= 1; }
+      if (keys["ArrowDown"]) { screenInput.y += 1; }
+      if (keys["ArrowLeft"]) { screenInput.x -= 1; }
+      if (keys["ArrowRight"]) { screenInput.x += 1; }
+      if (touchInput.x !== 0 || touchInput.y !== 0) {
+        screenInput = { x: touchInput.x, y: touchInput.y };
+      }
+      let mag = Math.hypot(screenInput.x, screenInput.y);
+      if (mag > 0) {
+        screenInput.x /= mag;
+        screenInput.y /= mag;
+      }
+      // Conversion du vecteur d'entrée de "screen space" en delta de grille
+      let a = tileWidth / 2;  // 16
+      let b = tileHeight / 2; // 8
+      let gridDelta = { 
+        x: (screenInput.x / a + screenInput.y / b) / 2,
+        y: (screenInput.y / b - screenInput.x / a) / 2
+      };
+      if (mag > 0) {
+        let proposedX = hero.x + gridDelta.x * hero.moveSpeed * dt;
+        let proposedY = hero.y + gridDelta.y * hero.moveSpeed * dt;
+        if (!isBlocked(Math.floor(proposedX), Math.floor(proposedY))) {
+          hero.x = proposedX;
+          hero.y = proposedY;
+        } else {
+          // Glissement : tester séparément X et Y
+          if (!isBlocked(Math.floor(proposedX), Math.floor(hero.y))) {
+            hero.x = proposedX;
+          }
+          if (!isBlocked(Math.floor(hero.x), Math.floor(proposedY))) {
+            hero.y = proposedY;
+          }
+        }
+      }
+      
+      // --- Attaque du héros ---
+      hero.attackTimer += dt;
+      if (hero.attackTimer >= 1 / hero.attackSpeed) {
+        let target = null;
+        let minDist = Infinity;
+        monsters.forEach(m => {
+          let d = Math.hypot(hero.x - m.x, hero.y - m.y);
+          if (d <= hero.range && d < minDist) { minDist = d; target = m; }
+        });
+        if (target) {
+          spawnProjectile(hero, { x: target.x, y: target.y, entity: target }, "hero");
+          hero.attackTimer = 0;
+        }
+      }
+      
+      // --- Comportement des monstres avec pathfinding amélioré ---
+      monsters.forEach(m => {
+        let dx = hero.x - m.x;
+        let dy = hero.y - m.y;
+        let d = Math.hypot(dx, dy);
+        if (d > m.range) {
+          let currentTime = performance.now();
+          if (!m.path || m.path.length === 0 || currentTime - m.lastPathTime > 500) {
+            m.lastPathTime = currentTime;
+            let start = { x: Math.floor(m.x), y: Math.floor(m.y) };
+            let goal = { x: Math.floor(hero.x), y: Math.floor(hero.y) };
+            m.path = findPath(start, goal);
+          }
+          if (m.path && m.path.length > 0) {
+            let nextTile = m.path[0];
+            let targetX = nextTile.x + 0.5;
+            let targetY = nextTile.y + 0.5;
+            let vx = targetX - m.x;
+            let vy = targetY - m.y;
+            let distToTile = Math.hypot(vx, vy);
+            if (distToTile > 0.1) {
+              vx /= distToTile;
+              vy /= distToTile;
+              let newX = m.x + vx * m.moveSpeed * dt;
+              let newY = m.y + vy * m.moveSpeed * dt;
+              if (!isBlocked(Math.floor(newX), Math.floor(newY))) {
+                m.x = newX;
+                m.y = newY;
+              }
+            }
+            if (distToTile < 0.2) { m.path.shift(); }
+          }
+        }
+        m.attackTimer += dt;
+        if (d <= m.range && m.attackTimer >= 1 / m.attackSpeed) {
+          spawnProjectile(m, { x: hero.x, y: hero.y, entity: hero }, "monster");
+          m.attackTimer = 0;
+        }
+      });
+      
+      updateProjectiles(dt);
+      monsters = monsters.filter(m => m.hp > 0);
+      if (hero.hp <= 0) { alert("Game Over! Vous avez perdu."); resetGame(); }
+      if (monsters.length === 0) { alert("Victoire! Vous avez éliminé tous les monstres."); resetGame(); }
+    }
+    
+    function resetGame() {
+      hero.x = gridWidth / 2;
+      hero.y = gridHeight / 2;
+      hero.hp = 100;
+      hero.attackTimer = 0;
+      spawnMonsters();
+      projectiles = [];
+    }
+    
+    // ===== Affichage (draw) =====
+    function drawGame() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let cameraOffset = getCameraOffset();
+      
+      // --- Dessiner le fond centré sur la grille ---
+      let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
+      let bgX = gridCenter.x - backgroundImage.width / 2;
+      let bgY = gridCenter.y - backgroundImage.height / 2;
+      ctx.drawImage(backgroundImage, bgX + cameraOffset.x, bgY + cameraOffset.y);
+      
+      // --- Dessiner les projectiles ---
+      drawProjectiles(cameraOffset);
+      
+      // --- Dessiner le héros avec transparence si sur tuile élevée ---
+      let heroTileKey = Math.floor(hero.x) + "," + Math.floor(hero.y);
+      let heroOnElevated = (heightMap[heroTileKey] >= 2);
+      let heroScreen = gridToScreen(hero.x, hero.y, cameraOffset);
+      let heroCenterX = heroScreen.x + tileWidth/2;
+      let heroCenterY = heroScreen.y + tileHeight/2;
+      if (heroOnElevated) {
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+      }
+      ctx.beginPath();
+      ctx.arc(heroCenterX, heroCenterY, 10, 0, Math.PI * 2);
+      ctx.fillStyle = "blue";
+      ctx.fill();
+      ctx.fillStyle = "white";
+      ctx.font = "10px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(Math.floor(hero.hp), heroCenterX, heroCenterY - 12);
+      if (heroOnElevated) { ctx.restore(); }
+      
+      // --- Dessiner les monstres avec transparence si sur tuile élevée ---
+      monsters.forEach(m => {
+        let mTileKey = Math.floor(m.x) + "," + Math.floor(m.y);
+        let mOnElevated = (heightMap[mTileKey] >= 2);
+        let mScreen = gridToScreen(m.x, m.y, cameraOffset);
+        let mCenterX = mScreen.x + tileWidth/2;
+        let mCenterY = mScreen.y + tileHeight/2;
+        if (mOnElevated) { ctx.save(); ctx.globalAlpha = 0.25; }
+        ctx.beginPath();
+        ctx.arc(mCenterX, mCenterY, 10, 0, Math.PI * 2);
+        ctx.fillStyle = "red";
+        ctx.fill();
+        ctx.fillStyle = "white";
+        ctx.font = "10px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(Math.floor(m.hp), mCenterX, mCenterY - 12);
+        if (mOnElevated) { ctx.restore(); }
+      });
+      
+      // Note : Le bloc d'affichage agrandi des coordonnées survolées a été supprimé.
+    }
+    
+    // ===== Mouseover pour mettre à jour hoveredTile (sans affichage) =====
+    let hoveredTile = null;
+    canvas.addEventListener("mousemove", function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      let cameraOffset = getCameraOffset();
+      const worldX = mouseX - cameraOffset.x;
+      const worldY = mouseY - cameraOffset.y;
+      const invX = worldX / (tileWidth / 2);
+      const invY = worldY / (tileHeight / 2);
+      let gridX = (invX + invY) / 2;
+      let gridY = (invY - invX) / 2;
+      hoveredTile = { x: Math.floor(gridX), y: Math.floor(gridY) };
+    });
+    canvas.addEventListener("mouseout", () => { hoveredTile = null; });
+    
+  </script>
+</body>
+</html>

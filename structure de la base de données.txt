@@ -16,6 +16,25 @@ CREATE INDEX idx_icons_filename ON public.icons USING btree (filename);
 CREATE INDEX idx_icons_type ON public.icons USING btree (type);
 
 
+-- public.monsters definition
+
+-- Drop table
+
+-- DROP TABLE public.monsters;
+
+CREATE TABLE public.monsters (
+	monster_id serial4 NOT NULL,
+	hp int4 NOT NULL,
+	damage int4 NOT NULL,
+	"range" float8 NOT NULL,
+	attack_speed float8 NOT NULL,
+	move_speed float8 NOT NULL,
+	design text NULL,
+	"size" float8 NOT NULL,
+	CONSTRAINT monsters_pkey PRIMARY KEY (monster_id)
+);
+
+
 -- public.stat_categories definition
 
 -- Drop table
@@ -44,17 +63,11 @@ CREATE TABLE public.users (
 	created_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
 	username varchar(255) NOT NULL,
 	"level" int4 DEFAULT 1 NULL,
+	"year" varchar(10) NULL,
 	CONSTRAINT users_email_key UNIQUE (email),
 	CONSTRAINT users_pkey PRIMARY KEY (id),
 	CONSTRAINT users_username_key UNIQUE (username)
 );
-
--- Table Triggers
-
-create trigger new_user_stats_trigger after
-insert
-    on
-    public.users for each row execute function initialize_player_stats();
 
 
 -- public.game_scores definition
@@ -88,6 +101,27 @@ CREATE TABLE public.level_progress (
 	CONSTRAINT level_progress_pkey PRIMARY KEY (user_id, level_id),
 	CONSTRAINT level_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
+
+
+-- public.levels definition
+
+-- Drop table
+
+-- DROP TABLE public.levels;
+
+CREATE TABLE public.levels (
+	id serial4 NOT NULL,
+	"level" int4 NOT NULL,
+	monster_id int4 NOT NULL,
+	coords_x int4 NOT NULL,
+	coords_y int4 NOT NULL,
+	spawn_time int4 NOT NULL,
+	amount int4 NOT NULL,
+	CONSTRAINT levels_pkey PRIMARY KEY (id),
+	CONSTRAINT fk_monster FOREIGN KEY (monster_id) REFERENCES public.monsters(monster_id) ON DELETE CASCADE
+);
+CREATE INDEX idx_levels_level ON public.levels USING btree (level);
+CREATE INDEX idx_levels_monster_id ON public.levels USING btree (monster_id);
 
 
 -- public.minigames definition
@@ -125,6 +159,7 @@ CREATE TABLE public.minigames_progress (
 	"cost" int4 DEFAULT 1 NULL,
 	time_played int4 DEFAULT 0 NULL,
 	CONSTRAINT minigames_progress_pkey PRIMARY KEY (id),
+	CONSTRAINT minigames_progress_unique UNIQUE (user_id, minigame_id, difficulty_level),
 	CONSTRAINT minigames_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 CREATE INDEX idx_minigames_progress_minigame ON public.minigames_progress USING btree (minigame_id);
@@ -140,6 +175,12 @@ delete
 update
     on
     public.minigames_progress for each row execute function update_player_stats();
+create trigger trigger_unlock_minigames after
+insert
+    or
+update
+    of points on
+    public.minigames_progress for each row execute function unlock_minigames();
 
 
 -- public.minigames_requirements definition
@@ -169,12 +210,11 @@ CREATE INDEX idx_minigames_requirements_required ON public.minigames_requirement
 -- DROP TABLE public.player_energy;
 
 CREATE TABLE public.player_energy (
-	id serial4 NOT NULL,
-	user_id int4 NULL,
+	user_id int4 NOT NULL,
 	current_energy int4 DEFAULT 20 NULL,
 	max_energy int4 DEFAULT 20 NULL,
 	last_refresh timestamp DEFAULT CURRENT_TIMESTAMP NULL,
-	CONSTRAINT player_energy_pkey PRIMARY KEY (id),
+	CONSTRAINT player_energy_pkey PRIMARY KEY (user_id),
 	CONSTRAINT player_energy_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 
@@ -229,6 +269,7 @@ CREATE TABLE public.unlocked_levels (
 	level_id int4 NOT NULL,
 	unlocked_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
 	CONSTRAINT unlocked_levels_pkey PRIMARY KEY (id),
+	CONSTRAINT unlocked_levels_unique UNIQUE (user_id, level_id),
 	CONSTRAINT unlocked_levels_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 
