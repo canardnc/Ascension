@@ -46,6 +46,12 @@
     const ctx = canvas.getContext("2d");
 
     const monsterImages = {}; 
+
+    const heroImage = new Image();
+heroImage.src = "/assets/images/caracter/caracter_1.png";
+
+const projectileImage = new Image();
+projectileImage.src = "/assets/images/crayon.png";
     
     // ===== Chargement du fond =====
     const backgroundImage = new Image();
@@ -396,18 +402,75 @@ async function loadPlayerStats() {
     function spawnMonsters() {
     monsters = [];
     
+    // Fonction pour vérifier si une position est valide pour un monstre
+    function isValidMonsterPosition(x, y) {
+        // Vérifier que la position n'est pas bloquée
+        if (isBlocked(Math.floor(x), Math.floor(y))) {
+            return false;
+        }
+        
+        // Vérifier que le monstre n'est pas trop proche du héros
+        if (Math.hypot(x - hero.x, y - hero.y) < 5) {
+            return false;
+        }
+        
+        // Vérifier qu'il existe un chemin vers le héros
+        const path = findPath(
+            { x: Math.floor(x), y: Math.floor(y) },
+            { x: Math.floor(hero.x), y: Math.floor(hero.y) }
+        );
+        
+        // Retourner vrai si le chemin existe et n'est pas vide
+        return path && path.length > 0;
+    }
+    
+    // Fonction pour trouver une position valide pour un monstre
+    function findValidMonsterPosition() {
+        let attempts = 0;
+        const maxAttempts = 100;
+        
+        while (attempts < maxAttempts) {
+            // Générer une position aléatoire
+            const x = Math.random() * gridWidth;
+            const y = Math.random() * gridHeight;
+            
+            // Vérifier la validité de la position
+            if (isValidMonsterPosition(x, y)) {
+                return { x, y };
+            }
+            
+            attempts++;
+        }
+        
+        // Si aucune position valide n'est trouvée après plusieurs tentatives,
+        // retourner une position près du centre (si possible)
+        const centerX = gridWidth / 2;
+        const centerY = gridHeight / 2;
+        
+        for (let dx = -10; dx <= 10; dx++) {
+            for (let dy = -10; dy <= 10; dy++) {
+                const x = centerX + dx;
+                const y = centerY + dy;
+                if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight && 
+                    isValidMonsterPosition(x, y)) {
+                    return { x, y };
+                }
+            }
+        }
+        
+        // En dernier recours, retourner une position au hasard (même si invalide)
+        return { x: gridWidth / 2, y: gridHeight / 2 };
+    }
+    
     // Si pas de configuration de niveau, utiliser des valeurs par défaut
     if (!levelConfig || !levelConfig.monsters || levelConfig.monsters.length === 0) {
         // Spawn par défaut (10 monstres aléatoires)
-        let count = 0;
-        while (count < 10) {
-            let mx = Math.random() * gridWidth;
-            let my = Math.random() * gridHeight;
-            if (Math.hypot(mx - hero.x, my - hero.y) < 5) continue;
-            if (isBlocked(Math.floor(mx), Math.floor(my))) continue;
+        for (let i = 0; i < 10; i++) {
+            const position = findValidMonsterPosition();
+            
             monsters.push({
-                x: mx,
-                y: my,
+                x: position.x,
+                y: position.y,
                 hp: 50,
                 damage: 5,
                 range: 5,
@@ -419,40 +482,61 @@ async function loadPlayerStats() {
                 name: "Monstre inconnu",
                 design: "default"
             });
-            count++;
         }
         return;
     }
     
     // Utiliser la configuration du niveau pour spawn les monstres
     levelConfig.monsters.forEach(monster => {
-        // Trouver une position valide pour le monstre
-        let mx, my;
-        let validPosition = false;
-        let attempts = 0;
-        
-        while (!validPosition && attempts < 100) {
-            mx = Math.random() * gridWidth;
-            my = Math.random() * gridHeight;
-            
-            // Vérifier si la position est valide (pas trop proche du héros, pas sur un obstacle)
-            if (Math.hypot(mx - hero.x, my - hero.y) >= 10 && 
-                !isBlocked(Math.floor(mx), Math.floor(my))) {
-                validPosition = true;
+        // Vérifier si les coordonnées x et y sont spécifiées dans la config
+        if (monster.x !== undefined && monster.y !== undefined) {
+            // Utiliser les coordonnées spécifiées si elles sont valides
+            if (isValidMonsterPosition(monster.x, monster.y)) {
+                monsters.push({
+                    x: monster.x,
+                    y: monster.y,
+                    hp: monster.health || 50,
+                    damage: monster.damage || 5,
+                    range: monster.range / 10 || 5,
+                    attackSpeed: monster.attackSpeed || 1,
+                    moveSpeed: monster.speed / 10 || 6,
+                    attackTimer: 0,
+                    lastPathTime: 0,
+                    path: [],
+                    name: monster.name || "Monstre inconnu",
+                    design: monster.design || "default"
+                });
+            } else {
+                // Si les coordonnées spécifiées ne sont pas valides, trouver une position valide
+                const position = findValidMonsterPosition();
+                
+                monsters.push({
+                    x: position.x,
+                    y: position.y,
+                    hp: monster.health || 50,
+                    damage: monster.damage || 5,
+                    range: monster.range / 10 || 5,
+                    attackSpeed: monster.attackSpeed || 1,
+                    moveSpeed: monster.speed / 10 || 6,
+                    attackTimer: 0,
+                    lastPathTime: 0,
+                    path: [],
+                    name: monster.name || "Monstre inconnu",
+                    design: monster.design || "default"
+                });
             }
+        } else {
+            // Si x et y ne sont pas spécifiés, trouver une position valide
+            const position = findValidMonsterPosition();
             
-            attempts++;
-        }
-        
-        if (validPosition) {
             monsters.push({
-                x: mx,
-                y: my,
-                hp: monster.health || 50,  // Utiliser les données du monstre avec fallback
+                x: position.x,
+                y: position.y,
+                hp: monster.health || 50,
                 damage: monster.damage || 5,
-                range: monster.range / 10 || 5,  // Ajuster la portée pour le gameplay
+                range: monster.range / 10 || 5,
                 attackSpeed: monster.attackSpeed || 1,
-                moveSpeed: monster.speed / 10 || 6,  // Ajuster la vitesse pour le gameplay
+                moveSpeed: monster.speed / 10 || 6,
                 attackTimer: 0,
                 lastPathTime: 0,
                 path: [],
@@ -466,27 +550,11 @@ async function loadPlayerStats() {
     if (levelConfig.boss) {
         let boss = levelConfig.boss;
         
-        // Positionner le boss dans une zone spécifique ou aléatoire
-        let bossX = gridWidth / 2;
-        let bossY = gridHeight / 2;
-        
-        // S'assurer que la position n'est pas bloquée
-        let validPosition = false;
-        let attempts = 0;
-        while (!validPosition && attempts < 100) {
-            if (!isBlocked(Math.floor(bossX), Math.floor(bossY))) {
-                validPosition = true;
-            } else {
-                bossX = Math.random() * gridWidth;
-                bossY = Math.random() * gridHeight;
-                attempts++;
-            }
-        }
-        
-        if (validPosition) {
+        // Vérifier si les coordonnées sont spécifiées pour le boss
+        if (boss.x !== undefined && boss.y !== undefined && isValidMonsterPosition(boss.x, boss.y)) {
             monsters.push({
-                x: bossX,
-                y: bossY,
+                x: boss.x,
+                y: boss.y,
                 hp: boss.health || 100,
                 damage: boss.damage || 10,
                 range: boss.range / 10 || 8,
@@ -497,7 +565,26 @@ async function loadPlayerStats() {
                 path: [],
                 name: boss.name || "Boss",
                 design: boss.design || "boss_default",
-                isBoss: true  // Marquer comme boss pour un traitement spécial
+                isBoss: true
+            });
+        } else {
+            // Si les coordonnées ne sont pas spécifiées ou invalides, trouver une position valide
+            const position = findValidMonsterPosition();
+            
+            monsters.push({
+                x: position.x,
+                y: position.y,
+                hp: boss.health || 100,
+                damage: boss.damage || 10,
+                range: boss.range / 10 || 8,
+                attackSpeed: boss.attackSpeed || 0.8,
+                moveSpeed: boss.speed / 10 || 5,
+                attackTimer: 0,
+                lastPathTime: 0,
+                path: [],
+                name: boss.name || "Boss",
+                design: boss.design || "boss_default",
+                isBoss: true
             });
         }
     }
@@ -626,15 +713,50 @@ async function loadPlayerStats() {
       }
     }
     function drawProjectiles(cameraOffset) {
-      projectiles.forEach(p => {
-        let screenPos = gridToScreen(p.x, p.y, cameraOffset);
-        ctx.beginPath();
-        ctx.arc(screenPos.x + tileWidth/2, screenPos.y + tileHeight/2, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "yellow";
-        ctx.fill();
-      });
-    }
+  projectiles.forEach(p => {
+    let screenPos = gridToScreen(p.x, p.y, cameraOffset);
+    let centerX = screenPos.x + tileWidth/2;
+    let centerY = screenPos.y + tileHeight/2;
     
+    if (p.owner === "hero") {
+      // Pour les projectiles du héros, utiliser l'image du crayon
+      
+      // Calculer l'angle de rotation
+      // Référence : angle 0 correspond à (vx=1, vy=0) soit un tir vers la droite
+      const angle = Math.atan2(p.vy, p.vx);
+      
+      // Ajouter un ajustement de -45 degrés (-π/4 radians) pour corriger l'orientation
+      const adjustedAngle = angle + Math.PI / 4;
+      
+      // Taille du projectile
+      const projectileWidth = 24;
+      const projectileHeight = 8;
+      
+      // Sauvegarder le contexte pour la rotation
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(adjustedAngle);
+      
+      // Dessiner l'image du projectile
+      ctx.drawImage(
+        projectileImage,
+        -projectileWidth / 2,
+        -projectileHeight / 2,
+        projectileWidth,
+        projectileHeight
+      );
+      
+      // Restaurer le contexte
+      ctx.restore();
+    } else {
+      // Pour les projectiles des monstres, conserver le dessin simple
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "yellow";
+      ctx.fill();
+    }
+  });
+}
     // ===== Boucle principale =====
     let lastTime = performance.now();
     function gameLoop(timestamp) {
@@ -849,40 +971,50 @@ async function loadPlayerStats() {
     
     // ===== Affichage (draw) =====
     function drawGame() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      let cameraOffset = getCameraOffset();
-      
-      // --- Dessiner le fond centré sur la grille ---
-      let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
-      let bgX = gridCenter.x - backgroundImage.width / 2;
-      let bgY = gridCenter.y - backgroundImage.height / 2;
-      ctx.drawImage(backgroundImage, bgX + cameraOffset.x, bgY + cameraOffset.y);
-      
-      // --- Dessiner les projectiles ---
-      drawProjectiles(cameraOffset);
-      
-      // --- Dessiner le héros avec transparence si sur tuile élevée ---
-      let heroTileKey = Math.floor(hero.x) + "," + Math.floor(hero.y);
-      let heroOnElevated = (heightMap[heroTileKey] >= 2);
-      let heroScreen = gridToScreen(hero.x, hero.y, cameraOffset);
-      let heroCenterX = heroScreen.x + tileWidth/2;
-      let heroCenterY = heroScreen.y + tileHeight/2;
-      if (heroOnElevated) {
-        ctx.save();
-        ctx.globalAlpha = 0.25;
-      }
-      ctx.beginPath();
-      ctx.arc(heroCenterX, heroCenterY, 10, 0, Math.PI * 2);
-      ctx.fillStyle = "blue";
-      ctx.fill();
-      ctx.fillStyle = "white";
-      ctx.font = "10px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(Math.floor(hero.hp), heroCenterX, heroCenterY - 12);
-      if (heroOnElevated) { ctx.restore(); }
-      
-      // --- Dessiner les monstres avec transparence si sur tuile élevée ---
-      monsters.forEach(m => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let cameraOffset = getCameraOffset();
+  
+  // --- Dessiner le fond centré sur la grille ---
+  let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
+  let bgX = gridCenter.x - backgroundImage.width / 2;
+  let bgY = gridCenter.y - backgroundImage.height / 2;
+  ctx.drawImage(backgroundImage, bgX + cameraOffset.x, bgY + cameraOffset.y);
+  
+  // --- Dessiner les projectiles ---
+  drawProjectiles(cameraOffset);
+  
+  // --- Dessiner le héros avec transparence si sur tuile élevée ---
+  let heroTileKey = Math.floor(hero.x) + "," + Math.floor(hero.y);
+  let heroOnElevated = (heightMap[heroTileKey] >= 2);
+  let heroScreen = gridToScreen(hero.x, hero.y, cameraOffset);
+  let heroCenterX = heroScreen.x + tileWidth/2;
+  let heroCenterY = heroScreen.y + tileHeight/2;
+  
+  if (heroOnElevated) {
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+  }
+  
+  // Dessiner l'image du héros au lieu d'un cercle
+  const heroSize = 40; // Taille fixe pour le héros
+  ctx.drawImage(
+    heroImage, 
+    heroCenterX - heroSize/2, 
+    heroCenterY - heroSize/2, 
+    heroSize, 
+    heroSize
+  );
+  
+  // Afficher la vie du héros au-dessus
+  ctx.fillStyle = "white";
+  ctx.font = "10px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(Math.floor(hero.hp), heroCenterX, heroCenterY - 25);
+  
+  if (heroOnElevated) { ctx.restore(); }
+  
+  // --- Dessiner les monstres avec transparence si sur tuile élevée ---
+  monsters.forEach(m => {
     let mTileKey = Math.floor(m.x) + "," + Math.floor(m.y);
     let mOnElevated = (heightMap[mTileKey] >= 2);
     let mScreen = gridToScreen(m.x, m.y, cameraOffset);
@@ -891,11 +1023,8 @@ async function loadPlayerStats() {
     
     if (mOnElevated) { ctx.save(); ctx.globalAlpha = 0.25; }
     
-    // Déterminer la taille du monstre
-    let monsterSize = m.isBoss ? 40 : 30;
-    if (m.size) {
-        monsterSize = m.size;
-    }
+    // Utiliser directement la taille du monstre depuis les données
+    let monsterSize = m.size || (m.isBoss ? 40 : 30);
     
     // Vérifier si l'image du monstre est disponible
     if (m.design && monsterImages[m.design]) {
@@ -959,24 +1088,23 @@ async function loadPlayerStats() {
     }
     
     if (mOnElevated) { ctx.restore(); }
-});
-      
-      // Afficher le score et autres informations
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 16px Arial';
-      ctx.textAlign = 'left';
-      ctx.fillText(`Score: ${score}`, 20, 30);
-      ctx.fillText(`PV: ${Math.floor(hero.hp)} / ${hero.hp}`, 20, 60);
-      ctx.fillText(`Monstres: ${monsters.length}`, 20, 90);
-      
-      // Afficher le chronomètre
-      const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
-      const minutes = Math.floor(elapsed / 60);
-      const seconds = elapsed % 60;
-      ctx.textAlign = 'right';
-      ctx.fillText(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, canvas.width - 20, 30);
-    }
-    
+  });
+  
+  // Afficher le score et autres informations
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Score: ${score}`, 20, 30);
+  ctx.fillText(`PV: ${Math.floor(hero.hp)} / ${hero.maxHp}`, 20, 60);
+  ctx.fillText(`Monstres: ${monsters.length}`, 20, 90);
+  
+  // Afficher le chronomètre
+  const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  ctx.textAlign = 'right';
+  ctx.fillText(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, canvas.width - 20, 30);
+}
     // ===== Mouseover pour mettre à jour hoveredTile (sans affichage) =====
     let hoveredTile = null;
     canvas.addEventListener("mousemove", function(e) {
