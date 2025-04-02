@@ -290,6 +290,7 @@
         let currentLevelIndex = 0;
         let maxUnlockedLevel = 1;
         let playerEnergy = { current: 0, max: 0 };
+        let currentLevelDetails = null; // Pour stocker les détails du niveau sélectionné
         
         // Éléments DOM
         const loadingOverlay = document.getElementById('loading-overlay');
@@ -323,18 +324,14 @@
                     throw new Error('Format de données incorrect');
                 }
                 
-                // Transformer les données dans un format utilisable
+                // Transformer les données dans un format utilisable - mais sans tiles, monsters, obstacles, boss
                 levels = data.levels.map(level => ({
                     id: level.id,
                     name: level.name || `Niveau ${level.id}`,
                     description: level.description || "Description non disponible",
                     image: level.image ? (level.image.startsWith('/') ? level.image : `/assets/images/${level.image}`) : `/assets/images/level${level.id}.jpg`,
                     background: level.background ? (level.background.startsWith('/') ? level.background : `/assets/images/${level.background}`) : `/assets/images/bg${level.id}.jpg`,
-                    energyCost: level.energyCost || (5 + (level.id - 1)),
-                    tiles: level.tiles || { base: "iso_dirt", special: [] },
-                    monsters: level.monsters || [],
-                    obstacles: level.obstacles || [],
-                    boss: level.boss
+                    energyCost: level.energyCost || (5 + (level.id - 1))
                 }));
                 
                 // Trier les niveaux par ID
@@ -345,6 +342,30 @@
                 console.error('Erreur lors du chargement des niveaux:', error);
                 alert('Erreur lors du chargement des niveaux. Veuillez réessayer.');
                 return false;
+            }
+        }
+        
+        // Nouvelle fonction pour charger les détails d'un niveau depuis la base de données
+        async function loadLevelDetails(levelId) {
+            try {
+                // 1. Récupérer les détails du niveau (monstres, obstacles, etc.)
+                const levelDetailsResponse = await fetchWithAuth(`/api/battle/level-details?id=${levelId}`);
+                
+                if (!levelDetailsResponse) {
+                    throw new Error(`Impossible de récupérer les détails du niveau ${levelId}`);
+                }
+                
+                console.log("Détails du niveau récupérés:", levelDetailsResponse);
+                
+                return levelDetailsResponse;
+            } catch (error) {
+                console.error(`Erreur lors du chargement des détails du niveau ${levelId}:`, error);
+                // Retourner un objet par défaut en cas d'erreur
+                return {
+                    monsters: [],
+                    obstacles: [],
+                    tiles: { base: "iso_dirt", special: [] }
+                };
             }
         }
         
@@ -392,8 +413,8 @@
             }
         }
         
-        // Fonction pour mettre à jour l'affichage du niveau
-        function updateLevelDisplay() {
+        // Fonction pour mettre à jour l'affichage du niveau et charger ses détails
+        async function updateLevelDisplay() {
             if (levels.length === 0) {
                 console.error('Aucun niveau chargé');
                 return;
@@ -433,6 +454,17 @@
             } else {
                 energyCostElement.innerHTML = level.energyCost;
             }
+            
+            // Charger les détails du niveau depuis la base de données
+            toggleLoading(true);
+            try {
+                currentLevelDetails = await loadLevelDetails(level.id);
+                console.log("Détails du niveau chargés et mis à jour");
+                toggleLoading(false);
+            } catch (error) {
+                console.error("Erreur lors du chargement des détails du niveau:", error);
+                toggleLoading(false);
+            }
         }
         
         // Fonction pour changer de niveau
@@ -457,6 +489,11 @@
             toggleLoading(true);
             
             try {
+                // S'assurer que les détails du niveau sont chargés
+                if (!currentLevelDetails) {
+                    currentLevelDetails = await loadLevelDetails(level.id);
+                }
+                
                 // Appel API pour commencer le niveau
                 const response = await fetchWithAuth('/api/battle/start', {
                     method: 'POST',
@@ -467,16 +504,37 @@
                 if (response.success) {
                     // Stocker les données du niveau pour le jeu
                     try {
+                        // Combiner les infos de base du niveau avec les détails
                         const levelData = {
                             id: level.id,
                             name: level.name,
-                            tiles: level.tiles,
-                            monsters: level.monsters,
-                            obstacles: level.obstacles || []
+                            // Ne pas inclure tiles et obstacles comme demandé
+                            monsters: currentLevelDetails.monsters || []
                         };
                         
-                        if (level.boss) {
-                            levelData.boss = level.boss;
+                        // S'assurer que les monstres ont tous les champs requis
+                        if (levelData.monsters && levelData.monsters.length > 0) {
+                            levelData.monsters = levelData.monsters.map(monster => ({
+                                name: monster.name || "Monstre inconnu",
+                                health: monster.health || 50,
+                                damage: monster.damage || 5,
+                                range: monster.range || 100,
+                                speed: monster.speed || 80,
+                                size: monster.size || 30,
+                                design: monster.design || "default"
+                            }));
+                        }
+                        
+                        if (currentLevelDetails.boss) {
+                            levelData.boss = {
+                                name: currentLevelDetails.boss.name || "Boss",
+                                health: currentLevelDetails.boss.health || 100,
+                                damage: currentLevelDetails.boss.damage || 10,
+                                range: currentLevelDetails.boss.range || 120,
+                                speed: currentLevelDetails.boss.speed || 50,
+                                size: currentLevelDetails.boss.size || 40,
+                                design: currentLevelDetails.boss.design || "boss_default"
+                            };
                         }
                         
                         localStorage.setItem('currentLevelData', JSON.stringify(levelData));
@@ -519,8 +577,8 @@
                 const playerDataLoaded = await loadPlayerData();
                 if (!playerDataLoaded) console.warn('Données joueur non chargées, utilisation des valeurs par défaut');
                 
-                // Mettre à jour l'affichage
-                updateLevelDisplay();
+                // Mettre à jour l'affichage (cela chargera également les détails du niveau actuel)
+                await updateLevelDisplay();
                 
                 toggleLoading(false);
             } catch (error) {

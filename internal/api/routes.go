@@ -113,6 +113,15 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
+	// Route pour les détails d'un niveau
+	mux.HandleFunc("/api/battle/level-details", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			middleware.JWTAuth(handlers.GetLevelDetails)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
 	// Routes des mini-jeux
 	mux.HandleFunc("/api/minigames", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
