@@ -2,18 +2,37 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Jeu Isométrique – Version épurée</title>
+  <title>Ascension - Combat</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4CAF50">
   <style>
-    body { margin: 0; overflow: hidden; background: #222; }
-    canvas { display: block; margin: auto; background: #000; }
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      background: #222; 
+    }
+    canvas { 
+      display: block; 
+      margin: auto; 
+      background: #000; 
+    }
   </style>
-  <!-- Inclusion du fichier de configuration pour blockMap et heightMap -->
-  <script src="config.js"></script>
+  <!-- Inclusion du fichier de configuration -->
+  <script src="/js/auth-utils.js"></script>
+  <script src="/js/minigame-utils.js"></script>
+  <script src="/configs/game-config.js"></script>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <canvas id="gameCanvas"></canvas>
   <script>
-
+    // ===== Configuration initiale =====
+    let levelId = 1; // Niveau par défaut
+    let levelConfig = null;
+    let playerStats = null;
+    let gameStartTime = Date.now();
+    let score = 0;
+    let gameCompleted = false;
+    let scoreSubmitted = false;
     
     // ===== Paramètres du terrain et des tuiles =====
     const gridWidth = 80;
@@ -26,20 +45,23 @@
     
     // ===== Chargement du fond =====
     const backgroundImage = new Image();
-
+    backgroundImage.src = "school.png"; 
+    
     function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-    backgroundImage.src = "school.png"; // l'image doit être dans le même dossier
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
     
     function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
+      return Math.max(min, Math.min(max, value));
+    }
+    
+    // ===== Définition des cartes de jeu (blockMap et heightMap) =====
+    let blockMap = {};  // Sera initialisé avec les données du niveau
+    let heightMap = {}; // Sera initialisé avec les données du niveau
+    
     // ===== Définition de la fonction isBlocked =====
     function isBlocked(tileX, tileY) {
       if (tileX < 0 || tileX >= gridWidth || tileY < 0 || tileY >= gridHeight) return true;
@@ -101,23 +123,23 @@ resizeCanvas();
     
     // ===== Caméra centrée sur le héros =====
     function getCameraOffset() {
-  // Calcul classique pour centrer le héros
-  const heroWorld = gridToWorld(hero.x, hero.y);
-  let offset = {
-    x: canvas.width / 2 - heroWorld.x - tileWidth / 2,
-    y: canvas.height / 2 - heroWorld.y - tileHeight / 2
-  };
-  // Calculer la position de l'image de fond (centrée sur la grille)
-  let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
-  let bgX = gridCenter.x - backgroundImage.width / 2;
-  let bgY = gridCenter.y - backgroundImage.height / 2;
-  
-  // Clamp de l'offset pour que le canvas reste dans l'image de fond
-  offset.x = clamp(offset.x, canvas.width - backgroundImage.width - bgX, -bgX);
-  offset.y = clamp(offset.y, canvas.height - backgroundImage.height - bgY, -bgY);
-  
-  return offset;
-}
+      // Calcul classique pour centrer le héros
+      const heroWorld = gridToWorld(hero.x, hero.y);
+      let offset = {
+        x: canvas.width / 2 - heroWorld.x - tileWidth / 2,
+        y: canvas.height / 2 - heroWorld.y - tileHeight / 2
+      };
+      // Calculer la position de l'image de fond (centrée sur la grille)
+      let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
+      let bgX = gridCenter.x - backgroundImage.width / 2;
+      let bgY = gridCenter.y - backgroundImage.height / 2;
+      
+      // Clamp de l'offset pour que le canvas reste dans l'image de fond
+      offset.x = clamp(offset.x, canvas.width - backgroundImage.width - bgX, -bgX);
+      offset.y = clamp(offset.y, canvas.height - backgroundImage.height - bgY, -bgY);
+      
+      return offset;
+    }
     
     // ===== Définition du héros et des monstres =====
     // Positions en valeurs continues pour un déplacement fluide.
@@ -125,37 +147,210 @@ resizeCanvas();
       x: gridWidth / 2,
       y: gridHeight / 2,
       hp: 100,
-      damage: 0,
+      damage: 10,         // Valeur de base, sera augmentée par stats
       range: 10,
-      attackSpeed: 1,   // 1 tir/s
-      moveSpeed: 100,    // vitesse ajustée
+      attackSpeed: 1,     // 1 tir/s
+      moveSpeed: 100,     // vitesse ajustée
       attackTimer: 0
     };
     let monsters = [];
-    function spawnMonsters() {
-      monsters = [];
-      let count = 0;
-      while (count < 10) {
-        let mx = Math.random() * gridWidth;
-        let my = Math.random() * gridHeight;
-        if (Math.hypot(mx - hero.x, my - hero.y) < 5) continue;
-        if (isBlocked(Math.floor(mx), Math.floor(my))) continue;
-        monsters.push({
-          x: mx,
-          y: my,
-          hp: 50,
-          damage: 0,
-          range: 5,
-          attackSpeed: 1,
-          moveSpeed: 6,    // vitesse des monstres
-          attackTimer: 0,
-          lastPathTime: 0,
-          path: []
-        });
-        count++;
+    
+    // ===== Initialisation du jeu =====
+    async function initGame() {
+      try {
+        // 1. Vérifier l'authentification
+        if (!checkAuth()) {
+          window.location.href = '/';
+          return;
+        }
+        
+        // 2. Récupérer l'ID du niveau depuis l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        levelId = parseInt(urlParams.get('level') || '1');
+        
+        // 3. Charger les données du niveau
+        await loadLevelData();
+        
+        // 4. Charger les statistiques du joueur
+        await loadPlayerStats();
+        
+        // 5. Initialiser les monstres
+        initBlockAndHeightMaps();
+        spawnMonsters();
+        
+        // 6. Démarrer la boucle de jeu
+        lastTime = performance.now();
+        requestAnimationFrame(gameLoop);
+        
+      } catch (error) {
+        console.error("Erreur d'initialisation:", error);
+        alert("Erreur lors du chargement du jeu. Veuillez réessayer.");
+        window.location.href = '/battle.html';
       }
     }
-    spawnMonsters();
+    
+    async function loadLevelData() {
+      try {
+        // Charger la configuration du niveau depuis localStorage ou l'API
+        let levelDataString = localStorage.getItem('currentLevelData');
+        if (levelDataString) {
+          levelConfig = JSON.parse(levelDataString);
+        } else {
+          // Si pas de données en localStorage, charger depuis l'API
+          const response = await fetch(`/configs/levels.json`);
+          if (!response.ok) {
+            throw new Error('Erreur lors du chargement de la configuration des niveaux');
+          }
+          const config = await response.json();
+          levelConfig = config.levels.find(level => level.id === levelId);
+        }
+        
+        if (!levelConfig) {
+          throw new Error(`Niveau ${levelId} non trouvé`);
+        }
+        
+        console.log("Configuration du niveau chargée:", levelConfig);
+      } catch (error) {
+        console.error("Erreur lors du chargement du niveau:", error);
+        // Configuration par défaut en cas d'erreur
+        levelConfig = {
+          id: levelId,
+          name: "Niveau par défaut",
+          monsters: [{
+            type: "book",
+            count: 10,
+            health: 50,
+            speed: 6,
+            damage: 5
+          }]
+        };
+      }
+    }
+    
+    async function loadPlayerStats() {
+      try {
+        const stats = await fetchWithAuth('/api/player/stats');
+        
+        // Mettre à jour les statistiques du héros
+        hero.damage = 10 + stats.attack; // Règle 1: damage = 10 + points en subcategory 1
+        hero.range = 8 + stats.range * 0.5;
+        hero.moveSpeed = 80 + stats.speed * 2;
+        hero.attackSpeed = 1 + stats.precision * 0.1;
+        hero.hp = 80 + stats.health * 2;
+        
+        console.log("Statistiques du joueur chargées:", stats);
+        console.log("Statistiques du héros mises à jour:", hero);
+        
+        // Sauvegarder les stats pour utilisation ultérieure
+        playerStats = stats;
+        
+      } catch (error) {
+        console.error("Erreur lors du chargement des statistiques:", error);
+        // Conserver les valeurs par défaut du héros
+      }
+    }
+    
+    function initBlockAndHeightMaps() {
+      // Initialiser les cartes vides
+      blockMap = {};
+      heightMap = {};
+      
+      // Ajouter des obstacles basés sur la configuration du niveau
+      if (levelConfig && levelConfig.obstacles) {
+        levelConfig.obstacles.forEach(obstacle => {
+          // Pour chaque obstacle, marquer les tuiles correspondantes comme bloquées
+          for (let i = 0; i < obstacle.width; i++) {
+            for (let j = 0; j < obstacle.height; j++) {
+              const key = (obstacle.x + i) + "," + (obstacle.y + j);
+              blockMap[key] = true;
+              heightMap[key] = 2; // Hauteur arbitraire pour les obstacles
+            }
+          }
+        });
+      }
+    }
+    
+    function spawnMonsters() {
+      monsters = [];
+      
+      // Si pas de configuration de niveau, utiliser des valeurs par défaut
+      if (!levelConfig || !levelConfig.monsters || levelConfig.monsters.length === 0) {
+        // Spawn par défaut (10 monstres aléatoires)
+        let count = 0;
+        while (count < 10) {
+          let mx = Math.random() * gridWidth;
+          let my = Math.random() * gridHeight;
+          if (Math.hypot(mx - hero.x, my - hero.y) < 5) continue;
+          if (isBlocked(Math.floor(mx), Math.floor(my))) continue;
+          monsters.push({
+            x: mx,
+            y: my,
+            hp: 50,
+            damage: 5,
+            range: 5,
+            attackSpeed: 1,
+            moveSpeed: 6,
+            attackTimer: 0,
+            lastPathTime: 0,
+            path: []
+          });
+          count++;
+        }
+        return;
+      }
+      
+      // Utiliser la configuration du niveau pour spawn les monstres
+      levelConfig.monsters.forEach(monsterType => {
+        const count = monsterType.count || 5;
+        const monsterData = {
+          hp: monsterType.health || 50,
+          damage: monsterType.damage || 5,
+          range: monsterType.range / 10 || 5,
+          attackSpeed: 1,
+          moveSpeed: monsterType.speed / 10 || 6,
+          type: monsterType.type || "book"
+        };
+        
+        // Spawn le nombre requis de ce type de monstre
+        for (let i = 0; i < count; i++) {
+          // Trouver une position valide
+          let mx, my;
+          let validPosition = false;
+          let attempts = 0;
+          
+          while (!validPosition && attempts < 100) {
+            mx = Math.random() * gridWidth;
+            my = Math.random() * gridHeight;
+            
+            // Vérifier si la position est valide (pas trop proche du héros, pas sur un obstacle)
+            if (Math.hypot(mx - hero.x, my - hero.y) >= 10 && 
+                !isBlocked(Math.floor(mx), Math.floor(my))) {
+              validPosition = true;
+            }
+            
+            attempts++;
+          }
+          
+          if (validPosition) {
+            monsters.push({
+              x: mx,
+              y: my,
+              hp: monsterData.hp,
+              damage: monsterData.damage,
+              range: monsterData.range,
+              attackSpeed: monsterData.attackSpeed,
+              moveSpeed: monsterData.moveSpeed,
+              type: monsterData.type,
+              attackTimer: 0,
+              lastPathTime: 0,
+              path: []
+            });
+          }
+        }
+      });
+      
+      console.log(`${monsters.length} monstres générés pour le niveau ${levelId}`);
+    }
     
     // ===== Amélioration du pathfinder (8 directions) =====
     function findPath(start, goal) {
@@ -262,6 +457,9 @@ resizeCanvas();
             let m = monsters[j];
             if (Math.hypot(p.x - m.x, p.y - m.y) < 0.5) {
               m.hp -= p.damage;
+              if (m.hp <= 0) {
+                score += 10; // Gain de score à chaque monstre tué
+              }
               projectiles.splice(i, 1);
               break;
             }
@@ -289,11 +487,20 @@ resizeCanvas();
     function gameLoop(timestamp) {
       let dt = (timestamp - lastTime) / 1000;
       lastTime = timestamp;
-      updateGame(dt);
+      
+      // Si jeu en cours, mettre à jour
+      if (!gameCompleted && hero.hp > 0) {
+        updateGame(dt);
+      }
+      
+      // Toujours afficher
       drawGame();
-      requestAnimationFrame(gameLoop);
+      
+      // Continuer la boucle si le jeu n'est pas terminé
+      if (!scoreSubmitted) {
+        requestAnimationFrame(gameLoop);
+      }
     }
-    requestAnimationFrame(gameLoop);
     
     // ===== Mise à jour du jeu =====
     function updateGame(dt) {
@@ -392,8 +599,86 @@ resizeCanvas();
       
       updateProjectiles(dt);
       monsters = monsters.filter(m => m.hp > 0);
-      if (hero.hp <= 0) { alert("Game Over! Vous avez perdu."); resetGame(); }
-      if (monsters.length === 0) { alert("Victoire! Vous avez éliminé tous les monstres."); resetGame(); }
+      
+      // Vérifier les conditions de fin de jeu
+      if (hero.hp <= 0) {
+        endGame(false);
+      } else if (monsters.length === 0) {
+        endGame(true);
+      }
+    }
+    
+    function endGame(success) {
+      // Marquer le jeu comme terminé
+      gameCompleted = true;
+      
+      // Calculer le temps écoulé et le score final
+      const gameTimeSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+      score += Math.max(0, 300 - gameTimeSeconds); // Bonus de temps
+      
+      // Afficher l'écran de fin et soumettre les résultats
+      if (!scoreSubmitted) {
+        scoreSubmitted = true;
+        
+        // Envoyer les résultats au serveur
+        submitResults(success, score, gameTimeSeconds);
+        
+        // Afficher l'écran de fin
+        setTimeout(() => {
+          showEndGameScreen(success);
+        }, 500);
+      }
+    }
+    
+    function submitResults(success, finalScore, timeSpent) {
+      // Récupérer l'ID du niveau depuis l'URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const levelId = parseInt(urlParams.get('level') || '1');
+      
+      // Calculer le nombre d'étoiles (1 à 3)
+      let starsCount = success ? Math.min(3, Math.max(1, Math.ceil(finalScore / 100))) : 0;
+      
+      // Données à envoyer
+      const data = {
+        levelId: levelId,
+        success: success,
+        score: finalScore,
+        starsCount: starsCount,
+        timeSpent: timeSpent
+      };
+      
+      // Envoyer les résultats
+      fetchWithAuth('/api/battle/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => {
+        console.log('Résultats envoyés avec succès:', response);
+      })
+      .catch(error => {
+        console.error('Erreur lors de l\'envoi des résultats:', error);
+      });
+    }
+    
+    function showEndGameScreen(success) {
+      // Calcul des stars en fonction du score
+      const starsCount = success ? Math.min(3, Math.max(1, Math.ceil(score / 100))) : 0;
+      
+      // Utiliser la fonction standard du panneau de fin de partie
+      showEndgameScreen(
+        score,                   // score obtenu
+        300,                     // score maximum
+        'strength',              // type de catégorie
+        () => window.location.reload(),   // fonction de réinitialisation
+        {
+          minigameId: levelId,   // ID du mini-jeu/niveau
+          difficultyLevel: 1,    // difficulté par défaut
+          timeSpent: Math.floor((Date.now() - gameStartTime) / 1000)  // temps écoulé
+        }
+      );
     }
     
     function resetGame() {
@@ -403,6 +688,10 @@ resizeCanvas();
       hero.attackTimer = 0;
       spawnMonsters();
       projectiles = [];
+      gameCompleted = false;
+      scoreSubmitted = false;
+      score = 0;
+      gameStartTime = Date.now();
     }
     
     // ===== Affichage (draw) =====
@@ -458,7 +747,20 @@ resizeCanvas();
         if (mOnElevated) { ctx.restore(); }
       });
       
-      // Note : Le bloc d'affichage agrandi des coordonnées survolées a été supprimé.
+      // Afficher le score et autres informations
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Score: ${score}`, 20, 30);
+      ctx.fillText(`PV: ${Math.floor(hero.hp)} / ${hero.hp}`, 20, 60);
+      ctx.fillText(`Monstres: ${monsters.length}`, 20, 90);
+      
+      // Afficher le chronomètre
+      const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      ctx.textAlign = 'right';
+      ctx.fillText(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, canvas.width - 20, 30);
     }
     
     // ===== Mouseover pour mettre à jour hoveredTile (sans affichage) =====
@@ -478,6 +780,8 @@ resizeCanvas();
     });
     canvas.addEventListener("mouseout", () => { hoveredTile = null; });
     
+    // ===== Initialiser le jeu au chargement =====
+    window.onload = initGame;
   </script>
 </body>
 </html>

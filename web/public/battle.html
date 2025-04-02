@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ascension - Combat</title>
+    <title>Ascension - Aventure</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#4CAF50">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
         
         * {
             margin: 0;
@@ -16,69 +16,61 @@
         }
         
         body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #1f1f3a;
+            font-family: 'Nunito', sans-serif;
             color: #fff;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
+            overflow: hidden;
             position: relative;
         }
         
+        /* Image de fond similaire à index.html */
+        .background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/assets/images/background/chapter_1.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(3px) brightness(0.7);
+            z-index: -1;
+        }
+        
+        .container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        /* En-tête avec icônes */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-top: 20px;
-            z-index: 10;
+            margin-bottom: 30px;
         }
         
-        .logo {
-            font-size: 28px;
-            font-weight: 700;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(101, 66, 254, 0.8);
-        }
-        
-        .back-button {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 16px;
+        .adventure-icon, .home-icon {
+            width: 60px;
+            height: 60px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
+            transition: transform 0.3s ease;
         }
         
-        .back-button svg {
-            margin-right: 5px;
+        .adventure-icon:hover, .home-icon:hover {
+            transform: translateY(-5px);
         }
         
-        .battle-content {
-            flex: 1;
+        /* Sélecteur de niveau */
+        .level-selector {
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-            position: relative;
-            z-index: 5;
-        }
-        
-        .battle-level-selector {
-            display: flex;
-            align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            align-items: center;
+            margin-bottom: 30px;
         }
         
         .level-arrow {
@@ -86,9 +78,13 @@
             border: none;
             color: #fff;
             font-size: 30px;
+            width: 50px;
+            height: 50px;
             cursor: pointer;
-            margin: 0 20px;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .level-arrow:hover {
@@ -96,387 +92,452 @@
         }
         
         .level-display {
-            background-color: rgba(101, 66, 254, 0.2);
+            background-color: rgba(101, 66, 254, 0.3);
             border: 2px solid #6542fe;
-            border-radius: 10px;
-            padding: 10px 30px;
-            font-size: 20px;
+            border-radius: 15px;
+            padding: 10px 25px;
+            font-size: 22px;
             font-weight: 700;
-            color: #fff;
+            margin: 0 15px;
             min-width: 150px;
             text-align: center;
-            box-shadow: 0 0 15px rgba(101, 66, 254, 0.4);
+            box-shadow: 0 0 15px rgba(101, 66, 254, 0.3);
         }
         
-        .battle-image-container {
-            width: 70%;
-            height: 60vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            margin: 20px 0;
-        }
-        
-        .battle-image {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-            transition: all 0.5s ease;
-        }
-        
-        .battle-image-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(31, 31, 58, 0.3), rgba(31, 31, 58, 0.7));
-            border-radius: 20px;
+        /* Image et informations du niveau */
+        .level-content {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end;
-            padding: 30px;
+            align-items: center;
+            justify-content: center;
         }
         
-        .battle-name {
-            font-size: 36px;
-            font-weight: 700;
-            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        .level-image-container {
+            position: relative;
+            width: 70%;
+            max-width: 700px;
+            height: 50vh;
+            margin-bottom: 30px;
+        }
+        
+        .level-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .level-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 30px 20px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            border-radius: 0 0 15px 15px;
+        }
+        
+        .level-name {
+            font-size: 28px;
+            font-weight: 800;
             margin-bottom: 10px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
         }
         
-        .battle-description {
-            font-size: 18px;
-            max-width: 80%;
-            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        .level-description {
+            font-size: 16px;
+            max-width: 90%;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
         
-        .start-battle-btn {
+        /* Bouton de démarrage */
+        .start-button {
             background: linear-gradient(45deg, #6542fe, #a16bff);
             border: none;
             color: white;
-            padding: 15px 60px;
+            padding: 15px 50px;
             font-size: 20px;
             font-weight: 700;
             border-radius: 50px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             box-shadow: 0 10px 20px rgba(101, 66, 254, 0.4);
             margin-top: 20px;
             position: relative;
             z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
         
-        .start-battle-btn:hover {
+        .start-button:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 30px rgba(101, 66, 254, 0.6);
         }
         
-        .energy-required {
-            background-color: rgba(0, 0, 0, 0.5);
-            color: #ffcc00;
-            border-radius: 20px;
-            padding: 5px 15px;
-            font-size: 16px;
-            margin-top: 10px;
-            display: inline-flex;
+        .energy-info {
+            display: flex;
             align-items: center;
+            font-size: 16px;
         }
         
         .energy-icon {
             margin-right: 5px;
+            color: #ffcc00;
         }
         
-        .background-image {
-            position: absolute;
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-size: cover;
-            background-position: center;
-            opacity: 0.3;
-            transition: all 0.5s ease;
-            z-index: 1;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s ease;
         }
         
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: #6542fe;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive styles */
         @media (max-width: 768px) {
-            .battle-image-container {
+            .level-image-container {
                 width: 90%;
-                height: 50vh;
+                height: 40vh;
             }
             
-            .battle-name {
-                font-size: 28px;
+            .level-name {
+                font-size: 22px;
             }
             
-            .battle-description {
-                font-size: 16px;
+            .level-description {
+                font-size: 14px;
+            }
+            
+            .adventure-icon, .home-icon {
+                width: 50px;
+                height: 50px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="background-image" id="background-image"></div>
+    <!-- Arrière-plan -->
+    <div class="background"></div>
+    
+    <!-- Overlay de chargement -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
     
     <div class="container">
+        <!-- En-tête avec icônes -->
         <header class="header">
-            <div class="logo">ASCENSION</div>
-            <button class="back-button" onclick="window.location.href='/home.html'">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 12H5"></path>
-                    <path d="M12 19l-7-7 7-7"></path>
-                </svg>
-                Retour
-            </button>
+            <img src="/assets/images/adventure.png" alt="Aventure" class="adventure-icon">
+            <img src="/assets/images/home_icon.png" alt="Accueil" class="home-icon" id="home-button">
         </header>
         
-        <div class="battle-content">
-            <div class="battle-level-selector">
-                <button class="level-arrow" onclick="changeLevel(-1)">&#10094;</button>
-                <div class="level-display">Niveau <span id="current-level">1</span></div>
-                <button class="level-arrow" onclick="changeLevel(1)">&#10095;</button>
-            </div>
-            
-            <div class="battle-image-container">
-                <img src="/assets/images/level1.jpg" alt="Image du niveau" class="battle-image" id="battle-image" onerror="this.src='/icons/icon-512.png'">
-                <div class="battle-image-overlay">
-                    <div class="battle-name" id="battle-name">Chargement...</div>
-                    <div class="battle-description" id="battle-description">Chargement de la description...</div>
-                    <div class="energy-required">
-                        <span class="energy-icon">⚡</span>
-                        <span id="energy-cost">Chargement...</span>
-                    </div>
+        <!-- Sélecteur de niveau -->
+        <div class="level-selector">
+            <button class="level-arrow" id="prev-level">&#10094;</button>
+            <div class="level-display">Niveau <span id="current-level">1</span></div>
+            <button class="level-arrow" id="next-level">&#10095;</button>
+        </div>
+        
+        <!-- Contenu du niveau sélectionné -->
+        <div class="level-content">
+            <div class="level-image-container">
+                <img src="" alt="Image du niveau" class="level-image" id="level-image">
+                <div class="level-overlay">
+                    <h2 class="level-name" id="level-name">Chargement...</h2>
+                    <p class="level-description" id="level-description">Chargement de la description...</p>
                 </div>
             </div>
             
-            <button class="start-battle-btn" onclick="startBattle()">COMMENCER</button>
+            <button class="start-button" id="start-button">
+                COMMENCER
+                <div class="energy-info">
+                    <span class="energy-icon">⚡</span>
+                    <span id="energy-cost">5</span>
+                </div>
+            </button>
         </div>
     </div>
+
     <script src="/js/auth-utils.js"></script>
+    
     <script>
-        // Variables globales pour les niveaux
+        // Variables globales
         let levels = [];
         let currentLevelIndex = 0;
         let maxUnlockedLevel = 1;
+        let playerEnergy = { current: 0, max: 0 };
         
-        // Initialiser la page
-        window.onload = async function() {
-        if (!checkAuth()) return;
+        // Éléments DOM
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const currentLevelElement = document.getElementById('current-level');
+        const levelImageElement = document.getElementById('level-image');
+        const levelNameElement = document.getElementById('level-name');
+        const levelDescriptionElement = document.getElementById('level-description');
+        const energyCostElement = document.getElementById('energy-cost');
+        const prevLevelButton = document.getElementById('prev-level');
+        const nextLevelButton = document.getElementById('next-level');
+        const startButton = document.getElementById('start-button');
+        const homeButton = document.getElementById('home-button');
         
-        try {
-            // Load level configuration
-            await fetchLevelsConfig();
-            
-            // Load player statistics, including unlocked levels
-            await fetchPlayerStats();
-            
-            // Update display with first unlocked level
-            updateLevelDisplay();
-        } catch (error) {
-            console.error('Error during initialization:', error);
-            alert('Error loading data. Please try again.');
+        // Fonction pour afficher/masquer l'overlay de chargement
+        function toggleLoading(show) {
+            loadingOverlay.style.opacity = show ? '1' : '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = show ? 'flex' : 'none';
+            }, show ? 0 : 300);
         }
-    };
         
-        // Récupérer la configuration des niveaux depuis le fichier JSON
-        async function fetchLevelsConfig() {
-        try {
-            // Load JSON file with anti-cache parameter
-            const response = await safeFetch('/configs/levels.json?nocache=' + Date.now());
-            if (!response.ok) {
-                throw new Error('Error loading level configuration');
-            }
-            
-            const levelsData = await response.json();
-            
-            if (!levelsData || !levelsData.levels || !Array.isArray(levelsData.levels)) {
-                throw new Error('Invalid data format: expected structure is { levels: [...] }');
-            }
-            
-            // Transform data into usable format
-            levels = levelsData.levels.map(level => ({
-                id: level.id,
-                name: level.name || `Level ${level.id}`,
-                description: level.description || "Description not available",
-                // Handle cases where image or background are undefined
-                image: level.image ? (level.image.startsWith('/') ? level.image : `/assets/images/${level.image}`) : `/assets/images/level${level.id}.jpg`,
-                background: level.background ? (level.background.startsWith('/') ? level.background : `/assets/images/${level.background}`) : `/assets/images/bg${level.id}.jpg`,
-                // Use energyCost from file if it exists, otherwise calculate based on ID
-                energyCost: level.energyCost || (5 + (level.id - 1)),
-                // Keep tile information for the game
-                tiles: level.tiles || { base: "iso_dirt", special: [] },
-                monsters: level.monsters || [],
-                obstacles: level.obstacles || [],
-                boss: level.boss
-            }));
-        } catch (error) {
-            console.error("Error loading levels:", error);
-            
-            // If error, use default data to avoid blocking the interface
-            levels = [
-                {
-                    id: 1,
-                    name: "La Cour d'École",
-                    description: "Votre première bataille contre les connaissances élémentaires. Affrontez des livres et des stylos ensorcelés qui vous attaquent avec des questions de base.",
-                    image: "/assets/images/level1.jpg",
-                    background: "/assets/images/bg1.jpg",
-                    energyCost: 5
-                },
-                // ... additional default levels
-            ];
-        }
-    }
-        // Récupérer les statistiques du joueur, y compris les niveaux débloqués
-        async function fetchPlayerStats() {
-        try {
-            const data = await fetchWithAuth('/api/player/stats');
-            
-            // Update maximum unlocked level
-            if (data.unlockedLevels && data.unlockedLevels.length > 0) {
-                maxUnlockedLevel = Math.max(...data.unlockedLevels);
-            } else {
-                maxUnlockedLevel = 1; // Default, only level 1 is unlocked
-            }
-            
-            // Adjust currentLevelIndex to point to maximum unlocked level
-            // Look for the level corresponding to maxUnlockedLevel in our levels array
-            const levelIndex = levels.findIndex(level => level.id === maxUnlockedLevel);
-            if (levelIndex !== -1) {
-                currentLevelIndex = levelIndex;
-            } else {
-                // If we don't find the exact level, look for the closest available
-                const availableLevels = levels.filter(level => level.id <= maxUnlockedLevel);
-                if (availableLevels.length > 0) {
-                    // Take the highest available level
-                    const highestAvailable = availableLevels.reduce((max, level) => 
-                        level.id > max.id ? level : max, availableLevels[0]);
-                    currentLevelIndex = levels.findIndex(level => level.id === highestAvailable.id);
-                } else {
-                    // Fallback to level 1 if no level is found
-                    currentLevelIndex = levels.findIndex(level => level.id === 1) || 0;
+        // Fonction pour charger les niveaux depuis le fichier JSON
+        async function loadLevels() {
+            try {
+                const response = await fetch('/configs/levels.json');
+                if (!response.ok) throw new Error('Erreur lors du chargement des niveaux');
+                
+                const data = await response.json();
+                
+                if (!data || !data.levels || !Array.isArray(data.levels)) {
+                    throw new Error('Format de données incorrect');
                 }
+                
+                // Transformer les données dans un format utilisable
+                levels = data.levels.map(level => ({
+                    id: level.id,
+                    name: level.name || `Niveau ${level.id}`,
+                    description: level.description || "Description non disponible",
+                    image: level.image ? (level.image.startsWith('/') ? level.image : `/assets/images/${level.image}`) : `/assets/images/level${level.id}.jpg`,
+                    background: level.background ? (level.background.startsWith('/') ? level.background : `/assets/images/${level.background}`) : `/assets/images/bg${level.id}.jpg`,
+                    energyCost: level.energyCost || (5 + (level.id - 1)),
+                    tiles: level.tiles || { base: "iso_dirt", special: [] },
+                    monsters: level.monsters || [],
+                    obstacles: level.obstacles || [],
+                    boss: level.boss
+                }));
+                
+                // Trier les niveaux par ID
+                levels.sort((a, b) => a.id - b.id);
+                
+                return true;
+            } catch (error) {
+                console.error('Erreur lors du chargement des niveaux:', error);
+                alert('Erreur lors du chargement des niveaux. Veuillez réessayer.');
+                return false;
             }
-        } catch (error) {
-            console.error("Error retrieving statistics:", error);
-            // If error, assume only level 1 is unlocked
-            maxUnlockedLevel = 1;
         }
-    }
-        // Mettre à jour l'affichage du niveau
+        
+        // Fonction pour charger les données du joueur
+        async function loadPlayerData() {
+            try {
+                const data = await fetchWithAuth('/api/player/stats');
+                
+                // Mettre à jour le niveau maximum débloqué
+                if (data.unlockedLevels && data.unlockedLevels.length > 0) {
+                    maxUnlockedLevel = Math.max(...data.unlockedLevels);
+                } else {
+                    maxUnlockedLevel = 1;
+                }
+                
+                // Mettre à jour l'énergie du joueur
+                playerEnergy = {
+                    current: data.currentEnergy,
+                    max: data.maxEnergy
+                };
+                
+                // Trouver l'index du niveau maximum débloqué
+                const levelIndex = levels.findIndex(level => level.id === maxUnlockedLevel);
+                if (levelIndex !== -1) {
+                    currentLevelIndex = levelIndex;
+                } else {
+                    // Fallback au plus haut niveau disponible
+                    const availableLevels = levels.filter(level => level.id <= maxUnlockedLevel);
+                    if (availableLevels.length > 0) {
+                        const highestAvailable = availableLevels.reduce((max, level) => 
+                            level.id > max.id ? level : max, availableLevels[0]);
+                        currentLevelIndex = levels.findIndex(level => level.id === highestAvailable.id);
+                    } else {
+                        currentLevelIndex = 0;
+                    }
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Erreur lors du chargement des données du joueur:', error);
+                maxUnlockedLevel = 1;
+                playerEnergy = { current: 20, max: 20 };
+                currentLevelIndex = 0;
+                return false;
+            }
+        }
+        
+        // Fonction pour mettre à jour l'affichage du niveau
         function updateLevelDisplay() {
             if (levels.length === 0) {
-                console.error("Aucun niveau n'a été chargé");
+                console.error('Aucun niveau chargé');
                 return;
             }
             
             const level = levels[currentLevelIndex];
             
-            document.getElementById('current-level').textContent = level.id;
-            document.getElementById('battle-name').textContent = level.name;
-            document.getElementById('battle-description').textContent = level.description;
-            document.getElementById('energy-cost').textContent = `${level.energyCost} énergie requise`;
+            // Mettre à jour le texte et l'image
+            currentLevelElement.textContent = level.id;
+            levelNameElement.textContent = level.name;
+            levelDescriptionElement.textContent = level.description;
+            energyCostElement.textContent = level.energyCost;
             
-            // Mettre à jour l'image du niveau
-            const battleImage = document.getElementById('battle-image');
-            battleImage.src = level.image;
-            battleImage.onerror = function() {
+            // Mettre à jour l'image avec fallback
+            levelImageElement.src = level.image;
+            levelImageElement.onerror = function() {
                 this.src = '/icons/icon-512.png';
             };
             
-            // Mettre à jour l'image de fond
-            const backgroundImage = document.getElementById('background-image');
-            backgroundImage.style.backgroundImage = `url('${level.background}')`;
+            // Mise à jour des boutons de navigation
+            prevLevelButton.disabled = currentLevelIndex <= 0;
+            prevLevelButton.style.opacity = currentLevelIndex <= 0 ? '0.3' : '1';
             
-            // Mettre à jour l'accessibilité des flèches
-            const leftArrow = document.querySelectorAll('.level-arrow')[0];
-            const rightArrow = document.querySelectorAll('.level-arrow')[1];
-            
-            // Flèche gauche désactivée si on est au premier niveau
-            leftArrow.style.opacity = currentLevelIndex > 0 ? '1' : '0.3';
-            leftArrow.style.cursor = currentLevelIndex > 0 ? 'pointer' : 'not-allowed';
-            
-            // Flèche droite désactivée si on est au dernier niveau débloqué
-            const isMaxLevel = currentLevelIndex >= levels.length - 1 || 
+            const isAtMaxLevel = currentLevelIndex >= levels.length - 1 || 
                                (currentLevelIndex + 1 < levels.length && levels[currentLevelIndex + 1].id > maxUnlockedLevel);
-            rightArrow.style.opacity = isMaxLevel ? '0.3' : '1';
-            rightArrow.style.cursor = isMaxLevel ? 'not-allowed' : 'pointer';
+            nextLevelButton.disabled = isAtMaxLevel;
+            nextLevelButton.style.opacity = isAtMaxLevel ? '0.3' : '1';
+            
+            // Mettre à jour le bouton de démarrage (désactivé si pas assez d'énergie)
+            const hasEnoughEnergy = playerEnergy.current >= level.energyCost;
+            startButton.disabled = !hasEnoughEnergy;
+            startButton.style.opacity = hasEnoughEnergy ? '1' : '0.5';
+            
+            // Feedback visuel si pas assez d'énergie
+            if (!hasEnoughEnergy) {
+                energyCostElement.innerHTML = `<span style="color: #e74c3c;">${level.energyCost}</span>`;
+            } else {
+                energyCostElement.innerHTML = level.energyCost;
+            }
         }
         
-        // Changer de niveau
+        // Fonction pour changer de niveau
         function changeLevel(direction) {
             const newIndex = currentLevelIndex + direction;
             
-            // Vérifier si le nouveau niveau est valide
-            if (newIndex >= 0 && newIndex < levels.length) {
-                // Vérifier si le niveau est débloqué
-                if (levels[newIndex].id <= maxUnlockedLevel) {
-                    currentLevelIndex = newIndex;
-                    updateLevelDisplay();
-                } else {
-                    alert(`Le niveau ${levels[newIndex].id} n'est pas encore débloqué.`);
-                }
+            if (newIndex < 0 || newIndex >= levels.length) return;
+            
+            // Vérifier si le niveau est débloqué
+            if (levels[newIndex].id <= maxUnlockedLevel) {
+                currentLevelIndex = newIndex;
+                updateLevelDisplay();
+            } else {
+                alert(`Le niveau ${levels[newIndex].id} n'est pas encore débloqué.`);
             }
         }
         
-        // Lancer le combat
-        function startBattle() {
-        const level = levels[currentLevelIndex];
-        
-        // Check and start battle
-        fetchWithAuth('/api/battle/start', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                levelId: level.id
-            })
-        })
-        .then(data => {
-            if (data.success) {
-                // Store temporary level data in localStorage for game.html
-                try {
-                    // Store only essential information to avoid exceeding localStorage limit
-                    const levelData = {
-                        id: level.id,
-                        name: level.name,
-                        tiles: level.tiles,
-                        monsters: level.monsters,
-                        obstacles: level.obstacles || []
-                    };
-                    
-                    if (level.boss) {
-                        levelData.boss = level.boss;
+        // Fonction pour démarrer le niveau
+        async function startLevel() {
+            const level = levels[currentLevelIndex];
+            
+            toggleLoading(true);
+            
+            try {
+                // Appel API pour commencer le niveau
+                const response = await fetchWithAuth('/api/battle/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ levelId: level.id })
+                });
+                
+                if (response.success) {
+                    // Stocker les données du niveau pour le jeu
+                    try {
+                        const levelData = {
+                            id: level.id,
+                            name: level.name,
+                            tiles: level.tiles,
+                            monsters: level.monsters,
+                            obstacles: level.obstacles || []
+                        };
+                        
+                        if (level.boss) {
+                            levelData.boss = level.boss;
+                        }
+                        
+                        localStorage.setItem('currentLevelData', JSON.stringify(levelData));
+                    } catch (e) {
+                        console.warn("Impossible de stocker les données dans localStorage:", e);
                     }
                     
-                    localStorage.setItem('currentLevelData', JSON.stringify(levelData));
-                } catch (e) {
-                    console.warn("Unable to store level data in localStorage:", e);
+                    // Rediriger vers le jeu
+                    window.location.href = `/main_game/index.html?level=${level.id}`;
+                } else {
+                    throw new Error('Échec du démarrage du niveau');
                 }
+            } catch (error) {
+                toggleLoading(false);
                 
-                // Redirect to game page with level parameters
-                window.location.href = `/game.html?level=${level.id}`;
-            }
-        })
-        .catch(error => {
-            // Only handle if still authenticated
-            if (localStorage.getItem('token')) {
-                console.error('Error:', error);
-                // Handle different possible errors
                 if (error.message && error.message.includes('énergie')) {
                     alert("Vous n'avez pas assez d'énergie pour ce niveau!");
                 } else if (error.message && error.message.includes('niveau')) {
                     alert("Ce niveau n'est pas encore débloqué!");
                 } else {
-                    alert("Erreur lors du démarrage du combat");
+                    alert("Erreur lors du démarrage du niveau. Veuillez réessayer.");
                 }
+                
+                console.error('Erreur:', error);
             }
-        });
-    }
+        }
+        
+        // Initialisation
+        async function init() {
+            // Vérifier l'authentification
+            if (!checkAuth()) return;
+            
+            toggleLoading(true);
+            
+            try {
+                // Charger les niveaux et les données du joueur
+                const levelsLoaded = await loadLevels();
+                if (!levelsLoaded) throw new Error('Échec du chargement des niveaux');
+                
+                const playerDataLoaded = await loadPlayerData();
+                if (!playerDataLoaded) console.warn('Données joueur non chargées, utilisation des valeurs par défaut');
+                
+                // Mettre à jour l'affichage
+                updateLevelDisplay();
+                
+                toggleLoading(false);
+            } catch (error) {
+                console.error('Erreur d\'initialisation:', error);
+                alert('Erreur lors du chargement de la page. Veuillez réessayer.');
+                toggleLoading(false);
+            }
+        }
+        
+        // Event listeners
+        prevLevelButton.addEventListener('click', () => changeLevel(-1));
+        nextLevelButton.addEventListener('click', () => changeLevel(1));
+        startButton.addEventListener('click', startLevel);
+        homeButton.addEventListener('click', () => window.location.href = '/home.html');
+        
+        // Démarrer l'initialisation
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
