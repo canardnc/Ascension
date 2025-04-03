@@ -486,7 +486,7 @@
       levelConfig.monsters.forEach(monster => {
 
         // S'assurer que le monstre a un niveau (utiliser 1 par défaut si non spécifié)
-const monsterLevel = monster.level || 1;
+const monsterLevel = monster.monsterLevel || 1;
 
           // Vérifier si les coordonnées x et y sont spécifiées dans la config
           if (monster.x !== undefined && monster.y !== undefined) {

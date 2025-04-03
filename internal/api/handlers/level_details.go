@@ -10,16 +10,16 @@ import (
 
 // MonsterData représente les données d'un monstre dans un niveau
 type MonsterData struct {
-	Name        string  `json:"name"`
-	HP          int     `json:"health"`
-	Damage      int     `json:"damage"`
-	Range       float64 `json:"range"`
-	AttackSpeed float64 `json:"attackSpeed"`
-	MoveSpeed   float64 `json:"speed"`
-	Size        float64 `json:"size"`
-	Design      string  `json:"design"`
-	Points      int     `json:"points"`       // Nouveau champ
-	Level       int     `json:"monsterLevel"` // Nouveau champ pour le niveau du monstre
+	Name         string  `json:"name"`
+	HP           int     `json:"health"`
+	Damage       int     `json:"damage"`
+	Range        float64 `json:"range"`
+	AttackSpeed  float64 `json:"attackSpeed"`
+	MoveSpeed    float64 `json:"speed"`
+	Size         float64 `json:"size"`
+	Design       string  `json:"design"`
+	Points       int     `json:"points"`       // Nouveau champ
+	MonsterLevel int     `json:"monsterLevel"` // Nouveau champ pour le niveau du monstre
 }
 
 // LevelDetailsResponse représente la réponse avec les détails du niveau
@@ -81,16 +81,16 @@ func getLevelDetailsFromDB(levelID int) (*LevelDetailsResponse, error) {
 
 		// Ajouter le monstre à la liste le nombre de fois spécifié par amount
 		monster := MonsterData{
-			Name:        name,
-			HP:          hp,
-			Damage:      damage,
-			Range:       monsterRange,
-			AttackSpeed: attackSpeed,
-			MoveSpeed:   moveSpeed,
-			Size:        size,
-			Design:      design,
-			Points:      points,
-			Level:       monsterLevel, // Ajout du niveau du monstre
+			Name:         name,
+			HP:           hp,
+			Damage:       damage,
+			Range:        monsterRange,
+			AttackSpeed:  attackSpeed,
+			MoveSpeed:    moveSpeed,
+			Size:         size,
+			Design:       design,
+			Points:       points,
+			MonsterLevel: monsterLevel, // Ajout du niveau du monstre
 		}
 
 		// Créer amount instances du monstre
@@ -102,55 +102,21 @@ func getLevelDetailsFromDB(levelID int) (*LevelDetailsResponse, error) {
 	// Si aucun monstre n'est trouvé, ajouter quelques monstres par défaut
 	if len(response.Monsters) == 0 {
 		defaultMonster := MonsterData{
-			Name:        "Livre Ensorcelé",
-			HP:          50,
-			Damage:      5,
-			Range:       100,
-			AttackSpeed: 1,
-			MoveSpeed:   80,
-			Size:        30,
-			Design:      "book_default",
-			Points:      10, // Points par défaut
+			Name:         "Livre Ensorcelé",
+			HP:           50,
+			Damage:       5,
+			Range:        100,
+			AttackSpeed:  1,
+			MoveSpeed:    80,
+			Size:         30,
+			Design:       "book_default",
+			Points:       10, // Points par défaut
+			MonsterLevel: 1,  // Niveau par défaut
 		}
 
 		// Ajouter 5 monstres par défaut
 		for i := 0; i < 5; i++ {
 			response.Monsters = append(response.Monsters, defaultMonster)
-		}
-	}
-
-	// 2. Récupérer le boss (si présent)
-	var bossID int
-	err = db.DB.QueryRow(`
-		SELECT boss_monster_id 
-		FROM level_bosses 
-		WHERE level_id = $1
-	`, levelID).Scan(&bossID)
-
-	if err == nil && bossID > 0 {
-		// Boss trouvé, récupérer ses détails
-		var name string
-		var hp, damage int
-		var bossRange, attackSpeed, moveSpeed, size float64
-		var design string
-
-		err = db.DB.QueryRow(`
-			SELECT monster_name, hp, damage, range, attack_speed, move_speed, size, design
-			FROM monsters
-			WHERE monster_id = $1
-		`, bossID).Scan(&name, &hp, &damage, &bossRange, &attackSpeed, &moveSpeed, &size, &design)
-
-		if err == nil {
-			response.Boss = &MonsterData{
-				Name:        name,
-				HP:          hp,
-				Damage:      damage,
-				Range:       bossRange,
-				AttackSpeed: attackSpeed,
-				MoveSpeed:   moveSpeed,
-				Size:        size,
-				Design:      design,
-			}
 		}
 	}
 

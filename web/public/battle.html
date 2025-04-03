@@ -459,7 +459,7 @@
             toggleLoading(true);
             try {
                 currentLevelDetails = await loadLevelDetails(level.id);
-                console.log("Détails du niveau chargés et mis à jour");
+                console.log("Détails du niveau chargés et mis à jour" + ":", currentLevelDetails);
                 toggleLoading(false);
             } catch (error) {
                 console.error("Erreur lors du chargement des détails du niveau:", error);
@@ -500,7 +500,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ levelId: level.id })
                 });
-                
+
                 if (response.success) {
                     // Stocker les données du niveau pour le jeu
                     try {
@@ -523,10 +523,9 @@
                                 size: monster.size || 30,
                                 design: monster.design || "default",
                                 points: monster.points || 10,
-                                level: monster.level || 1 
+                                monsterLevel: monster.monsterLevel || 10
                             }));
                         }
-                        
                         localStorage.setItem('currentLevelData', JSON.stringify(levelData));
                     } catch (e) {
                         console.warn("Impossible de stocker les données dans localStorage:", e);
