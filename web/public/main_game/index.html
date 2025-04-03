@@ -469,19 +469,20 @@ async function loadPlayerStats() {
             const position = findValidMonsterPosition();
             
             monsters.push({
-                x: position.x,
-                y: position.y,
-                hp: 50,
-                damage: 5,
-                range: 5,
-                attackSpeed: 1,
-                moveSpeed: 6,
-                attackTimer: 0,
-                lastPathTime: 0,
-                path: [],
-                name: "Monstre inconnu",
-                design: "default"
-            });
+    x: position.x,
+    y: position.y,
+    hp: monster.health || 50,
+    damage: monster.damage || 5,
+    range: monster.range / 10 || 5,
+    attackSpeed: monster.attackSpeed || 1,
+    moveSpeed: monster.speed / 10 || 6,
+    size: monster.size || 30, 
+    attackTimer: 0,
+    lastPathTime: 0,
+    path: [],
+    name: monster.name || "Monstre inconnu",
+    design: monster.design || "default"
+});
         }
         return;
     }
@@ -492,57 +493,60 @@ async function loadPlayerStats() {
         if (monster.x !== undefined && monster.y !== undefined) {
             // Utiliser les coordonnées spécifiées si elles sont valides
             if (isValidMonsterPosition(monster.x, monster.y)) {
-                monsters.push({
-                    x: monster.x,
-                    y: monster.y,
-                    hp: monster.health || 50,
-                    damage: monster.damage || 5,
-                    range: monster.range / 10 || 5,
-                    attackSpeed: monster.attackSpeed || 1,
-                    moveSpeed: monster.speed / 10 || 6,
-                    attackTimer: 0,
-                    lastPathTime: 0,
-                    path: [],
-                    name: monster.name || "Monstre inconnu",
-                    design: monster.design || "default"
-                });
+              monsters.push({
+    x: position.x,
+    y: position.y,
+    hp: monster.health || 50,
+    damage: monster.damage || 5,
+    range: monster.range / 10 || 5,
+    attackSpeed: monster.attackSpeed || 1,
+    moveSpeed: monster.speed / 10 || 6,
+    size: monster.size || 30, 
+    attackTimer: 0,
+    lastPathTime: 0,
+    path: [],
+    name: monster.name || "Monstre inconnu",
+    design: monster.design || "default"
+});
             } else {
                 // Si les coordonnées spécifiées ne sont pas valides, trouver une position valide
                 const position = findValidMonsterPosition();
                 
                 monsters.push({
-                    x: position.x,
-                    y: position.y,
-                    hp: monster.health || 50,
-                    damage: monster.damage || 5,
-                    range: monster.range / 10 || 5,
-                    attackSpeed: monster.attackSpeed || 1,
-                    moveSpeed: monster.speed / 10 || 6,
-                    attackTimer: 0,
-                    lastPathTime: 0,
-                    path: [],
-                    name: monster.name || "Monstre inconnu",
-                    design: monster.design || "default"
-                });
+    x: position.x,
+    y: position.y,
+    hp: monster.health || 50,
+    damage: monster.damage || 5,
+    range: monster.range / 10 || 5,
+    attackSpeed: monster.attackSpeed || 1,
+    moveSpeed: monster.speed / 10 || 6,
+    size: monster.size || 30, 
+    attackTimer: 0,
+    lastPathTime: 0,
+    path: [],
+    name: monster.name || "Monstre inconnu",
+    design: monster.design || "default"
+});
             }
         } else {
             // Si x et y ne sont pas spécifiés, trouver une position valide
             const position = findValidMonsterPosition();
             
             monsters.push({
-                x: position.x,
-                y: position.y,
-                hp: monster.health || 50,
-                damage: monster.damage || 5,
-                range: monster.range / 10 || 5,
-                attackSpeed: monster.attackSpeed || 1,
-                moveSpeed: monster.speed / 10 || 6,
-                attackTimer: 0,
-                lastPathTime: 0,
-                path: [],
-                name: monster.name || "Monstre inconnu",
-                design: monster.design || "default"
-            });
+    x: position.x,
+    y: position.y,
+    hp: monster.health || 50,
+    damage: monster.damage || 5,
+    range: monster.range / 10 || 5,
+    attackSpeed: monster.attackSpeed || 1,
+    moveSpeed: monster.speed / 10 || 6,
+    size: monster.size || 30, 
+    attackTimer: 0,
+    lastPathTime: 0,
+    path: [],
+    name: monster.name || "Monstre inconnu",
+    design: monster.design || "default"
+});
         }
     });
     
@@ -552,40 +556,40 @@ async function loadPlayerStats() {
         
         // Vérifier si les coordonnées sont spécifiées pour le boss
         if (boss.x !== undefined && boss.y !== undefined && isValidMonsterPosition(boss.x, boss.y)) {
-            monsters.push({
-                x: boss.x,
-                y: boss.y,
-                hp: boss.health || 100,
-                damage: boss.damage || 10,
-                range: boss.range / 10 || 8,
-                attackSpeed: boss.attackSpeed || 0.8,
-                moveSpeed: boss.speed / 10 || 5,
-                attackTimer: 0,
-                lastPathTime: 0,
-                path: [],
-                name: boss.name || "Boss",
-                design: boss.design || "boss_default",
-                isBoss: true
-            });
+          monsters.push({
+    x: position.x,
+    y: position.y,
+    hp: monster.health || 50,
+    damage: monster.damage || 5,
+    range: monster.range / 10 || 5,
+    attackSpeed: monster.attackSpeed || 1,
+    moveSpeed: monster.speed / 10 || 6,
+    size: monster.size || 300, 
+    attackTimer: 0,
+    lastPathTime: 0,
+    path: [],
+    name: monster.name || "Monstre inconnu",
+    design: monster.design || "default"
+});
         } else {
             // Si les coordonnées ne sont pas spécifiées ou invalides, trouver une position valide
             const position = findValidMonsterPosition();
             
             monsters.push({
-                x: position.x,
-                y: position.y,
-                hp: boss.health || 100,
-                damage: boss.damage || 10,
-                range: boss.range / 10 || 8,
-                attackSpeed: boss.attackSpeed || 0.8,
-                moveSpeed: boss.speed / 10 || 5,
-                attackTimer: 0,
-                lastPathTime: 0,
-                path: [],
-                name: boss.name || "Boss",
-                design: boss.design || "boss_default",
-                isBoss: true
-            });
+    x: position.x,
+    y: position.y,
+    hp: monster.health || 50,
+    damage: monster.damage || 5,
+    range: monster.range / 10 || 5,
+    attackSpeed: monster.attackSpeed || 1,
+    moveSpeed: monster.speed / 10 || 6,
+    size: monster.size || 300, 
+    attackTimer: 0,
+    lastPathTime: 0,
+    path: [],
+    name: monster.name || "Monstre inconnu",
+    design: monster.design || "default"
+});
         }
     }
     
@@ -996,14 +1000,15 @@ async function loadPlayerStats() {
   }
   
   // Dessiner l'image du héros au lieu d'un cercle
-  const heroSize = 40; // Taille fixe pour le héros
-  ctx.drawImage(
-    heroImage, 
-    heroCenterX - heroSize/2, 
-    heroCenterY - heroSize/2, 
-    heroSize, 
-    heroSize
-  );
+  const heroHeight = 40; // Hauteur fixe
+const heroWidth = (heroImage.width / heroImage.height) * heroHeight;
+ctx.drawImage(
+  heroImage, 
+  heroCenterX - heroWidth/2, 
+  heroCenterY - heroHeight/2, 
+  heroWidth, 
+  heroHeight
+);
   
   // Afficher la vie du héros au-dessus
   ctx.fillStyle = "white";
@@ -1030,17 +1035,16 @@ async function loadPlayerStats() {
     if (m.design && monsterImages[m.design]) {
         // Dessiner l'image du monstre
         const img = monsterImages[m.design];
-        const scaleFactor = monsterSize / Math.max(img.width, img.height);
-        const width = img.width * scaleFactor;
-        const height = img.height * scaleFactor;
-        
+        const monsterHeight = m.size || (m.isBoss ? 40 : 30);
+        const monsterWidth = (img.width / img.height) * monsterHeight;
+
         // Dessiner avec le centre de l'image à la position du monstre
         ctx.drawImage(
             img, 
-            mCenterX - width / 2, 
-            mCenterY - height / 2,
-            width,
-            height
+            mCenterX - monsterWidth / 2, 
+            mCenterY - monsterHeight / 2,
+            monsterWidth,
+            monsterHeight
         );
         
         // Pour les boss, ajouter une aura ou un effet spécial
