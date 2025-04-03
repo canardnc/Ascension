@@ -324,7 +324,7 @@
                     throw new Error('Format de données incorrect');
                 }
                 
-                // Transformer les données dans un format utilisable - mais sans tiles, monsters, obstacles, boss
+                // Transformer les données dans un format utilisable - mais sans tiles, monsters, obstacles
                 levels = data.levels.map(level => ({
                     id: level.id,
                     name: level.name || `Niveau ${level.id}`,
@@ -521,20 +521,9 @@
                                 range: monster.range || 100,
                                 speed: monster.speed || 80,
                                 size: monster.size || 30,
-                                design: monster.design || "default"
+                                design: monster.design || "default",
+                                points: monster.points || 10
                             }));
-                        }
-                        
-                        if (currentLevelDetails.boss) {
-                            levelData.boss = {
-                                name: currentLevelDetails.boss.name || "Boss",
-                                health: currentLevelDetails.boss.health || 100,
-                                damage: currentLevelDetails.boss.damage || 10,
-                                range: currentLevelDetails.boss.range || 120,
-                                speed: currentLevelDetails.boss.speed || 50,
-                                size: currentLevelDetails.boss.size || 40,
-                                design: currentLevelDetails.boss.design || "boss_default"
-                            };
                         }
                         
                         localStorage.setItem('currentLevelData', JSON.stringify(levelData));

@@ -147,7 +147,7 @@ func CompleteBattle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Enregistrement des logs pour le debug
-	log.Printf("CompleteBattle - UserID: %d, LevelID: %d, Success: %v, Stars: %d",
+	log.Printf("CompleteBattle - UserID: %d, LevelID: %d, Success: %v, Stars: %d, Score: %d",
 		userId, request.LevelID, request.Success, request.StarsCount)
 
 	// Créer un nouveau score
@@ -174,47 +174,77 @@ func CompleteBattle(w http.ResponseWriter, r *http.Request) {
 
 	var nextLevelUnlocked bool = false
 
-	// Si le joueur a obtenu 3 étoiles (terminé toutes les vagues), débloquer le niveau suivant
-	if request.StarsCount == 3 {
-		nextLevel := request.LevelID + 1
-
-		log.Printf("Niveau %d terminé avec 3 étoiles. Tentative de débloquage du niveau %d",
-			request.LevelID, nextLevel)
-
-		// Vérifier le nombre maximum de niveaux (à ajuster selon votre jeu)
-		maxLevel := 5
-		if nextLevel <= maxLevel {
-			if err := models.UnlockLevel(userId, nextLevel); err != nil {
-				log.Printf("Erreur lors du déblocage du niveau %d: %v", nextLevel, err)
-				middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors du déblocage du niveau suivant")
-				return
-			}
-			nextLevelUnlocked = true
-			log.Printf("Niveau %d débloqué avec succès", nextLevel)
-		}
-	}
-
-	// Mettre à jour les étoiles pour ce niveau
-	currentStars, err := models.GetLevelStars(userId, request.LevelID)
+	// Récupérer les étoiles et le score actuels pour ce niveau
+	currentStars, currentScore, err := models.GetLevelStars(userId, request.LevelID)
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("Erreur lors de la récupération des étoiles: %v", err)
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des étoiles")
+		log.Printf("Erreur lors de la récupération des étoiles et du score: %v", err)
+		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la récupération des données de progression")
 		return
 	}
 
-	// Mettre à jour seulement si le résultat est meilleur
+	// Déterminer si le score et/ou les étoiles doivent être mis à jour
+	updateNeeded := false
+	newRecord := false
+
+	// Vérifier si le nouveau score est meilleur
+	if request.Score > currentScore {
+		updateNeeded = true
+		newRecord = true
+		log.Printf("Nouveau record de score pour le niveau %d: %d (ancien: %d)",
+			request.LevelID, request.Score, currentScore)
+	}
+
+	// Obtenir dynamiquement le niveau maximum disponible
+	maxLevel, err := models.GetMaxLevelID()
+	if err != nil {
+		log.Printf("Erreur lors de la récupération du niveau maximum: %v", err)
+		// Ne pas échouer la requête pour cette erreur non critique
+		// Utiliser une valeur par défaut ou continuer sans déverrouillage
+		maxLevel = request.LevelID // Par sécurité, ne pas déverrouiller de niveau supplémentaire
+	}
+
+	// Vérifier si le nouveau nombre d'étoiles est meilleur
 	if request.StarsCount > currentStars {
-		if err := models.UpdateLevelStars(userId, request.LevelID, request.StarsCount); err != nil {
-			log.Printf("Erreur lors de la mise à jour des étoiles: %v", err)
-			middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la mise à jour des étoiles")
+		updateNeeded = true
+		log.Printf("Nouvelle progression d'étoiles pour le niveau %d: %d (ancien: %d)",
+			request.LevelID, request.StarsCount, currentStars)
+
+		// Si le joueur a obtenu 3 étoiles (terminé toutes les vagues), débloquer le niveau suivant
+		if request.StarsCount == 3 {
+			nextLevel := request.LevelID + 1
+
+			log.Printf("Niveau %d terminé avec 3 étoiles. Tentative de débloquage du niveau %d",
+				request.LevelID, nextLevel)
+
+			// Vérifier le nombre maximum de niveaux (à ajuster selon votre jeu)
+			maxLevel := maxLevel
+			if nextLevel <= maxLevel {
+				if err := models.UnlockLevel(userId, nextLevel); err != nil {
+					log.Printf("Erreur lors du déblocage du niveau %d: %v", nextLevel, err)
+					middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors du déblocage du niveau suivant")
+					return
+				}
+				nextLevelUnlocked = true
+				log.Printf("Niveau %d débloqué avec succès", nextLevel)
+			}
+		}
+	}
+
+	// Mettre à jour la progression si nécessaire
+	if updateNeeded {
+		if err := models.UpdateLevelStars(userId, request.LevelID, request.StarsCount, request.Score); err != nil {
+			log.Printf("Erreur lors de la mise à jour de la progression: %v", err)
+			middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la mise à jour de la progression")
 			return
 		}
-		log.Printf("Étoiles mises à jour pour le niveau %d: %d", request.LevelID, request.StarsCount)
+		log.Printf("Progression mise à jour pour le niveau %d: %d étoiles, score %d",
+			request.LevelID, request.StarsCount, request.Score)
 	}
 
 	middleware.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
 		"success":           true,
 		"isNewBest":         isNewBest,
+		"isNewLevelRecord":  newRecord,
 		"nextLevelUnlocked": nextLevelUnlocked,
 	})
 }

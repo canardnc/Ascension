@@ -18,6 +18,7 @@ type MonsterData struct {
 	MoveSpeed   float64 `json:"speed"`
 	Size        float64 `json:"size"`
 	Design      string  `json:"design"`
+	Points      int     `json:"points"` // Nouveau champ
 }
 
 // LevelDetailsResponse représente la réponse avec les détails du niveau
@@ -56,11 +57,11 @@ func getLevelDetailsFromDB(levelID int) (*LevelDetailsResponse, error) {
 
 	// 1. Récupérer les monstres du niveau
 	rows, err := db.DB.Query(`
-		SELECT m.monster_name, m.hp, m.damage, m.range, m.attack_speed, m.move_speed, m.size, m.design, l.amount
-		FROM levels l
-		JOIN monsters m ON l.monster_id = m.monster_id
-		WHERE l.level = $1
-	`, levelID)
+    SELECT m.monster_name, m.hp, m.damage, m.range, m.attack_speed, m.move_speed, m.size, m.design, m.points, l.amount
+    FROM levels l
+    JOIN monsters m ON l.monster_id = m.monster_id
+    WHERE l.level = $1
+`, levelID)
 	if err != nil {
 		return nil, err
 	}
@@ -68,11 +69,11 @@ func getLevelDetailsFromDB(levelID int) (*LevelDetailsResponse, error) {
 
 	for rows.Next() {
 		var name string
-		var hp, damage, amount int
+		var hp, damage, amount, points int
 		var monsterRange, attackSpeed, moveSpeed, size float64
 		var design string
 
-		err := rows.Scan(&name, &hp, &damage, &monsterRange, &attackSpeed, &moveSpeed, &size, &design, &amount)
+		err := rows.Scan(&name, &hp, &damage, &monsterRange, &attackSpeed, &moveSpeed, &size, &design, &points, &amount)
 		if err != nil {
 			return nil, err
 		}
@@ -87,6 +88,7 @@ func getLevelDetailsFromDB(levelID int) (*LevelDetailsResponse, error) {
 			MoveSpeed:   moveSpeed,
 			Size:        size,
 			Design:      design,
+			Points:      points, // Nouveau champ
 		}
 
 		// Créer amount instances du monstre
@@ -106,6 +108,7 @@ func getLevelDetailsFromDB(levelID int) (*LevelDetailsResponse, error) {
 			MoveSpeed:   80,
 			Size:        30,
 			Design:      "book_default",
+			Points:      10, // Points par défaut
 		}
 
 		// Ajouter 5 monstres par défaut

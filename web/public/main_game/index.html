@@ -48,10 +48,10 @@
     const monsterImages = {}; 
 
     const heroImage = new Image();
-heroImage.src = "/assets/images/caracter/caracter_1.png";
+    heroImage.src = "/assets/images/caracter/caracter_1.png";
 
-const projectileImage = new Image();
-projectileImage.src = "/assets/images/crayon.png";
+    const projectileImage = new Image();
+    projectileImage.src = "/assets/images/crayon.png";
     
     // ===== Chargement du fond =====
     const backgroundImage = new Image();
@@ -148,242 +148,235 @@ projectileImage.src = "/assets/images/crayon.png";
     }
 
     function preloadMonsterImages() {
-    // Fonction pour charger une image avec gestion d'erreur
-    function loadImage(design) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                monsterImages[design] = img;
-                resolve(true);
-            };
-            img.onerror = () => {
-                console.warn(`Image de monstre non trouvée: ${design}`);
-                resolve(false);
-            };
-            img.src = `/assets/images/monsters/${design}`;
-        });
+      // Fonction pour charger une image avec gestion d'erreur
+      function loadImage(design) {
+          return new Promise((resolve) => {
+              const img = new Image();
+              img.onload = () => {
+                  monsterImages[design] = img;
+                  resolve(true);
+              };
+              img.onerror = () => {
+                  console.warn(`Image de monstre non trouvée: ${design}`);
+                  resolve(false);
+              };
+              img.src = `/assets/images/monsters/${design}`;
+          });
+      }
+      
+      // Si la configuration du niveau est disponible, précharger les images
+      if (levelConfig && levelConfig.monsters) {
+          const uniqueDesigns = new Set();
+          
+          // Collecter tous les designs uniques
+          levelConfig.monsters.forEach(monster => {
+              if (monster.design) {
+                  uniqueDesigns.add(monster.design);
+              }
+          });
+          
+          // Précharger toutes les images uniques
+          const loadPromises = Array.from(uniqueDesigns).map(design => loadImage(design));
+          return Promise.all(loadPromises);
+      }
+      
+      return Promise.resolve();
     }
-    
-    // Si la configuration du niveau est disponible, précharger les images
-    if (levelConfig && levelConfig.monsters) {
-        const uniqueDesigns = new Set();
-        
-        // Collecter tous les designs uniques
-        levelConfig.monsters.forEach(monster => {
-            if (monster.design) {
-                uniqueDesigns.add(monster.design);
-            }
-        });
-        
-        // Ajouter le design du boss s'il existe
-        if (levelConfig.boss && levelConfig.boss.design) {
-            uniqueDesigns.add(levelConfig.boss.design);
-        }
-        
-        // Précharger toutes les images uniques
-        const loadPromises = Array.from(uniqueDesigns).map(design => loadImage(design));
-        return Promise.all(loadPromises);
-    }
-    
-    return Promise.resolve();
-}
     
     // ===== Définition du héros et des monstres =====
     // Positions en valeurs continues pour un déplacement fluide.
     const hero = {
-    x: gridWidth / 2,
-    y: gridHeight / 2,
-    hp: 100,                     // Points de vie de base
-    maxHp: 100,                  // Maximum de points de vie
-    damage: 10,                  // Dégâts de base
-    range: 10,                   // Portée de base
-    attackSpeed: 1,              // Vitesse d'attaque de base (1 tir/s)
-    moveSpeed: 100,              // Vitesse de déplacement de base
-    attackTimer: 0,              // Compteur pour la prochaine attaque
-    
-    // Sous-statistiques de Force
-    attack: 0,                   // Bonus aux dégâts
-    precision: 0,                // Précision des attaques
-    critical: 0,                 // Chance de critique et dégâts critiques
-    
-    // Sous-statistiques d'Endurance
-    health: 0,                   // Bonus aux points de vie
-    armor: 0,                    // Réduction des dégâts
-    dodge: 0,                    // Chance d'esquiver les attaques
-    
-    // Sous-statistiques de Récupération
-    regen: 0,                    // Régénération de points de vie
-    lifesteal: 0,                // Vol de vie sur les attaques
-    
-    // Sous-statistiques d'Agilité
-    rangeBonus: 0,               // Bonus de portée
-    speed: 0,                    // Bonus de vitesse de déplacement
-    
-    // Mécaniques dérivées
-    critChance: 0,               // Chance de critique
-    critDamage: 1.5,             // Multiplicateur de critique
-    // ...etc.
-};
+      x: gridWidth / 2,
+      y: gridHeight / 2,
+      hp: 100,                     // Points de vie de base
+      maxHp: 100,                  // Maximum de points de vie
+      damage: 10,                  // Dégâts de base
+      range: 10,                   // Portée de base
+      attackSpeed: 1,              // Vitesse d'attaque de base (1 tir/s)
+      moveSpeed: 100,              // Vitesse de déplacement de base
+      attackTimer: 0,              // Compteur pour la prochaine attaque
+      
+      // Sous-statistiques de Force
+      attack: 0,                   // Bonus aux dégâts
+      precision: 0,                // Précision des attaques
+      critical: 0,                 // Chance de critique et dégâts critiques
+      
+      // Sous-statistiques d'Endurance
+      health: 0,                   // Bonus aux points de vie
+      armor: 0,                    // Réduction des dégâts
+      dodge: 0,                    // Chance d'esquiver les attaques
+      
+      // Sous-statistiques de Récupération
+      regen: 0,                    // Régénération de points de vie
+      lifesteal: 0,                // Vol de vie sur les attaques
+      
+      // Sous-statistiques d'Agilité
+      rangeBonus: 0,               // Bonus de portée
+      speed: 0,                    // Bonus de vitesse de déplacement
+      
+      // Mécaniques dérivées
+      critChance: 0,               // Chance de critique
+      critDamage: 1.5,             // Multiplicateur de critique
+      // ...etc.
+    };
     let monsters = [];
     
     // ===== Initialisation du jeu =====
     async function initGame() {
-    try {
-        // 1. Vérifier l'authentification
-        if (!checkAuth()) {
-            window.location.href = '/';
-            return;
-        }
-        
-        // 2. Récupérer l'ID du niveau depuis l'URL
-        const urlParams = new URLSearchParams(window.location.search);
-        levelId = parseInt(urlParams.get('level') || '1');
-        
-        // 3. Charger les données du niveau
-        await loadLevelData();
-        
-        // 4. Précharger les images des monstres
-        await preloadMonsterImages();
-        
-        // 5. Charger les statistiques du joueur
-        await loadPlayerStats();
-        
-        // 6. Initialiser les monstres
-        initBlockAndHeightMaps();
-        spawnMonsters();
-        
-        // 7. Démarrer la boucle de jeu
-        lastTime = performance.now();
-        requestAnimationFrame(gameLoop);
-        
-    } catch (error) {
-        console.error("Erreur d'initialisation:", error);
-        alert("Erreur lors du chargement du jeu. Veuillez réessayer.");
-        window.location.href = '/battle.html';
+      try {
+          // 1. Vérifier l'authentification
+          if (!checkAuth()) {
+              window.location.href = '/';
+              return;
+          }
+          
+          // 2. Récupérer l'ID du niveau depuis l'URL
+          const urlParams = new URLSearchParams(window.location.search);
+          levelId = parseInt(urlParams.get('level') || '1');
+          
+          // 3. Charger les données du niveau
+          await loadLevelData();
+          
+          // 4. Précharger les images des monstres
+          await preloadMonsterImages();
+          
+          // 5. Charger les statistiques du joueur
+          await loadPlayerStats();
+          
+          // 6. Initialiser les monstres
+          initBlockAndHeightMaps();
+          spawnMonsters();
+          
+          // 7. Démarrer la boucle de jeu
+          lastTime = performance.now();
+          requestAnimationFrame(gameLoop);
+          
+      } catch (error) {
+          console.error("Erreur d'initialisation:", error);
+          alert("Erreur lors du chargement du jeu. Veuillez réessayer.");
+          window.location.href = '/battle.html';
+      }
     }
-}
     
     async function loadLevelData() {
-    try {
-        // Charger la configuration du niveau depuis localStorage ou l'API
-        let levelDataString = localStorage.getItem('currentLevelData');
-        if (levelDataString) {
-            levelConfig = JSON.parse(levelDataString);
-            console.log("Données du niveau chargées depuis localStorage:", levelConfig);
-        } else {
-            // Si pas de données en localStorage, charger depuis l'API
-            console.log("Aucune donnée de niveau trouvée dans localStorage, tentative de chargement depuis l'API...");
-            
-            // Charger d'abord les informations de base du niveau
-            const baseResponse = await fetch(`/configs/levels.json`);
-            if (!baseResponse.ok) {
-                throw new Error('Erreur lors du chargement de la configuration des niveaux');
-            }
-            const baseConfig = await baseResponse.json();
-            const baseLevelConfig = baseConfig.levels.find(level => level.id === levelId);
-            
-            if (!baseLevelConfig) {
-                throw new Error(`Niveau ${levelId} non trouvé dans la configuration de base`);
-            }
-            
-            // Ensuite charger les détails du niveau (monstres, boss) depuis l'API
-            const detailsResponse = await fetchWithAuth(`/api/battle/level-details?id=${levelId}`);
-            if (!detailsResponse) {
-                throw new Error(`Impossible de récupérer les détails du niveau ${levelId}`);
-            }
-            
-            // Combiner les informations
-            levelConfig = {
-                id: baseLevelConfig.id,
-                name: baseLevelConfig.name,
-                monsters: detailsResponse.monsters || [],
-                boss: detailsResponse.boss || null
-            };
-            
-            console.log("Données du niveau chargées depuis l'API:", levelConfig);
-        }
-        
-        if (!levelConfig) {
-            throw new Error(`Niveau ${levelId} non trouvé`);
-        }
-        
-        // Initialiser le titre du jeu avec le nom du niveau
-        document.title = `Ascension - ${levelConfig.name || 'Niveau ' + levelId}`;
-        
-        return true;
-    } catch (error) {
-        console.error("Erreur lors du chargement du niveau:", error);
-        // Configuration par défaut en cas d'erreur
-        levelConfig = {
-            id: levelId,
-            name: "Niveau par défaut",
-            monsters: [
-                {
-                    name: "Livre Ensorcelé",
-                    health: 50,
-                    damage: 5,
-                    range: 100,
-                    speed: 80,
-                    size: 30,
-                    design: "book_default"
-                }
-            ]
-        };
-        return false;
+      try {
+          // Charger la configuration du niveau depuis localStorage ou l'API
+          let levelDataString = localStorage.getItem('currentLevelData');
+          if (levelDataString) {
+              levelConfig = JSON.parse(levelDataString);
+              console.log("Données du niveau chargées depuis localStorage:", levelConfig);
+          } else {
+              // Si pas de données en localStorage, charger depuis l'API
+              console.log("Aucune donnée de niveau trouvée dans localStorage, tentative de chargement depuis l'API...");
+              
+              // Charger d'abord les informations de base du niveau
+              const baseResponse = await fetch(`/configs/levels.json`);
+              if (!baseResponse.ok) {
+                  throw new Error('Erreur lors du chargement de la configuration des niveaux');
+              }
+              const baseConfig = await baseResponse.json();
+              const baseLevelConfig = baseConfig.levels.find(level => level.id === levelId);
+              
+              if (!baseLevelConfig) {
+                  throw new Error(`Niveau ${levelId} non trouvé dans la configuration de base`);
+              }
+              
+              // Ensuite charger les détails du niveau (monstres) depuis l'API
+              const detailsResponse = await fetchWithAuth(`/api/battle/level-details?id=${levelId}`);
+              if (!detailsResponse) {
+                  throw new Error(`Impossible de récupérer les détails du niveau ${levelId}`);
+              }
+              
+              // Combiner les informations
+              levelConfig = {
+                  id: baseLevelConfig.id,
+                  name: baseLevelConfig.name,
+                  monsters: detailsResponse.monsters || []
+              };
+              
+              console.log("Données du niveau chargées depuis l'API:", levelConfig);
+          }
+          
+          if (!levelConfig) {
+              throw new Error(`Niveau ${levelId} non trouvé`);
+          }
+          
+          // Initialiser le titre du jeu avec le nom du niveau
+          document.title = `Ascension - ${levelConfig.name || 'Niveau ' + levelId}`;
+          
+          return true;
+      } catch (error) {
+          console.error("Erreur lors du chargement du niveau:", error);
+          // Configuration par défaut en cas d'erreur
+          levelConfig = {
+              id: levelId,
+              name: "Niveau par défaut",
+              monsters: [
+                  {
+                      name: "Livre Ensorcelé",
+                      health: 50,
+                      damage: 5,
+                      range: 100,
+                      speed: 80,
+                      size: 30,
+                      design: "book_default"
+                  }
+              ]
+          };
+          return false;
+      }
     }
-}
     
-async function loadPlayerStats() {
-    try {
-        const stats = await fetchWithAuth('/api/player/stats');
-        
-        // Récupérer toutes les sous-statistiques
-        hero.attack = stats.attack || 0;
-        hero.precision = stats.precision || 0;
-        hero.critical = stats.critical || 0;
-        hero.health = stats.health || 0;
-        hero.armor = stats.armor || 0;
-        hero.dodge = stats.dodge || 0;
-        hero.regen = stats.regen || 0;
-        hero.lifesteal = stats.lifesteal || 0;
-        hero.rangeBonus = stats.range || 0;
-        hero.speed = stats.speed || 0;
-        
-        // Appliquer les règles de calcul des statistiques principales
-        // Force
-        hero.damage = 10 + hero.attack;
-        hero.attackSpeed = 1 + (hero.precision * 0.1);
-        hero.critChance = hero.critical * 0.02; // 2% par point
-        hero.critDamage = 1.5 + (hero.critical * 0.1);
-        
-        // Endurance
-        hero.maxHp = 100 + (hero.health * 5);
-        hero.hp = hero.maxHp; // Commencer avec HP max
-        hero.damageReduction = hero.armor * 0.02; // 2% par point
-        hero.dodgeChance = hero.dodge * 0.02; // 2% par point
-        
-        // Récupération
-        hero.healthRegen = hero.regen * 0.1; // 0.1 HP/s par point
-        hero.lifeStealPercent = hero.lifesteal * 0.03; // 3% par point
-        
-        // Agilité
-        hero.range = 10 + (hero.rangeBonus * 0.5);
-        hero.moveSpeed = 100 + (hero.speed * 2);
-        
-        console.log("Statistiques du joueur chargées:", stats);
-        console.log("Statistiques du héros mises à jour:", hero);
-        
-        // Sauvegarder les stats pour utilisation ultérieure
-        playerStats = stats;
-        
-    } catch (error) {
-        console.error("Erreur lors du chargement des statistiques:", error);
-        // Conserver les valeurs par défaut du héros
+    async function loadPlayerStats() {
+      try {
+          const stats = await fetchWithAuth('/api/player/stats');
+          
+          // Récupérer toutes les sous-statistiques
+          hero.attack = stats.attack || 0;
+          hero.precision = stats.precision || 0;
+          hero.critical = stats.critical || 0;
+          hero.health = stats.health || 0;
+          hero.armor = stats.armor || 0;
+          hero.dodge = stats.dodge || 0;
+          hero.regen = stats.regen || 0;
+          hero.lifesteal = stats.lifesteal || 0;
+          hero.rangeBonus = stats.range || 0;
+          hero.speed = stats.speed || 0;
+          
+          // Appliquer les règles de calcul des statistiques principales
+          // Force
+          hero.damage = 10 + hero.attack;
+          hero.attackSpeed = 1 + (hero.precision * 0.1);
+          hero.critChance = hero.critical * 0.02; // 2% par point
+          hero.critDamage = 1.5 + (hero.critical * 0.1);
+          
+          // Endurance
+          hero.maxHp = 100 + (hero.health * 5);
+          hero.hp = hero.maxHp; // Commencer avec HP max
+          hero.damageReduction = hero.armor * 0.02; // 2% par point
+          hero.dodgeChance = hero.dodge * 0.02; // 2% par point
+          
+          // Récupération
+          hero.healthRegen = hero.regen * 0.1; // 0.1 HP/s par point
+          hero.lifeStealPercent = hero.lifesteal * 0.03; // 3% par point
+          
+          // Agilité
+          hero.range = 10 + (hero.rangeBonus * 0.5);
+          hero.moveSpeed = 100 + (hero.speed * 2);
+          
+          console.log("Statistiques du joueur chargées:", stats);
+          console.log("Statistiques du héros mises à jour:", hero);
+          
+          // Sauvegarder les stats pour utilisation ultérieure
+          playerStats = stats;
+          
+      } catch (error) {
+          console.error("Erreur lors du chargement des statistiques:", error);
+          // Conserver les valeurs par défaut du héros
+      }
     }
-}
     
     function initBlockAndHeightMaps() {
-      
       // Ajouter des obstacles basés sur la configuration du niveau
       if (levelConfig && levelConfig.obstacles) {
         levelConfig.obstacles.forEach(obstacle => {
@@ -400,201 +393,162 @@ async function loadPlayerStats() {
     }
     
     function spawnMonsters() {
-    monsters = [];
-    
-    // Fonction pour vérifier si une position est valide pour un monstre
-    function isValidMonsterPosition(x, y) {
-        // Vérifier que la position n'est pas bloquée
-        if (isBlocked(Math.floor(x), Math.floor(y))) {
-            return false;
-        }
-        
-        // Vérifier que le monstre n'est pas trop proche du héros
-        if (Math.hypot(x - hero.x, y - hero.y) < 5) {
-            return false;
-        }
-        
-        // Vérifier qu'il existe un chemin vers le héros
-        const path = findPath(
-            { x: Math.floor(x), y: Math.floor(y) },
-            { x: Math.floor(hero.x), y: Math.floor(hero.y) }
-        );
-        
-        // Retourner vrai si le chemin existe et n'est pas vide
-        return path && path.length > 0;
-    }
-    
-    // Fonction pour trouver une position valide pour un monstre
-    function findValidMonsterPosition() {
-        let attempts = 0;
-        const maxAttempts = 100;
-        
-        while (attempts < maxAttempts) {
-            // Générer une position aléatoire
-            const x = Math.random() * gridWidth;
-            const y = Math.random() * gridHeight;
-            
-            // Vérifier la validité de la position
-            if (isValidMonsterPosition(x, y)) {
-                return { x, y };
-            }
-            
-            attempts++;
-        }
-        
-        // Si aucune position valide n'est trouvée après plusieurs tentatives,
-        // retourner une position près du centre (si possible)
-        const centerX = gridWidth / 2;
-        const centerY = gridHeight / 2;
-        
-        for (let dx = -10; dx <= 10; dx++) {
-            for (let dy = -10; dy <= 10; dy++) {
-                const x = centerX + dx;
-                const y = centerY + dy;
-                if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight && 
-                    isValidMonsterPosition(x, y)) {
-                    return { x, y };
-                }
-            }
-        }
-        
-        // En dernier recours, retourner une position au hasard (même si invalide)
-        return { x: gridWidth / 2, y: gridHeight / 2 };
-    }
-    
-    // Si pas de configuration de niveau, utiliser des valeurs par défaut
-    if (!levelConfig || !levelConfig.monsters || levelConfig.monsters.length === 0) {
-        // Spawn par défaut (10 monstres aléatoires)
-        for (let i = 0; i < 10; i++) {
-            const position = findValidMonsterPosition();
-            
-            monsters.push({
-    x: position.x,
-    y: position.y,
-    hp: monster.health || 50,
-    damage: monster.damage || 5,
-    range: monster.range / 10 || 5,
-    attackSpeed: monster.attackSpeed || 1,
-    moveSpeed: monster.speed / 10 || 6,
-    size: monster.size || 30, 
-    attackTimer: 0,
-    lastPathTime: 0,
-    path: [],
-    name: monster.name || "Monstre inconnu",
-    design: monster.design || "default"
-});
-        }
-        return;
-    }
-    
-    // Utiliser la configuration du niveau pour spawn les monstres
-    levelConfig.monsters.forEach(monster => {
-        // Vérifier si les coordonnées x et y sont spécifiées dans la config
-        if (monster.x !== undefined && monster.y !== undefined) {
-            // Utiliser les coordonnées spécifiées si elles sont valides
-            if (isValidMonsterPosition(monster.x, monster.y)) {
+      monsters = [];
+      
+      // Fonction pour vérifier si une position est valide pour un monstre
+      function isValidMonsterPosition(x, y) {
+          // Vérifier que la position n'est pas bloquée
+          if (isBlocked(Math.floor(x), Math.floor(y))) {
+              return false;
+          }
+          
+          // Vérifier que le monstre n'est pas trop proche du héros
+          if (Math.hypot(x - hero.x, y - hero.y) < 5) {
+              return false;
+          }
+          
+          // Vérifier qu'il existe un chemin vers le héros
+          const path = findPath(
+              { x: Math.floor(x), y: Math.floor(y) },
+              { x: Math.floor(hero.x), y: Math.floor(hero.y) }
+          );
+          
+          // Retourner vrai si le chemin existe et n'est pas vide
+          return path && path.length > 0;
+      }
+      
+      // Fonction pour trouver une position valide pour un monstre
+      function findValidMonsterPosition() {
+          let attempts = 0;
+          const maxAttempts = 100;
+          
+          while (attempts < maxAttempts) {
+              // Générer une position aléatoire
+              const x = Math.random() * gridWidth;
+              const y = Math.random() * gridHeight;
+              
+              // Vérifier la validité de la position
+              if (isValidMonsterPosition(x, y)) {
+                  return { x, y };
+              }
+              
+              attempts++;
+          }
+          
+          // Si aucune position valide n'est trouvée après plusieurs tentatives,
+          // retourner une position près du centre (si possible)
+          const centerX = gridWidth / 2;
+          const centerY = gridHeight / 2;
+          
+          for (let dx = -10; dx <= 10; dx++) {
+              for (let dy = -10; dy <= 10; dy++) {
+                  const x = centerX + dx;
+                  const y = centerY + dy;
+                  if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight && 
+                      isValidMonsterPosition(x, y)) {
+                      return { x, y };
+                  }
+              }
+          }
+          
+          // En dernier recours, retourner une position au hasard (même si invalide)
+          return { x: gridWidth / 2, y: gridHeight / 2 };
+      }
+      
+      // Si pas de configuration de niveau, utiliser des valeurs par défaut
+      if (!levelConfig || !levelConfig.monsters || levelConfig.monsters.length === 0) {
+          // Spawn par défaut (10 monstres aléatoires)
+          for (let i = 0; i < 10; i++) {
+              const position = findValidMonsterPosition();
+              
               monsters.push({
-    x: position.x,
-    y: position.y,
-    hp: monster.health || 50,
-    damage: monster.damage || 5,
-    range: monster.range / 10 || 5,
-    attackSpeed: monster.attackSpeed || 1,
-    moveSpeed: monster.speed / 10 || 6,
-    size: monster.size || 30, 
-    attackTimer: 0,
-    lastPathTime: 0,
-    path: [],
-    name: monster.name || "Monstre inconnu",
-    design: monster.design || "default"
-});
-            } else {
-                // Si les coordonnées spécifiées ne sont pas valides, trouver une position valide
-                const position = findValidMonsterPosition();
-                
+                  x: position.x,
+                  y: position.y,
+                  hp: 50,
+                  damage: 5,
+                  range: 10,
+                  attackSpeed: 1,
+                  moveSpeed: 8,
+                  size: 30,
+                  attackTimer: 0,
+                  lastPathTime: 0,
+                  path: [],
+                  name: "Monstre inconnu",
+                  design: "default",
+                  points: 10
+              });
+          }
+          return;
+      }
+      
+      // Utiliser la configuration du niveau pour spawn les monstres
+      levelConfig.monsters.forEach(monster => {
+          // Vérifier si les coordonnées x et y sont spécifiées dans la config
+          if (monster.x !== undefined && monster.y !== undefined) {
+              // Utiliser les coordonnées spécifiées si elles sont valides
+              if (isValidMonsterPosition(monster.x, monster.y)) {
                 monsters.push({
-    x: position.x,
-    y: position.y,
-    hp: monster.health || 50,
-    damage: monster.damage || 5,
-    range: monster.range / 10 || 5,
-    attackSpeed: monster.attackSpeed || 1,
-    moveSpeed: monster.speed / 10 || 6,
-    size: monster.size || 30, 
-    attackTimer: 0,
-    lastPathTime: 0,
-    path: [],
-    name: monster.name || "Monstre inconnu",
-    design: monster.design || "default"
-});
-            }
-        } else {
-            // Si x et y ne sont pas spécifiés, trouver une position valide
-            const position = findValidMonsterPosition();
-            
-            monsters.push({
-    x: position.x,
-    y: position.y,
-    hp: monster.health || 50,
-    damage: monster.damage || 5,
-    range: monster.range / 10 || 5,
-    attackSpeed: monster.attackSpeed || 1,
-    moveSpeed: monster.speed / 10 || 6,
-    size: monster.size || 30, 
-    attackTimer: 0,
-    lastPathTime: 0,
-    path: [],
-    name: monster.name || "Monstre inconnu",
-    design: monster.design || "default"
-});
-        }
-    });
-    
-    // Ajouter le boss si présent
-    if (levelConfig.boss) {
-        let boss = levelConfig.boss;
-        
-        // Vérifier si les coordonnées sont spécifiées pour le boss
-        if (boss.x !== undefined && boss.y !== undefined && isValidMonsterPosition(boss.x, boss.y)) {
-          monsters.push({
-    x: position.x,
-    y: position.y,
-    hp: monster.health || 50,
-    damage: monster.damage || 5,
-    range: monster.range / 10 || 5,
-    attackSpeed: monster.attackSpeed || 1,
-    moveSpeed: monster.speed / 10 || 6,
-    size: monster.size || 300, 
-    attackTimer: 0,
-    lastPathTime: 0,
-    path: [],
-    name: monster.name || "Monstre inconnu",
-    design: monster.design || "default"
-});
-        } else {
-            // Si les coordonnées ne sont pas spécifiées ou invalides, trouver une position valide
-            const position = findValidMonsterPosition();
-            
-            monsters.push({
-    x: position.x,
-    y: position.y,
-    hp: monster.health || 50,
-    damage: monster.damage || 5,
-    range: monster.range / 10 || 5,
-    attackSpeed: monster.attackSpeed || 1,
-    moveSpeed: monster.speed / 10 || 6,
-    size: monster.size || 300, 
-    attackTimer: 0,
-    lastPathTime: 0,
-    path: [],
-    name: monster.name || "Monstre inconnu",
-    design: monster.design || "default"
-});
-        }
+                    x: monster.x,
+                    y: monster.y,
+                    hp: monster.health || 50,
+                    damage: monster.damage || 5,
+                    range: monster.range / 10 || 5,
+                    attackSpeed: monster.attackSpeed || 1,
+                    moveSpeed: monster.speed / 10 || 6,
+                    size: monster.size || 30, 
+                    attackTimer: 0,
+                    lastPathTime: 0,
+                    path: [],
+                    name: monster.name || "Monstre inconnu",
+                    design: monster.design || "default",
+                    points: monster.points || 10
+                });
+              } else {
+                  // Si les coordonnées spécifiées ne sont pas valides, trouver une position valide
+                  const position = findValidMonsterPosition();
+                  
+                  monsters.push({
+                      x: position.x,
+                      y: position.y,
+                      hp: monster.health || 50,
+                      damage: monster.damage || 5,
+                      range: monster.range / 10 || 5,
+                      attackSpeed: monster.attackSpeed || 1,
+                      moveSpeed: monster.speed / 10 || 6,
+                      size: monster.size || 30, 
+                      attackTimer: 0,
+                      lastPathTime: 0,
+                      path: [],
+                      name: monster.name || "Monstre inconnu",
+                      design: monster.design || "default",
+                      points: monster.points || 10
+                  });
+              }
+          } else {
+              // Si x et y ne sont pas spécifiés, trouver une position valide
+              const position = findValidMonsterPosition();
+              
+              monsters.push({
+                  x: position.x,
+                  y: position.y,
+                  hp: monster.health || 50,
+                  damage: monster.damage || 5,
+                  range: monster.range / 10 || 5,
+                  attackSpeed: monster.attackSpeed || 1,
+                  moveSpeed: monster.speed / 10 || 6,
+                  size: monster.size || 30, 
+                  attackTimer: 0,
+                  lastPathTime: 0,
+                  path: [],
+                  name: monster.name || "Monstre inconnu",
+                  design: monster.design || "default",
+                  points: monster.points || 10
+              });
+          }
+      });
+      
+      console.log(`${monsters.length} monstres générés pour le niveau ${levelId}`);
     }
-    
-    console.log(`${monsters.length} monstres générés pour le niveau ${levelId}`);
-}
     
     // ===== Amélioration du pathfinder (8 directions) =====
     function findPath(start, goal) {
@@ -702,7 +656,7 @@ async function loadPlayerStats() {
             if (Math.hypot(p.x - m.x, p.y - m.y) < 0.5) {
               m.hp -= p.damage;
               if (m.hp <= 0) {
-                score += 10; // Gain de score à chaque monstre tué
+                score += m.points; // Gain de score à chaque monstre tué
               }
               projectiles.splice(i, 1);
               break;
@@ -717,50 +671,50 @@ async function loadPlayerStats() {
       }
     }
     function drawProjectiles(cameraOffset) {
-  projectiles.forEach(p => {
-    let screenPos = gridToScreen(p.x, p.y, cameraOffset);
-    let centerX = screenPos.x + tileWidth/2;
-    let centerY = screenPos.y + tileHeight/2;
-    
-    if (p.owner === "hero") {
-      // Pour les projectiles du héros, utiliser l'image du crayon
-      
-      // Calculer l'angle de rotation
-      // Référence : angle 0 correspond à (vx=1, vy=0) soit un tir vers la droite
-      const angle = Math.atan2(p.vy, p.vx);
-      
-      // Ajouter un ajustement de -45 degrés (-π/4 radians) pour corriger l'orientation
-      const adjustedAngle = angle + Math.PI / 4;
-      
-      // Taille du projectile
-      const projectileWidth = 24;
-      const projectileHeight = 8;
-      
-      // Sauvegarder le contexte pour la rotation
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(adjustedAngle);
-      
-      // Dessiner l'image du projectile
-      ctx.drawImage(
-        projectileImage,
-        -projectileWidth / 2,
-        -projectileHeight / 2,
-        projectileWidth,
-        projectileHeight
-      );
-      
-      // Restaurer le contexte
-      ctx.restore();
-    } else {
-      // Pour les projectiles des monstres, conserver le dessin simple
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
-      ctx.fillStyle = "yellow";
-      ctx.fill();
+      projectiles.forEach(p => {
+        let screenPos = gridToScreen(p.x, p.y, cameraOffset);
+        let centerX = screenPos.x + tileWidth/2;
+        let centerY = screenPos.y + tileHeight/2;
+        
+        if (p.owner === "hero") {
+          // Pour les projectiles du héros, utiliser l'image du crayon
+          
+          // Calculer l'angle de rotation
+          // Référence : angle 0 correspond à (vx=1, vy=0) soit un tir vers la droite
+          const angle = Math.atan2(p.vy, p.vx);
+          
+          // Ajouter un ajustement de -45 degrés (-π/4 radians) pour corriger l'orientation
+          const adjustedAngle = angle + Math.PI / 4;
+          
+          // Taille du projectile
+          const projectileWidth = 24;
+          const projectileHeight = 8;
+          
+          // Sauvegarder le contexte pour la rotation
+          ctx.save();
+          ctx.translate(centerX, centerY);
+          ctx.rotate(adjustedAngle);
+          
+          // Dessiner l'image du projectile
+          ctx.drawImage(
+            projectileImage,
+            -projectileWidth / 2,
+            -projectileHeight / 2,
+            projectileWidth,
+            projectileHeight
+          );
+          
+          // Restaurer le contexte
+          ctx.restore();
+        } else {
+          // Pour les projectiles des monstres, conserver le dessin simple
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+          ctx.fillStyle = "yellow";
+          ctx.fill();
+        }
+      });
     }
-  });
-}
     // ===== Boucle principale =====
     let lastTime = performance.now();
     function gameLoop(timestamp) {
@@ -975,140 +929,114 @@ async function loadPlayerStats() {
     
     // ===== Affichage (draw) =====
     function drawGame() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  let cameraOffset = getCameraOffset();
-  
-  // --- Dessiner le fond centré sur la grille ---
-  let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
-  let bgX = gridCenter.x - backgroundImage.width / 2;
-  let bgY = gridCenter.y - backgroundImage.height / 2;
-  ctx.drawImage(backgroundImage, bgX + cameraOffset.x, bgY + cameraOffset.y);
-  
-  // --- Dessiner les projectiles ---
-  drawProjectiles(cameraOffset);
-  
-  // --- Dessiner le héros avec transparence si sur tuile élevée ---
-  let heroTileKey = Math.floor(hero.x) + "," + Math.floor(hero.y);
-  let heroOnElevated = (heightMap[heroTileKey] >= 2);
-  let heroScreen = gridToScreen(hero.x, hero.y, cameraOffset);
-  let heroCenterX = heroScreen.x + tileWidth/2;
-  let heroCenterY = heroScreen.y + tileHeight/2;
-  
-  if (heroOnElevated) {
-    ctx.save();
-    ctx.globalAlpha = 0.25;
-  }
-  
-  // Dessiner l'image du héros au lieu d'un cercle
-  const heroHeight = 40; // Hauteur fixe
-const heroWidth = (heroImage.width / heroImage.height) * heroHeight;
-ctx.drawImage(
-  heroImage, 
-  heroCenterX - heroWidth/2, 
-  heroCenterY - heroHeight/2, 
-  heroWidth, 
-  heroHeight
-);
-  
-  // Afficher la vie du héros au-dessus
-  ctx.fillStyle = "white";
-  ctx.font = "10px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(Math.floor(hero.hp), heroCenterX, heroCenterY - 25);
-  
-  if (heroOnElevated) { ctx.restore(); }
-  
-  // --- Dessiner les monstres avec transparence si sur tuile élevée ---
-  monsters.forEach(m => {
-    let mTileKey = Math.floor(m.x) + "," + Math.floor(m.y);
-    let mOnElevated = (heightMap[mTileKey] >= 2);
-    let mScreen = gridToScreen(m.x, m.y, cameraOffset);
-    let mCenterX = mScreen.x + tileWidth/2;
-    let mCenterY = mScreen.y + tileHeight/2;
-    
-    if (mOnElevated) { ctx.save(); ctx.globalAlpha = 0.25; }
-    
-    // Utiliser directement la taille du monstre depuis les données
-    let monsterSize = m.size || (m.isBoss ? 40 : 30);
-    
-    // Vérifier si l'image du monstre est disponible
-    if (m.design && monsterImages[m.design]) {
-        // Dessiner l'image du monstre
-        const img = monsterImages[m.design];
-        const monsterHeight = m.size || (m.isBoss ? 40 : 30);
-        const monsterWidth = (img.width / img.height) * monsterHeight;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let cameraOffset = getCameraOffset();
+      
+      // --- Dessiner le fond centré sur la grille ---
+      let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
+      let bgX = gridCenter.x - backgroundImage.width / 2;
+      let bgY = gridCenter.y - backgroundImage.height / 2;
+      ctx.drawImage(backgroundImage, bgX + cameraOffset.x, bgY + cameraOffset.y);
+      
+      // --- Dessiner les projectiles ---
+      drawProjectiles(cameraOffset);
+      
+      // --- Dessiner le héros avec transparence si sur tuile élevée ---
+      let heroTileKey = Math.floor(hero.x) + "," + Math.floor(hero.y);
+      let heroOnElevated = (heightMap[heroTileKey] >= 2);
+      let heroScreen = gridToScreen(hero.x, hero.y, cameraOffset);
+      let heroCenterX = heroScreen.x + tileWidth/2;
+      let heroCenterY = heroScreen.y + tileHeight/2;
+      
+      if (heroOnElevated) {
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+      }
+      
+      // Dessiner l'image du héros au lieu d'un cercle
+      const heroHeight = 40; // Hauteur fixe
+      const heroWidth = (heroImage.width / heroImage.height) * heroHeight;
+      ctx.drawImage(
+        heroImage, 
+        heroCenterX - heroWidth/2, 
+        heroCenterY - heroHeight/2, 
+        heroWidth, 
+        heroHeight
+      );
+      
+      // Afficher la vie du héros au-dessus
+      ctx.fillStyle = "white";
+      ctx.font = "10px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(Math.floor(hero.hp), heroCenterX, heroCenterY - 25);
+      
+      if (heroOnElevated) { ctx.restore(); }
+      
+      // --- Dessiner les monstres avec transparence si sur tuile élevée ---
+      monsters.forEach(m => {
+        let mTileKey = Math.floor(m.x) + "," + Math.floor(m.y);
+        let mOnElevated = (heightMap[mTileKey] >= 2);
+        let mScreen = gridToScreen(m.x, m.y, cameraOffset);
+        let mCenterX = mScreen.x + tileWidth/2;
+        let mCenterY = mScreen.y + tileHeight/2;
+        
+        if (mOnElevated) { ctx.save(); ctx.globalAlpha = 0.25; }
+        
+        // Utiliser directement la taille du monstre depuis les données
+        let monsterSize = m.size || 30;
+        
+        // Vérifier si l'image du monstre est disponible
+        if (m.design && monsterImages[m.design]) {
+            // Dessiner l'image du monstre
+            const img = monsterImages[m.design];
+            const monsterHeight = m.size || 30;
+            const monsterWidth = (img.width / img.height) * monsterHeight;
 
-        // Dessiner avec le centre de l'image à la position du monstre
-        ctx.drawImage(
-            img, 
-            mCenterX - monsterWidth / 2, 
-            mCenterY - monsterHeight / 2,
-            monsterWidth,
-            monsterHeight
-        );
-        
-        // Pour les boss, ajouter une aura ou un effet spécial
-        if (m.isBoss) {
-            ctx.save();
-            ctx.globalAlpha = 0.3;
+            // Dessiner avec le centre de l'image à la position du monstre
+            ctx.drawImage(
+                img, 
+                mCenterX - monsterWidth / 2, 
+                mCenterY - monsterHeight / 2,
+                monsterWidth,
+                monsterHeight
+            );
+        } else {
+            // Solution de repli : dessiner un cercle rouge
             ctx.beginPath();
-            ctx.arc(mCenterX, mCenterY, monsterSize * 1.2, 0, Math.PI * 2);
-            ctx.fillStyle = "#FFD700"; // Aura dorée pour les boss
+            ctx.arc(mCenterX, mCenterY, monsterSize / 3, 0, Math.PI * 2);
+            ctx.fillStyle = "red";
             ctx.fill();
-            ctx.restore();
         }
-    } else {
-        // Solution de repli : dessiner un cercle rouge
-        ctx.beginPath();
-        ctx.arc(mCenterX, mCenterY, monsterSize / 3, 0, Math.PI * 2);
-        ctx.fillStyle = m.isBoss ? "#F39C12" : "red";
-        ctx.fill();
         
-        // Pour les boss, ajouter un contour
-        if (m.isBoss) {
-            ctx.strokeStyle = "#FFD700"; // Or
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
+        // Ajouter les points de vie au-dessus du monstre
+        ctx.fillStyle = "white";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
+        ctx.font = "10px Arial";
+        ctx.textAlign = "center";
+        
+        // Dessiner le texte avec contour pour meilleure visibilité
+        ctx.strokeText(Math.floor(m.hp), mCenterX, mCenterY - monsterSize / 2 - 5);
+        ctx.fillText(Math.floor(m.hp), mCenterX, mCenterY - monsterSize / 2 - 5);
+        
+        if (mOnElevated) { ctx.restore(); }
+      });
+      
+      // Afficher le score et autres informations
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Score: ${score}`, 20, 30);
+      ctx.fillText(`PV: ${Math.floor(hero.hp)} / ${hero.maxHp}`, 20, 60);
+      ctx.fillText(`Monstres: ${monsters.length}`, 20, 90);
+      
+      // Afficher le chronomètre
+      const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      ctx.textAlign = 'right';
+      ctx.fillText(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, canvas.width - 20, 30);
     }
-    
-    // Ajouter les points de vie au-dessus du monstre
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 2;
-    ctx.font = m.isBoss ? "bold 14px Arial" : "10px Arial";
-    ctx.textAlign = "center";
-    
-    // Dessiner le texte avec contour pour meilleure visibilité
-    ctx.strokeText(Math.floor(m.hp), mCenterX, mCenterY - monsterSize / 2 - 5);
-    ctx.fillText(Math.floor(m.hp), mCenterX, mCenterY - monsterSize / 2 - 5);
-    
-    // Ajouter le nom du monstre en dessous pour les boss
-    if (m.isBoss) {
-        const bossName = m.name || "Boss";
-        ctx.font = "bold 12px Arial";
-        ctx.strokeText(bossName, mCenterX, mCenterY - monsterSize / 2 - 20);
-        ctx.fillText(bossName, mCenterX, mCenterY - monsterSize / 2 - 20);
-    }
-    
-    if (mOnElevated) { ctx.restore(); }
-  });
-  
-  // Afficher le score et autres informations
-  ctx.fillStyle = 'white';
-  ctx.font = 'bold 16px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText(`Score: ${score}`, 20, 30);
-  ctx.fillText(`PV: ${Math.floor(hero.hp)} / ${hero.maxHp}`, 20, 60);
-  ctx.fillText(`Monstres: ${monsters.length}`, 20, 90);
-  
-  // Afficher le chronomètre
-  const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
-  const minutes = Math.floor(elapsed / 60);
-  const seconds = elapsed % 60;
-  ctx.textAlign = 'right';
-  ctx.fillText(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, canvas.width - 20, 30);
-}
     // ===== Mouseover pour mettre à jour hoveredTile (sans affichage) =====
     let hoveredTile = null;
     canvas.addEventListener("mousemove", function(e) {

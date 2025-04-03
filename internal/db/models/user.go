@@ -99,29 +99,53 @@ func (u *User) GetBestScore() (int, error) {
 	return bestScore, nil
 }
 
-// GetLevelStars récupère le nombre d'étoiles pour un niveau donné
-func GetLevelStars(userID, levelID int) (int, error) {
+// GetLevelStars récupère le nombre d'étoiles et le score pour un niveau donné
+func GetLevelStars(userID, levelID int) (stars int, score int, err error) {
 	query := `
-        SELECT stars
+        SELECT stars, score
         FROM level_progress
         WHERE user_id = $1 AND level_id = $2
     `
 
-	var stars int
-	err := db.DB.QueryRow(query, userID, levelID).Scan(&stars)
-	return stars, err
+	err = db.DB.QueryRow(query, userID, levelID).Scan(&stars, &score)
+	return
 }
 
-// UpdateLevelStars met à jour le nombre d'étoiles pour un niveau
-func UpdateLevelStars(userID, levelID, stars int) error {
+// GetMaxLevelID récupère l'ID du niveau maximum disponible dans le jeu
+func GetMaxLevelID() (int, error) {
 	query := `
-        INSERT INTO level_progress (user_id, level_id, stars)
-        VALUES ($1, $2, $3)
+        SELECT COALESCE(MAX(level_id), 0) 
+        FROM levels
+    `
+	// Alternative si vous stockez les niveaux dans une autre table :
+	// Si les niveaux sont dans une table "levels" avec une colonne "id" :
+	// SELECT COALESCE(MAX(id), 0) FROM levels
+
+	var maxLevelID int
+	err := db.DB.QueryRow(query).Scan(&maxLevelID)
+	if err != nil {
+		return 0, err
+	}
+
+	return maxLevelID, nil
+}
+
+// UpdateLevelStars met à jour le nombre d'étoiles et le score pour un niveau
+func UpdateLevelStars(userID, levelID, stars, score int) error {
+	query := `
+        INSERT INTO level_progress (user_id, level_id, stars, score, completed_at)
+        VALUES ($1, $2, $3, $4, NOW())
         ON CONFLICT (user_id, level_id)
-        DO UPDATE SET stars = EXCLUDED.stars
-        WHERE level_progress.stars < EXCLUDED.stars
+        DO UPDATE SET 
+            stars = CASE WHEN EXCLUDED.stars > level_progress.stars THEN EXCLUDED.stars ELSE level_progress.stars END,
+            score = CASE WHEN EXCLUDED.score > level_progress.score THEN EXCLUDED.score ELSE level_progress.score END,
+            completed_at = CASE 
+                WHEN EXCLUDED.stars > level_progress.stars OR EXCLUDED.score > level_progress.score 
+                THEN NOW() 
+                ELSE level_progress.completed_at 
+            END
     `
 
-	_, err := db.DB.Exec(query, userID, levelID, stars)
+	_, err := db.DB.Exec(query, userID, levelID, stars, score)
 	return err
 }
