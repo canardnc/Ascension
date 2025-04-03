@@ -475,7 +475,8 @@
                   path: [],
                   name: "Monstre inconnu",
                   design: "default",
-                  points: 10
+                  points: 10,
+                  level : 1
               });
           }
           return;
@@ -483,6 +484,10 @@
       
       // Utiliser la configuration du niveau pour spawn les monstres
       levelConfig.monsters.forEach(monster => {
+
+        // S'assurer que le monstre a un niveau (utiliser 1 par défaut si non spécifié)
+const monsterLevel = monster.level || 1;
+
           // Vérifier si les coordonnées x et y sont spécifiées dans la config
           if (monster.x !== undefined && monster.y !== undefined) {
               // Utiliser les coordonnées spécifiées si elles sont valides
@@ -490,11 +495,11 @@
                 monsters.push({
                     x: monster.x,
                     y: monster.y,
-                    hp: monster.health || 50,
-                    damage: monster.damage || 5,
-                    range: monster.range / 10 || 5,
+                    hp: monster.health * (1+monsterLevel*0.2)|| 50,
+                    damage: monster.damage* (1+monsterLevel*0.2) || 5,
+                    range: monster.range || 5,
                     attackSpeed: monster.attackSpeed || 1,
-                    moveSpeed: monster.speed / 10 || 6,
+                    moveSpeed: monster.speed|| 6,
                     size: monster.size || 30, 
                     attackTimer: 0,
                     lastPathTime: 0,
@@ -510,11 +515,11 @@
                   monsters.push({
                       x: position.x,
                       y: position.y,
-                      hp: monster.health || 50,
-                      damage: monster.damage || 5,
-                      range: monster.range / 10 || 5,
+                      hp: monster.health * (1+monsterLevel*0.2)|| 50,
+                      damage: monster.damage * (1+monsterLevel*0.2)|| 5,
+                      range: monster.range || 5,
                       attackSpeed: monster.attackSpeed || 1,
-                      moveSpeed: monster.speed / 10 || 6,
+                      moveSpeed: monster.speed || 6,
                       size: monster.size || 30, 
                       attackTimer: 0,
                       lastPathTime: 0,
@@ -531,11 +536,11 @@
               monsters.push({
                   x: position.x,
                   y: position.y,
-                  hp: monster.health || 50,
-                  damage: monster.damage || 5,
-                  range: monster.range / 10 || 5,
+                  hp: monster.health* (1+monsterLevel*0.2) || 50,
+                  damage: monster.damage * (1+monsterLevel*0.2)|| 5,
+                  range: monster.range || 5,
                   attackSpeed: monster.attackSpeed || 1,
-                  moveSpeed: monster.speed / 10 || 6,
+                  moveSpeed: monster.speed || 6,
                   size: monster.size || 30, 
                   attackTimer: 0,
                   lastPathTime: 0,
@@ -842,77 +847,274 @@
     }
     
     function endGame(success) {
-      // Marquer le jeu comme terminé
-      gameCompleted = true;
-      
-      // Calculer le temps écoulé et le score final
-      const gameTimeSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
-      score += Math.max(0, 300 - gameTimeSeconds); // Bonus de temps
-      
-      // Afficher l'écran de fin et soumettre les résultats
-      if (!scoreSubmitted) {
-        scoreSubmitted = true;
-        
-        // Envoyer les résultats au serveur
-        submitResults(success, score, gameTimeSeconds);
-        
-        // Afficher l'écran de fin
-        setTimeout(() => {
-          showEndGameScreen(success);
-        }, 500);
-      }
-    }
+  // Marquer le jeu comme terminé
+  gameCompleted = true;
+  
+  // Calculer le temps écoulé et le score final
+  const gameTimeSeconds = Math.floor((Date.now() - gameStartTime) / 1000);
+  
+  // Afficher l'écran de fin et soumettre les résultats
+  if (!scoreSubmitted) {
+    scoreSubmitted = true;
+    
+    // Envoyer les résultats au serveur et afficher l'écran de fin
+    submitResults(success, score, gameTimeSeconds)
+      .then(result => {
+        showBattleEndScreen(success, result.nextLevelUnlocked);
+      });
+  }
+}
     
     function submitResults(success, finalScore, timeSpent) {
-      // Récupérer l'ID du niveau depuis l'URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const levelId = parseInt(urlParams.get('level') || '1');
-      
-      // Calculer le nombre d'étoiles (1 à 3)
-      let starsCount = success ? Math.min(3, Math.max(1, Math.ceil(finalScore / 100))) : 0;
-      
-      // Données à envoyer
-      const data = {
-        levelId: levelId,
-        success: success,
-        score: finalScore,
-        starsCount: starsCount,
-        timeSpent: timeSpent
-      };
-      
-      // Envoyer les résultats
-      fetchWithAuth('/api/battle/complete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => {
-        console.log('Résultats envoyés avec succès:', response);
-      })
-      .catch(error => {
-        console.error('Erreur lors de l\'envoi des résultats:', error);
-      });
-    }
+  // Récupérer l'ID du niveau depuis l'URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const levelId = parseInt(urlParams.get('level') || '1');
+  
+  // Calculer le nombre d'étoiles (1 à 3)
+  let starsCount = success ? Math.min(3, Math.max(1, Math.ceil(finalScore / 100))) : 0;
+  
+  // Données à envoyer
+  const data = {
+    levelId: levelId,
+    success: success,
+    score: finalScore,
+    starsCount: starsCount,
+    timeSpent: timeSpent
+  };
+  
+  // Envoyer les résultats et retourner une promesse
+  return fetchWithAuth('/api/battle/complete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data)
+  })
+  .then(response => {
+    console.log('Résultats envoyés avec succès:', response);
+    return {
+      success: response.success,
+      nextLevelUnlocked: response.nextLevelUnlocked || false
+    };
+  })
+  .catch(error => {
+    console.error('Erreur lors de l\'envoi des résultats:', error);
+    return {
+      success: false,
+      nextLevelUnlocked: false
+    };
+  });
+}
     
-    function showEndGameScreen(success) {
-      // Calcul des stars en fonction du score
-      const starsCount = success ? Math.min(3, Math.max(1, Math.ceil(score / 100))) : 0;
-      
-      // Utiliser la fonction standard du panneau de fin de partie
-      showEndgameScreen(
-        score,                   // score obtenu
-        300,                     // score maximum
-        'strength',              // type de catégorie
-        () => window.location.reload(),   // fonction de réinitialisation
-        {
-          minigameId: levelId,   // ID du mini-jeu/niveau
-          difficultyLevel: 1,    // difficulté par défaut
-          timeSpent: Math.floor((Date.now() - gameStartTime) / 1000)  // temps écoulé
-        }
-      );
+function showBattleEndScreen(success, nextLevelUnlocked) {
+  // Calculer le score maximum possible (somme des points de tous les monstres)
+  let maxPossibleScore = 0;
+  if (levelConfig && levelConfig.monsters) {
+    levelConfig.monsters.forEach(monster => {
+      maxPossibleScore += monster.points || 10;
+    });
+  }
+  
+  // Si aucun monstre ou pas de config, utiliser une valeur par défaut
+  if (maxPossibleScore <= 0) {
+    maxPossibleScore = 100 * 10; // 10 monstres à 100 points par défaut
+  }
+  
+  // Calcul des stars en fonction du pourcentage de réussite
+  const percentage = (score / maxPossibleScore) * 100;
+  let starsCount = 0;
+  
+  if (success) {
+    if (percentage >= 95) {
+      starsCount = 3;
+    } else if (percentage >= 66) {
+      starsCount = 2;
+    } else if (percentage >= 30) {
+      starsCount = 1;
     }
+  }
+  
+  // Créer le conteneur modal s'il n'existe pas déjà
+  let modalContainer = document.getElementById('battle-endgame-modal-container');
+  if (modalContainer) {
+    modalContainer.remove();
+  }
+  
+  modalContainer = document.createElement('div');
+  modalContainer.id = 'battle-endgame-modal-container';
+  
+  // Récupérer l'ID du niveau
+  const urlParams = new URLSearchParams(window.location.search);
+  const currentLevelId = parseInt(urlParams.get('level') || '1');
+  
+  // Définir le style du modal en fonction du succès ou de l'échec
+  const titleText = success ? "Victoire !" : "Défaite";
+  const titleColor = success ? "#ffd700" : "#e74c3c"; // Or pour victoire, rouge pour défaite
+  const titleShadow = success ? "0 0 15px rgba(255, 215, 0, 0.8)" : "0 0 15px rgba(231, 76, 60, 0.8)";
+  const messageText = nextLevelUnlocked ? "Niveau suivant débloqué !" : "Vous pouvez réessayer";
+  
+  // Générer les étoiles avec des images
+  const starsHTML = Array(3).fill().map((_, i) => {
+    const isActive = i < starsCount;
+    return `<img 
+      src="/assets/images/star.png" 
+      alt="Étoile" 
+      style="
+        width: 48px; 
+        height: 48px; 
+        filter: ${isActive ? 'brightness(1) drop-shadow(0 0 5px rgba(255, 215, 0, 0.8))' : 'brightness(0.3) grayscale(1)'};
+        transition: transform 0.3s ease;
+        ${isActive ? 'animation: star-pop 0.5s ease-out;' : ''}
+      "
+    >`;
+  }).join('');
+  
+  // Créer des fonctions globales temporaires pour les gestionnaires d'événements
+  window.battleEndNext = function() {
+    if (nextLevelUnlocked) {
+      window.location.href = `/battle.html?level=${currentLevelId + 1}`;
+    } else {
+      window.location.reload();
+    }
+  };
+  
+  window.battleEndQuit = function() {
+    window.location.href = '/battle.html';
+  };
+  
+  // Choisir le bouton gauche selon si le niveau suivant est débloqué
+  const leftButtonImg = nextLevelUnlocked ? "/assets/images/next.png" : "/assets/images/replay.png";
+  const leftButtonAlt = nextLevelUnlocked ? "Niveau suivant" : "Rejouer";
+  
+  // Définir le HTML du modal
+  modalContainer.innerHTML = `
+    <style>
+      #battle-endgame-modal-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        font-family: 'Comic Neue', 'Nunito', 'Arial', sans-serif;
+      }
+      
+      @keyframes star-pop {
+        0% { transform: scale(0.5); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      .frame-container {
+        background-image: url('/assets/images/endgame_frame.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        width: 90%;
+        max-width: 500px;
+        aspect-ratio: 1 / 1.2;
+        padding: 30px;
+        text-align: center;
+        position: relative;
+      }
+      
+      .content-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 25%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding-top: 5%;
+      }
+      
+      .buttons-container {
+        position: absolute;
+        bottom: 13%;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        z-index: 10000;
+      }
+      
+      .button-image {
+        width: 90px;
+        height: auto;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
+      
+      .button-image:hover {
+        transform: scale(1.1);
+      }
+      
+      .victory-title {
+        font-size: 1.8rem; 
+        color: ${titleColor}; 
+        text-shadow: ${titleShadow}; 
+        margin-bottom: 10px;
+        animation: ${success ? 'pulse 1.5s infinite' : 'none'};
+      }
+      
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    </style>
+    
+    <div class="frame-container">
+      <!-- Conteneur pour centrer le contenu principal -->
+      <div class="content-container">
+        <div style="width: 80%;">
+          <h2 class="victory-title">
+            ${titleText}
+          </h2>
+          
+          <div style="display: flex; justify-content: center; gap: 15px; margin: 10px 0;">
+            ${starsHTML}
+          </div>
+          
+          <div style="font-size: 1.3rem; color: #ffffff; margin: 15px 0;">
+            Ton score est de <span style="font-weight: bold;">${score}</span> / ${maxPossibleScore}
+          </div>
+          
+          <div style="font-size: 1.1rem; color: ${nextLevelUnlocked ? '#4ae07c' : '#ffffff'}; margin: 10px 0; font-weight: ${nextLevelUnlocked ? 'bold' : 'normal'}">
+            ${messageText}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Boutons de fin fixés en bas -->
+      <div class="buttons-container">
+        <img src="${leftButtonImg}" alt="${leftButtonAlt}" class="button-image" onclick="window.battleEndNext()">
+        <img src="/assets/images/quit.png" alt="Quitter" class="button-image" onclick="window.battleEndQuit()">
+      </div>
+    </div>
+  `;
+  
+  // Ajouter le modal au document
+  document.body.appendChild(modalContainer);
+  
+  // Essayer de charger la police Comic Neue
+  try {
+    const fontLink = document.createElement('link');
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap';
+    fontLink.rel = 'stylesheet';
+    document.head.appendChild(fontLink);
+  } catch (error) {
+    console.warn("Impossible de charger la police:", error);
+  }
+}
     
     function resetGame() {
       hero.x = gridWidth / 2;

@@ -148,7 +148,7 @@ func CompleteBattle(w http.ResponseWriter, r *http.Request) {
 
 	// Enregistrement des logs pour le debug
 	log.Printf("CompleteBattle - UserID: %d, LevelID: %d, Success: %v, Stars: %d, Score: %d",
-		userId, request.LevelID, request.Success, request.StarsCount)
+		userId, request.LevelID, request.Success, request.StarsCount, request.Score)
 
 	// Créer un nouveau score
 	score := models.Score{

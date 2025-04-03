@@ -114,7 +114,7 @@ func GetLevelStars(userID, levelID int) (stars int, score int, err error) {
 // GetMaxLevelID récupère l'ID du niveau maximum disponible dans le jeu
 func GetMaxLevelID() (int, error) {
 	query := `
-        SELECT COALESCE(MAX(level_id), 0) 
+        SELECT COALESCE(MAX(level), 0) 
         FROM levels
     `
 	// Alternative si vous stockez les niveaux dans une autre table :
@@ -133,9 +133,9 @@ func GetMaxLevelID() (int, error) {
 // UpdateLevelStars met à jour le nombre d'étoiles et le score pour un niveau
 func UpdateLevelStars(userID, levelID, stars, score int) error {
 	query := `
-        INSERT INTO level_progress (user_id, level_id, stars, score, completed_at)
+        INSERT INTO level_progress (user_id, level, stars, score, completed_at)
         VALUES ($1, $2, $3, $4, NOW())
-        ON CONFLICT (user_id, level_id)
+        ON CONFLICT (user_id, level)
         DO UPDATE SET 
             stars = CASE WHEN EXCLUDED.stars > level_progress.stars THEN EXCLUDED.stars ELSE level_progress.stars END,
             score = CASE WHEN EXCLUDED.score > level_progress.score THEN EXCLUDED.score ELSE level_progress.score END,
