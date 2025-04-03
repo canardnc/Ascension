@@ -31,6 +31,8 @@ CREATE TABLE public.monsters (
 	move_speed float8 NOT NULL,
 	design text NULL,
 	"size" float8 NOT NULL,
+	monster_name text DEFAULT 'Monster'::text NOT NULL,
+	points int4 DEFAULT 10 NOT NULL,
 	CONSTRAINT monsters_pkey PRIMARY KEY (monster_id)
 );
 
