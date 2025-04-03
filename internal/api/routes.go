@@ -25,11 +25,17 @@ func SetupRoutes(mux *http.ServeMux) {
 	assetsDir := http.FileServer(http.Dir("./web/public/assets"))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", assetsDir))
 
+	jsDir := http.FileServer(http.Dir("./web/public/js"))
+	mux.Handle("/js/", http.StripPrefix("/js/", jsDir))
+
 	iconsDir := http.FileServer(http.Dir("./web/public/icons"))
 	mux.Handle("/icons/", http.StripPrefix("/icons/", iconsDir))
 
 	gamesDir := http.FileServer(http.Dir("./web/public/games"))
 	mux.Handle("/games/", http.StripPrefix("/games/", gamesDir))
+
+	mainGameDir := http.FileServer(http.Dir("./web/public/main_game"))
+	mux.Handle("/main_game/", http.StripPrefix("/main_game/", mainGameDir))
 
 	// Routes HTML
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
