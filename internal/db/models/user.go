@@ -133,9 +133,9 @@ func GetMaxLevelID() (int, error) {
 // UpdateLevelStars met à jour le nombre d'étoiles et le score pour un niveau
 func UpdateLevelStars(userID, levelID, stars, score int) error {
 	query := `
-        INSERT INTO level_progress (user_id, level, stars, score, completed_at)
+        INSERT INTO level_progress (user_id, level_id, stars, score, completed_at)
         VALUES ($1, $2, $3, $4, NOW())
-        ON CONFLICT (user_id, level)
+        ON CONFLICT (user_id, level_id)
         DO UPDATE SET 
             stars = CASE WHEN EXCLUDED.stars > level_progress.stars THEN EXCLUDED.stars ELSE level_progress.stars END,
             score = CASE WHEN EXCLUDED.score > level_progress.score THEN EXCLUDED.score ELSE level_progress.score END,

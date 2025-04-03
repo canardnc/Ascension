@@ -203,6 +203,8 @@ func CompleteBattle(w http.ResponseWriter, r *http.Request) {
 		maxLevel = request.LevelID // Par sécurité, ne pas déverrouiller de niveau supplémentaire
 	}
 
+	log.Printf("comparaison des étoiles : %v VS %v", request.StarsCount, currentStars)
+
 	// Vérifier si le nouveau nombre d'étoiles est meilleur
 	if request.StarsCount > currentStars {
 		updateNeeded = true
