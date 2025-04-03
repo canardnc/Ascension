@@ -119,6 +119,7 @@ CREATE TABLE public.levels (
 	coords_y int4 NOT NULL,
 	spawn_time int4 NOT NULL,
 	amount int4 NOT NULL,
+	monster_level int4 DEFAULT 1 NOT NULL,
 	CONSTRAINT levels_pkey PRIMARY KEY (id),
 	CONSTRAINT fk_monster FOREIGN KEY (monster_id) REFERENCES public.monsters(monster_id) ON DELETE CASCADE
 );
