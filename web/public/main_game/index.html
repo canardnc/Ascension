@@ -865,47 +865,36 @@ const monsterLevel = monster.level || 1;
   }
 }
     
-    function submitResults(success, finalScore, timeSpent) {
+function submitResults(success, finalScore, timeSpent) {
   // Récupérer l'ID du niveau depuis l'URL
   const urlParams = new URLSearchParams(window.location.search);
   const levelId = parseInt(urlParams.get('level') || '1');
   
-  // Calculer le nombre d'étoiles (1 à 3)
-  let starsCount = success ? Math.min(3, Math.max(1, Math.ceil(finalScore / 100))) : 0;
+  // Calculer le score maximum possible
+  let maxPossibleScore = 0;
+  if (levelConfig && levelConfig.monsters) {
+    levelConfig.monsters.forEach(monster => {
+      maxPossibleScore += monster.points || 10;
+    });
+  }
+  if (maxPossibleScore <= 0) {
+    maxPossibleScore = 100 * 10;
+  }
   
-  // Données à envoyer
-  const data = {
-    levelId: levelId,
-    success: success,
-    score: finalScore,
-    starsCount: starsCount,
-    timeSpent: timeSpent
-  };
+  // Calculer les étoiles en fonction du pourcentage - MÊME LOGIQUE QUE L'AFFICHAGE
+  const percentage = (finalScore / maxPossibleScore) * 100;
+  let starsCount = 0;
   
-  // Envoyer les résultats et retourner une promesse
-  return fetchWithAuth('/api/battle/complete', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => {
-    console.log('Résultats envoyés avec succès:', response);
-    return {
-      success: response.success,
-      nextLevelUnlocked: response.nextLevelUnlocked || false
-    };
-  })
-  .catch(error => {
-    console.error('Erreur lors de l\'envoi des résultats:', error);
-    return {
-      success: false,
-      nextLevelUnlocked: false
-    };
-  });
-}
-    
+  if (success) {
+    if (percentage >= 95) {
+      starsCount = 3;
+    } else if (percentage >= 66) {
+      starsCount = 2;
+    } else if (percentage >= 30) {
+      starsCount = 1;
+    }
+  }
+
 function showBattleEndScreen(success, nextLevelUnlocked) {
   // Calculer le score maximum possible (somme des points de tous les monstres)
   let maxPossibleScore = 0;
