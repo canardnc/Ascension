@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration du jeu principal</title>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            padding: 0;
+            margin: 0;
+            color: #ffffff;
+        }
+        
+        .container {
+            padding: 20px;
+        }
+        
+        .page-header {
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .breadcrumb-item {
+            font-size: 14px;
+            color: #a9a9c9;
+        }
+        
+        .breadcrumb-item:not(:last-child)::after {
+            content: '/';
+            margin: 0 8px;
+        }
+        
+        .breadcrumb-item a {
+            color: #6542fe;
+            text-decoration: none;
+        }
+        
+        .content-section {
+            background-color: rgba(47, 47, 77, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            color: #a9a9c9;
+            font-size: 16px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #6542fe;
+        }
+        
+        .tab:hover {
+            color: #ffffff;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .data-table th {
+            background-color: rgba(101, 66, 254, 0.2);
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .data-table tr {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .data-table tr:hover {
+            background-color: rgba(101, 66, 254, 0.1);
+        }
+        
+        .data-table tr.selected {
+            background-color: rgba(101, 66, 254, 0.3);
+        }
+        
+        .monster-image {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        /* Forms */
+        .form-container {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .form-container h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #a16bff;
+            font-size: 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+            padding: 0 10px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #a9a9c9;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .monster-preview {
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .monster-preview img {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+        }
+        
+        /* Buttons */
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .btn-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .btn-icon {
+            margin-right: 5px;
+        }
+        
+        .btn-primary {
+            background-color: #6542fe;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #5234d9;
+        }
+        
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-success {
+            background-color: #4ae07c;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #3bc667;
+        }
+        
+        .btn-danger {
+            background-color: #e04a4a;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c73a3a;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background-color: rgba(47, 47, 77, 0.95);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: #ffffff;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .notification.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .notification.success {
+            background-color: #4ae07c;
+        }
+        
+        .notification.error {
+            background-color: #e04a4a;
+        }
+        
+        .notification.warning {
+            background-color: #ffcc00;
+            color: #333;
+        }
+        
+        /* Loading indicator */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            flex-direction: column;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(101, 66, 254, 0.3);
+            border-radius: 50%;
+            border-top-color: #6542fe;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        .loading-text {
+            margin-top: 15px;
+            color: #a9a9c9;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Monster levels in the table */
+        .monster-level {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: rgba(101, 66, 254, 0.3);
+            color: #ffffff;
+            font-size: 12px;
+            margin-right: 5px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-group {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .data-table th:nth-child(4),
+            .data-table td:nth-child(4),
+            .data-table th:nth-child(5),
+            .data-table td:nth-child(5) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .data-table th:nth-child(3),
+            .data-table td:nth-child(3) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Administration du jeu principal</h1>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Administration</a></li>
+                <li class="breadcrumb-item">Jeu principal</li>
+            </ul>
+        </div>
+        
+        <div class="content-section">
+            <!-- Tabs navigation -->
+            <div class="tabs">
+                <button class="tab active" id="tab-monsters" onclick="switchTab('monsters')">Gestion des monstres</button>
+                <button class="tab" id="tab-levels" onclick="switchTab('levels')">Gestion des niveaux</button>
+            </div>
+            
+            <!-- Tab content: Monsters -->
+            <div class="tab-content active" id="content-monsters">
+                <div class="section-header">
+                    <h2 class="section-title">Liste des monstres</h2>
+                    <button class="btn btn-primary" onclick="showAddMonsterModal()">
+                        <span class="btn-icon">+</span> Ajouter un monstre
+                    </button>
+                </div>
+                
+                <div id="monsters-table-container">
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Chargement des monstres...</div>
+                    </div>
+                </div>
+                
+                <!-- Monster details form -->
+                <div class="form-container" id="monster-form" style="display: none;">
+                    <h3>Détails du monstre: <span id="monster-name-display">-</span></h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="monster-id">ID</label>
+                            <input type="text" id="monster-id" disabled>
+                        </div>
+                        <div class="form-group">
+                            <div class="monster-preview" id="monster-preview">
+                                <img id="monster-image-preview" src="" alt="Aperçu du monstre">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="monster-name">Nom</label>
+                            <input type="text" id="monster-name" placeholder="Nom du monstre">
+                        </div>
+                        <div class="form-group">
+                            <label for="monster-design">Design (nom de l'image)</label>
+                            <input type="text" id="monster-design" placeholder="ex: book_default">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="monster-hp">Points de vie</label>
+                            <input type="number" id="monster-hp" min="1" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="monster-damage">Dégâts</label>
+                            <input type="number" id="monster-damage" min="1" step="1">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="monster-range">Portée</label>
+                            <input type="number" id="monster-range" min="1" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="monster-attack-speed">Vitesse d'attaque</label>
+                            <input type="number" id="monster-attack-speed" min="0.1" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="monster-move-speed">Vitesse de déplacement</label>
+                            <input type="number" id="monster-move-speed" min="0.1" step="0.1">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="monster-size">Taille</label>
+                            <input type="number" id="monster-size" min="1" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="monster-points">Points (score)</label>
+                            <input type="number" id="monster-points" min="1" step="1">
+                        </div>
+                    </div>
+                    
+                    <div class="btn-container">
+                        <div class="btn-actions">
+                            <button class="btn btn-secondary" onclick="cancelMonsterEdit()">Annuler</button>
+                            <button class="btn btn-danger" onclick="confirmDeleteMonster()">Supprimer</button>
+                        </div>
+                        <button class="btn btn-success" onclick="saveMonster()">Enregistrer</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tab content: Levels -->
+            <div class="tab-content" id="content-levels">
+                <div class="section-header">
+                    <h2 class="section-title">Liste des niveaux</h2>
+                    <button class="btn btn-primary" onclick="showAddLevelModal()">
+                        <span class="btn-icon">+</span> Ajouter un niveau
+                    </button>
+                </div>
+                
+                <div id="levels-table-container">
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Chargement des niveaux...</div>
+                    </div>
+                </div>
+                
+                <!-- Level details form -->
+                <div class="form-container" id="level-form" style="display: none;">
+                    <h3>Configuration du niveau: <span id="level-number-display">-</span></h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="level-id">ID</label>
+                            <input type="text" id="level-id" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label for="level-number">Numéro du niveau</label>
+                            <input type="number" id="level-number" min="1" step="1">
+                        </div>
+                    </div>
+                    
+                    <h4>Monstres du niveau</h4>
+                    <table class="data-table" id="level-monsters-table">
+                        <thead>
+                            <tr>
+                                <th>Monstre</th>
+                                <th>Image</th>
+                                <th>Niveau</th>
+                                <th>Quantité</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="level-monsters-body">
+                            <tr>
+                                <td colspan="5" class="loading-container">
+                                    <div class="loading-spinner"></div>
+                                    <div style="margin-top: 10px;">Chargement des monstres du niveau...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="btn-container">
+                        <button class="btn btn-primary" onclick="showAddLevelMonsterModal()">
+                            <span class="btn-icon">+</span> Ajouter un monstre
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Monster Modal -->
+    <div class="modal-overlay" id="add-monster-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un nouveau monstre</h3>
+                <button class="modal-close" onclick="closeModal('add-monster-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-monster-name">Nom</label>
+                        <input type="text" id="new-monster-name" placeholder="Nom du monstre">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-monster-design">Design (nom de l'image)</label>
+                        <input type="text" id="new-monster-design" placeholder="ex: book_default">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-monster-hp">Points de vie</label>
+                        <input type="number" id="new-monster-hp" min="1" step="1" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-monster-damage">Dégâts</label>
+                        <input type="number" id="new-monster-damage" min="1" step="1" value="5">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-monster-range">Portée</label>
+                        <input type="number" id="new-monster-range" min="1" step="1" value="100">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-monster-attack-speed">Vitesse d'attaque</label>
+                        <input type="number" id="new-monster-attack-speed" min="0.1" step="0.1" value="1.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-monster-move-speed">Vitesse de déplacement</label>
+                        <input type="number" id="new-monster-move-speed" min="0.1" step="0.1" value="1.0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-monster-size">Taille</label>
+                        <input type="number" id="new-monster-size" min="1" step="1" value="30">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-monster-points">Points (score)</label>
+                        <input type="number" id="new-monster-points" min="1" step="1" value="10">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-monster-modal')">Annuler</button>
+                <button class="btn btn-primary" onclick="addNewMonster()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Level Modal -->
+    <div class="modal-overlay" id="add-level-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un nouveau niveau</h3>
+                <button class="modal-close" onclick="closeModal('add-level-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-level-number">Numéro du niveau</label>
+                    <input type="number" id="new-level-number" min="1" step="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-level-modal')">Annuler</button>
+                <button class="btn btn-primary" onclick="addNewLevel()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Level Monster Modal -->
+    <div class="modal-overlay" id="add-level-monster-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un monstre au niveau</h3>
+                <button class="modal-close" onclick="closeModal('add-level-monster-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-level-monster-id">Monstre</label>
+                    <select id="new-level-monster-id">
+                        <option value="">Sélectionnez un monstre</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-level-monster-level">Niveau du monstre</label>
+                        <input type="number" id="new-level-monster-level" min="1" step="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-level-monster-amount">Quantité</label>
+                        <input type="number" id="new-level-monster-amount" min="1" step="1" value="5">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-level-monster-x">Position X</label>
+                        <input type="number" id="new-level-monster-x" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-level-monster-y">Position Y</label>
+                        <input type="number" id="new-level-monster-y" value="0">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="new-level-monster-spawn-time">Temps avant apparition (secondes)</label>
+                    <input type="number" id="new-level-monster-spawn-time" min="0" step="1" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('add-level-monster-modal')">Annuler</button>
+                <button class="btn btn-primary" onclick="addLevelMonster()">Ajouter</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="delete-confirmation-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirmer la suppression</h3>
+                <button class="modal-close" onclick="closeModal('delete-confirmation-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="delete-confirmation-message">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('delete-confirmation-modal')">Annuler</button>
+                <button class="btn btn-danger" id="confirm-delete-btn">Supprimer</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // State variables
+        let monsters = [];
+        let levels = [];
+        let selectedMonsterId = null;
+        let selectedLevelId = null;
+        let levelMonsters = [];
+        
+        // DOM Elements
+        const monstersTableContainer = document.getElementById('monsters-table-container');
+        const levelsTableContainer = document.getElementById('levels-table-container');
+        const monsterForm = document.getElementById('monster-form');
+        const levelForm = document.getElementById('level-form');
+        const notification = document.getElementById('notification');
+        const deleteConfirmationModal = document.getElementById('delete-confirmation-modal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMonsters();
+            loadLevels();
+        });
+        
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`content-${tabName}`).classList.add('active');
+            
+            // Reset forms
+            if (tabName === 'monsters') {
+                resetMonsterForm();
+            } else if (tabName === 'levels') {
+                resetLevelForm();
+            }
+        }
+        
+        // API Functions
+        async function fetchWithAuth(url, options = {}) {
+            try {
+                // Get token from parent window (iframe communication)
+                const token = window.parent.localStorage.getItem('token');
+                
+                if (!token) {
+                    showNotification("Vous n'êtes pas authentifié", 'error');
+                    return null;
+                }
+                
+                const defaultOptions = {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                const mergedOptions = {
+                    ...defaultOptions,
+                    ...options,
+                    headers: {
+                        ...defaultOptions.headers,
+                        ...options.headers
+                    }
+                };
+                
+                const response = await fetch(url, mergedOptions);
+                
+                if (response.status === 401 || response.status === 403) {
+                    showNotification("Session expirée ou accès refusé", 'error');
+                    setTimeout(() => {
+                        window.parent.location.href = '/';
+                    }, 2000);
+                    return null;
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.error || `Erreur ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Erreur API:', error);
+                showNotification(`Erreur: ${error.message}`, 'error');
+                return null;
+            }
+        }
+        
+        // MONSTERS MANAGEMENT //
+        
+        // Load monsters from API
+        async function loadMonsters() {
+            monstersTableContainer.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Chargement des monstres...</div>
+                </div>
+            `;
+            
+            const data = await fetchWithAuth('/api/game/monsters');
+            
+            if (!data) {
+                monstersTableContainer.innerHTML = `
+                    <div class="loading-container">
+                        <div class="loading-text">Erreur lors du chargement des monstres</div>
+                        <button class="btn btn-primary" style="margin-top: 15px;" onclick="loadMonsters()">Réessayer</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            monsters = data.monsters || [];
+            renderMonstersTable();
+        }
+        
+        // Render monsters table
+        function renderMonstersTable() {
+            if (monsters.length === 0) {
+                monstersTableContainer.innerHTML = `
+                    <div class="loading-container">
+                        <div class="loading-text">Aucun monstre trouvé</div>
+                        <button class="btn btn-primary" style="margin-top: 15px;" onclick="showAddMonsterModal()">Ajouter un monstre</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Nom</th>
+                            <th>PV</th>
+                            <th>Dégâts</th>
+                            <th>Portée</th>
+                            <th>Vitesse</th>
+                            <th>Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            monsters.forEach(monster => {
+                const isSelected = selectedMonsterId === monster.monster_id ? 'selected' : '';
+                html += `
+                    <tr class="${isSelected}" onclick="selectMonster(${monster.monster_id})">
+                        <td>${monster.monster_id}</td>
+                        <td><img src="/assets/images/monsters/${monster.design || 'default.png'}" alt="${monster.monster_name}" class="monster-image" onerror="this.src='/assets/images/monsters/default.png'"></td>
+                        <td>${monster.monster_name}</td>
+                        <td>${monster.hp}</td>
+                        <td>${monster.damage}</td>
+                        <td>${monster.range}</td>
+                        <td>${monster.move_speed}</td>
+                        <td>${monster.points}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            monstersTableContainer.innerHTML = html;
+        }
+        
+        // Select a monster and display details
+        function selectMonster(monsterId) {
+            selectedMonsterId = monsterId;
+            
+            // Update table selection
+            const rows = document.querySelectorAll('.data-table tbody tr');
+            rows.forEach(row => row.classList.remove('selected'));
+            document.querySelector(`.data-table tbody tr[onclick="selectMonster(${monsterId})"]`)?.classList.add('selected');
+            
+            // Find the monster
+            const monster = monsters.find(m => m.monster_id === monsterId);
+            if (!monster) return;
+            
+            // Update form fields
+            document.getElementById('monster-id').value = monster.monster_id;
+            document.getElementById('monster-name').value = monster.monster_name || '';
+            document.getElementById('monster-name-display').textContent = monster.monster_name || 'Sans nom';
+            document.getElementById('monster-design').value = monster.design || '';
+            document.getElementById('monster-hp').value = monster.hp || 0;
+            document.getElementById('monster-damage').value = monster.damage || 0;
+            document.getElementById('monster-range').value = monster.range || 0;
+            document.getElementById('monster-attack-speed').value = monster.attack_speed || 0;
+            document.getElementById('monster-move-speed').value = monster.move_speed || 0;
+            document.getElementById('monster-size').value = monster.size || 0;
+            document.getElementById('monster-points').value = monster.points || 0;
+            
+            // Update preview image
+            const imageUrl = `/assets/images/monsters/${monster.design || 'default'}.png`;
+            document.getElementById('monster-image-preview').src = imageUrl;
+            document.getElementById('monster-image-preview').onerror = function() {
+                this.src = '/assets/images/monsters/default.png';
+            };
+            
+            // Show the form
+            monsterForm.style.display = 'block';
+        }
+        
+        // Reset monster form
+        function resetMonsterForm() {
+            selectedMonsterId = null;
+            monsterForm.style.display = 'none';
+            
+            // Update table selection
+            const rows = document.querySelectorAll('.data-table tbody tr');
+            rows.forEach(row => row.classList.remove('selected'));
+        }
+        
+        // Cancel monster edit
+        function cancelMonsterEdit() {
+            resetMonsterForm();
+        }
+        
+        // Show add monster modal
+        function showAddMonsterModal() {
+            // Reset form fields
+            document.getElementById('new-monster-name').value = '';
+            document.getElementById('new-monster-design').value = '';
+            document.getElementById('new-monster-hp').value = '20';
+            document.getElementById('new-monster-damage').value = '5';
+            document.getElementById('new-monster-range').value = '100';
+            document.getElementById('new-monster-attack-speed').value = '1.0';
+            document.getElementById('new-monster-move-speed').value = '1.0';
+            document.getElementById('new-monster-size').value = '30';
+            document.getElementById('new-monster-points').value = '10';
+            
+            // Show modal
+            document.getElementById('add-monster-modal').classList.add('active');
+        }
+        
+        // Add new monster
+        async function addNewMonster() {
+            const newMonster = {
+                monster_name: document.getElementById('new-monster-name').value,
+                design: document.getElementById('new-monster-design').value,
+                hp: parseInt(document.getElementById('new-monster-hp').value),
+                damage: parseInt(document.getElementById('new-monster-damage').value),
+                range: parseFloat(document.getElementById('new-monster-range').value),
+                attack_speed: parseFloat(document.getElementById('new-monster-attack-speed').value),
+                move_speed: parseFloat(document.getElementById('new-monster-move-speed').value),
+                size: parseFloat(document.getElementById('new-monster-size').value),
+                points: parseInt(document.getElementById('new-monster-points').value)
+            };
+            
+            // Validation
+            if (!newMonster.monster_name) {
+                showNotification("Le nom du monstre est requis", 'error');
+                return;
+            }
+            
+            // API call to create monster
+            const response = await fetchWithAuth('/api/game/monsters', {
+                method: 'POST',
+                body: JSON.stringify(newMonster)
+            });
+            
+            if (response) {
+                closeModal('add-monster-modal');
+                loadMonsters();
+                showNotification("Monstre ajouté avec succès", 'success');
+            }
+        }
+        
+        // Save monster changes
+        async function saveMonster() {
+            if (!selectedMonsterId) return;
+            
+            const updatedMonster = {
+                monster_id: selectedMonsterId,
+                monster_name: document.getElementById('monster-name').value,
+                design: document.getElementById('monster-design').value,
+                hp: parseInt(document.getElementById('monster-hp').value),
+                damage: parseInt(document.getElementById('monster-damage').value),
+                range: parseFloat(document.getElementById('monster-range').value),
+                attack_speed: parseFloat(document.getElementById('monster-attack-speed').value),
+                move_speed: parseFloat(document.getElementById('monster-move-speed').value),
+                size: parseFloat(document.getElementById('monster-size').value),
+                points: parseInt(document.getElementById('monster-points').value)
+            };
+            
+            // Validation
+            if (!updatedMonster.monster_name) {
+                showNotification("Le nom du monstre est requis", 'error');
+                return;
+            }
+            
+            // API call to update monster
+            const response = await fetchWithAuth(`/api/game/monsters/${selectedMonsterId}`, {
+                method: 'PUT',
+                body: JSON.stringify(updatedMonster)
+            });
+            
+            if (response) {
+                loadMonsters();
+                showNotification("Monstre mis à jour avec succès", 'success');
+            }
+        }
+        
+        // Confirm monster deletion
+        function confirmDeleteMonster() {
+            if (!selectedMonsterId) return;
+            
+            const monster = monsters.find(m => m.monster_id === selectedMonsterId);
+            if (!monster) return;
+            
+            document.getElementById('delete-confirmation-message').textContent = 
+                `Êtes-vous sûr de vouloir supprimer le monstre "${monster.monster_name}" ?`;
+            
+            confirmDeleteBtn.onclick = deleteMonster;
+            
+            document.getElementById('delete-confirmation-modal').classList.add('active');
+        }
+        
+        // Delete monster
+        async function deleteMonster() {
+            if (!selectedMonsterId) return;
+            
+            // API call to delete monster
+            const response = await fetchWithAuth(`/api/game/monsters/${selectedMonsterId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response) {
+                closeModal('delete-confirmation-modal');
+                resetMonsterForm();
+                loadMonsters();
+                showNotification("Monstre supprimé avec succès", 'success');
+            }
+        }
+        
+        // LEVELS MANAGEMENT //
+        
+        // Load levels from API
+        async function loadLevels() {
+            levelsTableContainer.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Chargement des niveaux...</div>
+                </div>
+            `;
+            
+            const data = await fetchWithAuth('/api/game/levels');
+            
+            if (!data) {
+                levelsTableContainer.innerHTML = `
+                    <div class="loading-container">
+                        <div class="loading-text">Erreur lors du chargement des niveaux</div>
+                        <button class="btn btn-primary" style="margin-top: 15px;" onclick="loadLevels()">Réessayer</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group levels by level number
+            const groupedLevels = {};
+            data.levels.forEach(level => {
+                if (!groupedLevels[level.level]) {
+                    groupedLevels[level.level] = [];
+                }
+                groupedLevels[level.level].push(level);
+            });
+            
+            levels = Object.keys(groupedLevels).map(levelNumber => ({
+                level: parseInt(levelNumber),
+                entries: groupedLevels[levelNumber]
+            }));
+            
+            renderLevelsTable();
+        }
+        
+        // Render levels table
+        function renderLevelsTable() {
+            if (levels.length === 0) {
+                levelsTableContainer.innerHTML = `
+                    <div class="loading-container">
+                        <div class="loading-text">Aucun niveau trouvé</div>
+                        <button class="btn btn-primary" style="margin-top: 15px;" onclick="showAddLevelModal()">Ajouter un niveau</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort levels by level number
+            levels.sort((a, b) => a.level - b.level);
+            
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Niveau</th>
+                            <th>Monstres</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            levels.forEach(levelGroup => {
+                const isSelected = selectedLevelId === levelGroup.level ? 'selected' : '';
+                
+                // Count monsters by type
+                const monsterCounts = {};
+                let totalMonsters = 0;
+                
+                levelGroup.entries.forEach(entry => {
+                    const monsterId = entry.monster_id;
+                    const monsterLevel = entry.monster_level;
+                    const monster = monsters.find(m => m.monster_id === monsterId);
+                    
+                    if (!monsterCounts[monsterId]) {
+                        monsterCounts[monsterId] = {
+                            name: monster ? monster.monster_name : `Monstre #${monsterId}`,
+                            design: monster ? monster.design : 'default',
+                            levels: {},
+                            total: 0
+                        };
+                    }
+                    
+                    if (!monsterCounts[monsterId].levels[monsterLevel]) {
+                        monsterCounts[monsterId].levels[monsterLevel] = 0;
+                    }
+                    
+                    monsterCounts[monsterId].levels[monsterLevel] += entry.amount;
+                    monsterCounts[monsterId].total += entry.amount;
+                    totalMonsters += entry.amount;
+                });
+                
+                // Create the monster display
+                let monstersDisplay = '';
+                Object.keys(monsterCounts).forEach(monsterId => {
+                    const monster = monsterCounts[monsterId];
+                    
+                    // Show monster image and levels
+                    monstersDisplay += `
+                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                            <img src="/assets/images/monsters/${monster.design || 'default'}.png" 
+                                 alt="${monster.name}" 
+                                 class="monster-image" 
+                                 onerror="this.src='/assets/images/monsters/default.png'">
+                            <div style="margin-left: 10px;">
+                                <div>${monster.name}</div>
+                                <div>`;
+                    
+                    // Add level badges
+                    Object.keys(monster.levels).forEach(level => {
+                        monstersDisplay += `
+                            <span class="monster-level">Niv.${level}: ${monster.levels[level]}</span>
+                        `;
+                    });
+                    
+                    monstersDisplay += `
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                    <tr class="${isSelected}" onclick="selectLevel(${levelGroup.level})">
+                        <td>${levelGroup.level}</td>
+                        <td>${monstersDisplay}</td>
+                        <td>${totalMonsters}</td>
+                        <td>
+                            <button class="btn btn-secondary" onclick="event.stopPropagation(); editLevel(${levelGroup.level})">
+                                Modifier
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            levelsTableContainer.innerHTML = html;
+        }
+        
+        // Select a level
+        function selectLevel(level) {
+            selectedLevelId = level;
+            
+            // Update table selection
+            const rows = document.querySelectorAll('.data-table tbody tr');
+            rows.forEach(row => row.classList.remove('selected'));
+            document.querySelector(`.data-table tbody tr[onclick="selectLevel(${level})"]`)?.classList.add('selected');
+            
+            // Load level details
+            loadLevelDetails(level);
+        }
+        
+        // Load level details
+        function loadLevelDetails(level) {
+            // Find the level entries
+            const levelGroup = levels.find(lg => lg.level === level);
+            if (!levelGroup) return;
+            
+            // Update form fields
+            document.getElementById('level-id').value = level;
+            document.getElementById('level-number').value = level;
+            document.getElementById('level-number-display').textContent = `Niveau ${level}`;
+            
+            // Load level monsters
+            levelMonsters = levelGroup.entries;
+            renderLevelMonsters();
+            
+            // Show the form
+            levelForm.style.display = 'block';
+        }
+        
+        // Render level monsters
+        function renderLevelMonsters() {
+            const tbody = document.getElementById('level-monsters-body');
+            
+            if (levelMonsters.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center;">Aucun monstre dans ce niveau</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            levelMonsters.forEach(entry => {
+                const monster = monsters.find(m => m.monster_id === entry.monster_id);
+                const monsterName = monster ? monster.monster_name : `Monstre #${entry.monster_id}`;
+                const monsterDesign = monster ? monster.design : 'default';
+                
+                html += `
+                    <tr>
+                        <td>${monsterName}</td>
+                        <td>
+                            <img src="/assets/images/monsters/${monsterDesign}.png" 
+                                 alt="${monsterName}" 
+                                 class="monster-image" 
+                                 onerror="this.src='/assets/images/monsters/default.png'">
+                        </td>
+                        <td>${entry.monster_level}</td>
+                        <td>${entry.amount}</td>
+                        <td>
+                            <button class="btn btn-secondary" onclick="editLevelMonster(${entry.id})">
+                                Modifier
+                            </button>
+                            <button class="btn btn-danger" onclick="confirmDeleteLevelMonster(${entry.id})">
+                                X
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+        
+        // Reset level form
+        function resetLevelForm() {
+            selectedLevelId = null;
+            levelForm.style.display = 'none';
+            
+            // Update table selection
+            const rows = document.querySelectorAll('.data-table tbody tr');
+            rows.forEach(row => row.classList.remove('selected'));
+        }
+        
+        // Edit level
+        function editLevel(level) {
+            selectLevel(level);
+        }
+        
+        // Show add level modal
+        function showAddLevelModal() {
+            // Calculate next level number
+            let nextLevel = 1;
+            if (levels.length > 0) {
+                nextLevel = Math.max(...levels.map(l => l.level)) + 1;
+            }
+            
+            document.getElementById('new-level-number').value = nextLevel;
+            
+            // Show modal
+            document.getElementById('add-level-modal').classList.add('active');
+        }
+        
+        // Add new level
+        async function addNewLevel() {
+            const levelNumber = parseInt(document.getElementById('new-level-number').value);
+            
+            // Validation
+            if (isNaN(levelNumber) || levelNumber <= 0) {
+                showNotification("Le numéro de niveau doit être un nombre positif", 'error');
+                return;
+            }
+            
+            // Check if level already exists
+            if (levels.some(l => l.level === levelNumber)) {
+                showNotification(`Le niveau ${levelNumber} existe déjà`, 'error');
+                return;
+            }
+            
+            // API call to create level
+            const response = await fetchWithAuth('/api/game/levels', {
+                method: 'POST',
+                body: JSON.stringify({ level: levelNumber })
+            });
+            
+            if (response) {
+                closeModal('add-level-modal');
+                loadLevels();
+                showNotification(`Niveau ${levelNumber} créé avec succès`, 'success');
+                
+                // Select the new level after reload
+                setTimeout(() => {
+                    selectLevel(levelNumber);
+                }, 500);
+            }
+        }
+        
+        // Show add level monster modal
+        function showAddLevelMonsterModal() {
+            if (!selectedLevelId) return;
+            
+            // Populate monster select
+            const monsterSelect = document.getElementById('new-level-monster-id');
+            monsterSelect.innerHTML = '<option value="">Sélectionnez un monstre</option>';
+            
+            monsters.forEach(monster => {
+                monsterSelect.innerHTML += `
+                    <option value="${monster.monster_id}">${monster.monster_name}</option>
+                `;
+            });
+            
+            // Reset form fields
+            document.getElementById('new-level-monster-level').value = '1';
+            document.getElementById('new-level-monster-amount').value = '5';
+            document.getElementById('new-level-monster-x').value = '0';
+            document.getElementById('new-level-monster-y').value = '0';
+            document.getElementById('new-level-monster-spawn-time').value = '0';
+            
+            // Show modal
+            document.getElementById('add-level-monster-modal').classList.add('active');
+        }
+        
+        // Add level monster
+        async function addLevelMonster() {
+            if (!selectedLevelId) return;
+            
+            const monsterId = parseInt(document.getElementById('new-level-monster-id').value);
+            
+            // Validation
+            if (isNaN(monsterId) || monsterId <= 0) {
+                showNotification("Veuillez sélectionner un monstre", 'error');
+                return;
+            }
+            
+            const newLevelMonster = {
+                level: selectedLevelId,
+                monster_id: monsterId,
+                monster_level: parseInt(document.getElementById('new-level-monster-level').value),
+                amount: parseInt(document.getElementById('new-level-monster-amount').value),
+                coords_x: parseInt(document.getElementById('new-level-monster-x').value),
+                coords_y: parseInt(document.getElementById('new-level-monster-y').value),
+                spawn_time: parseInt(document.getElementById('new-level-monster-spawn-time').value)
+            };
+            
+            // API call to add monster to level
+            const response = await fetchWithAuth(`/api/game/levels/${selectedLevelId}/monsters`, {
+                method: 'POST',
+                body: JSON.stringify(newLevelMonster)
+            });
+            
+            if (response) {
+                closeModal('add-level-monster-modal');
+                
+                // Reload level data
+                loadLevels();
+                
+                // Reload level details after a short delay
+                setTimeout(() => {
+                    selectLevel(selectedLevelId);
+                }, 500);
+                
+                showNotification("Monstre ajouté au niveau", 'success');
+            }
+        }
+        
+        // Edit level monster
+        function editLevelMonster(entryId) {
+            // TODO: Implement edit level monster
+            showNotification("Fonctionnalité à implémenter", 'warning');
+        }
+        
+        // Confirm delete level monster
+        function confirmDeleteLevelMonster(entryId) {
+            const entry = levelMonsters.find(e => e.id === entryId);
+            if (!entry) return;
+            
+            const monster = monsters.find(m => m.monster_id === entry.monster_id);
+            const monsterName = monster ? monster.monster_name : `Monstre #${entry.monster_id}`;
+            
+            document.getElementById('delete-confirmation-message').textContent = 
+                `Êtes-vous sûr de vouloir supprimer "${monsterName}" (niveau ${entry.monster_level}) du niveau ${selectedLevelId} ?`;
+            
+            confirmDeleteBtn.onclick = () => deleteLevelMonster(entryId);
+            
+            document.getElementById('delete-confirmation-modal').classList.add('active');
+        }
+        
+        // Delete level monster
+        async function deleteLevelMonster(entryId) {
+            // API call to delete level monster
+            const response = await fetchWithAuth(`/api/game/levels/entries/${entryId}`, {
+                method: 'DELETE'
+            });
+            
+            if (response) {
+                closeModal('delete-confirmation-modal');
+                
+                // Reload level data
+                loadLevels();
+                
+                // Reload level details after a short delay
+                setTimeout(() => {
+                    selectLevel(selectedLevelId);
+                }, 500);
+                
+                showNotification("Monstre supprimé du niveau", 'success');
+            }
+        }
+        
+        // UTILITIES //
+        
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = 'notification';
+            notification.classList.add(type);
+            notification.classList.add('active');
+            
+            setTimeout(() => {
+                notification.classList.remove('active');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

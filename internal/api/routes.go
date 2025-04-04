@@ -74,6 +74,9 @@ func SetupRoutes(mux *http.ServeMux) {
 		http.ServeFile(w, r, "./web/public/manifest.json")
 	})
 
+	// Configurer les routes d'administration du jeu
+	SetupGameAdminRoutes(mux)
+
 	mux.HandleFunc("/api/icons/random", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			middleware.JWTAuth(handlers.GetRandomIcons)(w, r)
