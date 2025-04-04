@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/canardnc/Ascension/internal/api/handlers"
 	"github.com/canardnc/Ascension/internal/api/middleware"
@@ -101,6 +102,57 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
+	// Routes d'administration des utilisateurs
+	mux.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.JWTAuth(handlers.GetUsersList)(w, r)
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/users/", func(w http.ResponseWriter, r *http.Request) {
+		// Extraire l'ID de l'URL
+		path := r.URL.Path
+		parts := strings.Split(path, "/")
+
+		// Si c'est juste /api/users/ sans ID, renvoyer une erreur
+		if len(parts) < 4 || parts[3] == "" {
+			http.Error(w, "ID utilisateur manquant", http.StatusBadRequest)
+			return
+		}
+
+		// Route pour recharger l'énergie: /api/users/{id}/recharge-energy
+		if len(parts) >= 5 && parts[4] == "recharge-energy" {
+			if r.Method == http.MethodPost {
+				middleware.JWTAuth(handlers.RechargeUserEnergy)(w, r)
+			} else {
+				http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		// Route pour gérer les permissions: /api/users/{id}/permissions
+		if len(parts) >= 5 && parts[4] == "permissions" {
+			if r.Method == http.MethodPatch {
+				middleware.JWTAuth(handlers.UpdateUserPermissions)(w, r)
+			} else {
+				http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		// Route par défaut pour les détails et mises à jour: /api/users/{id}
+		switch r.Method {
+		case http.MethodGet:
+			middleware.JWTAuth(handlers.GetUserDetails)(w, r)
+		case http.MethodPut:
+			middleware.JWTAuth(handlers.AdminUpdateUser)(w, r)
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
 	// Route d'initialisation des données du joueur
 	mux.HandleFunc("/api/user/initialize", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {

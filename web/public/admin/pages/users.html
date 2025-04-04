@@ -9,6 +9,7 @@
             font-family: 'Montserrat', sans-serif;
             padding: 0;
             margin: 0;
+            color: #ffffff;
         }
         
         .container {
@@ -68,9 +69,407 @@
             color: #ffffff;
         }
         
-        p {
+        /* Styles spécifiques à la page utilisateurs */
+        .search-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .search-container input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        .search-container input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .search-container .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .users-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .users-list th, .users-list td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .users-list th {
+            background-color: rgba(101, 66, 254, 0.2);
+            color: #ffffff;
+            font-weight: 600;
+        }
+        
+        .users-list tr {
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .users-list tr:hover {
+            background-color: rgba(101, 66, 254, 0.1);
+        }
+        
+        .users-list tr.selected {
+            background-color: rgba(101, 66, 254, 0.3);
+        }
+        
+        .user-permissions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .permission-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .permission-checkbox label {
+            font-size: 12px;
+            user-select: none;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .action-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .action-button.energy {
+            background-color: rgba(255, 215, 0, 0.2);
+            color: #ffcc00;
+        }
+        
+        .action-button.energy:hover {
+            background-color: rgba(255, 215, 0, 0.4);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        .pagination-button {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pagination-button:hover, .pagination-button.active {
+            background-color: rgba(101, 66, 254, 0.5);
+        }
+        
+        .pagination-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .user-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .detail-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .detail-card h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #a16bff;
+            font-size: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
             color: #a9a9c9;
-            line-height: 1.6;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: #ffffff;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: 1px solid rgba(101, 66, 254, 0.5);
+        }
+        
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: #6542fe;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #a16bff;
+        }
+        
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #a9a9c9;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background-color: rgba(47, 47, 77, 0.95);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 1s ease-in-out infinite;
+            display: inline-block;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .notification.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .notification.success {
+            background-color: #4ae07c;
+        }
+        
+        .notification.error {
+            background-color: #e04a4a;
+        }
+        
+        .notification.warning {
+            background-color: #ffcc00;
+            color: #333;
+        }
+        
+        .user-detail-section {
+            display: none;
+        }
+        
+        .user-detail-section.visible {
+            display: block;
+        }
+        
+        .no-user-selected {
+            text-align: center;
+            padding: 40px 0;
+            color: #a9a9c9;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 992px) {
+            .user-detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .users-list th:nth-child(3),
+            .users-list td:nth-child(3) {
+                display: none;
+            }
+            
+            .action-button {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .users-list th:nth-child(4),
+            .users-list td:nth-child(4) {
+                display: none;
+            }
+            
+            .permission-checkbox label {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -84,12 +483,715 @@
             </ul>
         </div>
         
+        <!-- Liste des utilisateurs -->
         <div class="content-section">
             <div class="section-header">
-                <h2 class="section-title">Liste des utilisateurs</h2>
+                <h2 class="section-title">Liste des utilisateurs (<span id="users-count">0</span>)</h2>
             </div>
-            <p>Contenu de la gestion des utilisateurs à implémenter.</p>
+            
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-users" placeholder="Rechercher par nom, email, pseudo...">
+            </div>
+            
+            <div id="users-table-container">
+                <table class="users-list" id="users-list">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pseudo</th>
+                            <th>Email</th>
+                            <th>Héros</th>
+                            <th>Droits</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-list-body">
+                        <!-- Les utilisateurs seront ajoutés ici dynamiquement -->
+                        <tr>
+                            <td colspan="6" class="loading-container">
+                                <div class="loading-spinner"></div>
+                                <div style="margin-top: 10px;">Chargement des utilisateurs...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination" id="pagination">
+                <!-- Les boutons de pagination seront ajoutés ici dynamiquement -->
+            </div>
+        </div>
+        
+        <!-- Détails de l'utilisateur -->
+        <div class="content-section user-detail-section" id="user-detail-section">
+            <div class="section-header">
+                <h2 class="section-title">Détails de l'utilisateur: <span id="detail-username">-</span></h2>
+            </div>
+            
+            <div class="user-detail-grid">
+                <div class="detail-card">
+                    <h3>Informations personnelles</h3>
+                    <div class="form-group">
+                        <label for="detail-pseudo">Pseudo</label>
+                        <input type="text" id="detail-pseudo" placeholder="Pseudo">
+                    </div>
+                    <div class="form-group">
+                        <label for="detail-email">Email</label>
+                        <input type="email" id="detail-email" placeholder="Email">
+                    </div>
+                    <div class="form-group">
+                        <label for="detail-hero-name">Nom du héros</label>
+                        <input type="text" id="detail-hero-name" placeholder="Nom du héros">
+                    </div>
+                    <div class="form-group">
+                        <label for="detail-year">Année scolaire</label>
+                        <select id="detail-year">
+                            <option value="">Non spécifié</option>
+                            <option value="CP">CP</option>
+                            <option value="CE1">CE1</option>
+                            <option value="CE2">CE2</option>
+                            <option value="CM1">CM1</option>
+                            <option value="CM2">CM2</option>
+                            <option value="DYS">DYS</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-secondary" id="cancel-edit-button">Annuler</button>
+                        <button class="btn btn-primary" id="save-user-button">
+                            <span id="save-button-text">Enregistrer</span>
+                            <span id="save-spinner" class="loading-spinner" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <h3>Statistiques du joueur</h3>
+                    <div class="user-stats" id="user-stats">
+                        <div class="stat-row">
+                            <span class="stat-label">Niveau du joueur</span>
+                            <span class="stat-value" id="stat-level">-</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Niveau maximum débloqué</span>
+                            <span class="stat-value" id="stat-max-level">-</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Score total</span>
+                            <span class="stat-value" id="stat-total-score">-</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Date de création</span>
+                            <span class="stat-value" id="stat-created-at">-</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Énergie actuelle</span>
+                            <span class="stat-value" id="stat-energy">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-primary" id="recharge-energy-button">
+                            <span id="recharge-button-text">Recharger l'énergie ⚡</span>
+                            <span id="recharge-spinner" class="loading-spinner" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Message quand aucun utilisateur n'est sélectionné -->
+        <div class="content-section" id="no-user-selected">
+            <div class="no-user-selected">
+                <h3>Sélectionnez un utilisateur pour voir les détails</h3>
+                <p>Cliquez sur une ligne dans le tableau des utilisateurs ci-dessus</p>
+            </div>
         </div>
     </div>
+    
+    <!-- Modal de confirmation -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Confirmation</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                Êtes-vous sûr de vouloir effectuer cette action?
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="modal-cancel">Annuler</button>
+                <button class="btn btn-primary" id="modal-confirm">
+                    <span id="modal-confirm-text">Confirmer</span>
+                    <span id="modal-spinner" class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // Configuration
+        const ITEMS_PER_PAGE = 10;
+        let currentPage = 1;
+        let totalPages = 1;
+        let selectedUserId = null;
+        let pendingAction = null;
+        
+        // Éléments DOM
+        const usersListBody = document.getElementById('users-list-body');
+        const userDetailSection = document.getElementById('user-detail-section');
+        const noUserSelectedSection = document.getElementById('no-user-selected');
+        const usersCountElement = document.getElementById('users-count');
+        const searchInput = document.getElementById('search-users');
+        const paginationContainer = document.getElementById('pagination');
+        
+        // Modals et notifications
+        const confirmModal = document.getElementById('confirm-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalClose = document.getElementById('modal-close');
+        const modalCancel = document.getElementById('modal-cancel');
+        const modalConfirm = document.getElementById('modal-confirm');
+        const modalConfirmText = document.getElementById('modal-confirm-text');
+        const modalSpinner = document.getElementById('modal-spinner');
+        const notification = document.getElementById('notification');
+        
+        // Détails utilisateur
+        const detailUsername = document.getElementById('detail-username');
+        const detailPseudo = document.getElementById('detail-pseudo');
+        const detailEmail = document.getElementById('detail-email');
+        const detailHeroName = document.getElementById('detail-hero-name');
+        const detailYear = document.getElementById('detail-year');
+        const cancelEditButton = document.getElementById('cancel-edit-button');
+        const saveUserButton = document.getElementById('save-user-button');
+        const saveButtonText = document.getElementById('save-button-text');
+        const saveSpinner = document.getElementById('save-spinner');
+        
+        // Statistiques
+        const statLevel = document.getElementById('stat-level');
+        const statMaxLevel = document.getElementById('stat-max-level');
+        const statTotalScore = document.getElementById('stat-total-score');
+        const statCreatedAt = document.getElementById('stat-created-at');
+        const statEnergy = document.getElementById('stat-energy');
+        const rechargeEnergyButton = document.getElementById('recharge-energy-button');
+        const rechargeButtonText = document.getElementById('recharge-button-text');
+        const rechargeSpinner = document.getElementById('recharge-spinner');
+        
+        // Fonction pour effectuer des requêtes API avec authentification
+        async function fetchWithAuth(url, options = {}) {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Non authentifié');
+                }
+                
+                const defaultOptions = {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                const mergedOptions = {
+                    ...defaultOptions,
+                    ...options,
+                    headers: {
+                        ...defaultOptions.headers,
+                        ...options.headers
+                    }
+                };
+                
+                const response = await fetch(url, mergedOptions);
+                
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error('Non autorisé');
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.error || `Erreur ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Erreur API:', error);
+                if (error.message === 'Non authentifié' || error.message === 'Non autorisé') {
+                    // Rediriger vers la page de connexion
+                    window.location.href = '/';
+                }
+                throw error;
+            }
+        }
+        
+        // Charger les utilisateurs au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUsers();
+            
+            // Écouteurs d'événements
+            searchInput.addEventListener('input', debounce(handleSearch, 300));
+            modalClose.addEventListener('click', closeModal);
+            modalCancel.addEventListener('click', closeModal);
+            modalConfirm.addEventListener('click', handleModalConfirm);
+            cancelEditButton.addEventListener('click', cancelUserEdit);
+            saveUserButton.addEventListener('click', saveUserChanges);
+            rechargeEnergyButton.addEventListener('click', confirmRechargeEnergy);
+        });
+        
+        // Fonction de debounce pour limiter le nombre d'appels lors des recherches
+        function debounce(func, delay) {
+            let timeoutId;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(context, args);
+                }, delay);
+            };
+        }
+        
+        // Fonction pour récupérer les utilisateurs
+        async function fetchUsers() {
+            try {
+                // Afficher l'indicateur de chargement
+                usersListBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-top: 10px;">Chargement des utilisateurs...</div>
+                        </td>
+                    </tr>
+                `;
+                
+                // Préparer les paramètres de requête
+                const searchTerm = searchInput.value.trim();
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    perPage: ITEMS_PER_PAGE
+                });
+                
+                if (searchTerm) {
+                    params.append('q', searchTerm);
+                }
+                
+                // Effectuer la requête API
+                const data = await fetchWithAuth(`/api/users?${params.toString()}`);
+                
+                // Mettre à jour les variables globales
+                totalPages = data.totalPages;
+                
+                // Mettre à jour l'interface
+                usersCountElement.textContent = data.totalCount;
+                updateUsersTable(data.users);
+                updatePagination();
+                
+            } catch (error) {
+                showNotification(`Erreur lors du chargement des utilisateurs: ${error.message}`, 'error');
+                usersListBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px;">
+                            Erreur lors du chargement des utilisateurs. <br>
+                            <button class="btn btn-primary" style="margin-top: 10px;" onclick="fetchUsers()">
+                                Réessayer
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Mettre à jour le tableau des utilisateurs
+        function updateUsersTable(users) {
+            if (!users || users.length === 0) {
+                usersListBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Aucun utilisateur trouvé</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            users.forEach(user => {
+                const isSelected = user.id === selectedUserId ? 'selected' : '';
+                html += `
+                    <tr class="${isSelected}" data-id="${user.id}" onclick="selectUser(${user.id})">
+                        <td>${user.id}</td>
+                        <td>${user.username}</td>
+                        <td>${user.email || '-'}</td>
+                        <td>${user.heroName || '-'}</td>
+                        <td>
+                            <div class="user-permissions">
+                                <div class="permission-checkbox">
+                                    <input type="checkbox" id="admin-${user.id}" ${user.admin ? 'checked' : ''} onclick="event.stopPropagation(); togglePermission(${user.id}, 'admin')">
+                                    <label for="admin-${user.id}">Admin</label>
+                                </div>
+                                <div class="permission-checkbox">
+                                    <input type="checkbox" id="teacher-${user.id}" ${user.teacher ? 'checked' : ''} onclick="event.stopPropagation(); togglePermission(${user.id}, 'teacher')">
+                                    <label for="teacher-${user.id}">Prof</label>
+                                </div>
+                                <div class="permission-checkbox">
+                                    <input type="checkbox" id="parent-${user.id}" ${user.parent ? 'checked' : ''} onclick="event.stopPropagation(); togglePermission(${user.id}, 'parent')">
+                                    <label for="parent-${user.id}">Parent</label>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="user-actions">
+                                <button class="action-button energy" title="Recharger l'énergie" onclick="event.stopPropagation(); quickRechargeEnergy(${user.id})">⚡</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            usersListBody.innerHTML = html;
+        }
+        
+        // Mettre à jour la pagination
+        function updatePagination() {
+            let html = '';
+            
+            // Bouton précédent
+            html += `
+                <button class="pagination-button ${currentPage === 1 ? 'disabled' : ''}" 
+                  ${currentPage === 1 ? 'disabled' : 'onclick="changePage(' + (currentPage - 1) + ')"'}>
+                    &laquo;
+                </button>
+            `;
+            
+            // Pages
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <button class="pagination-button ${i === currentPage ? 'active' : ''}" 
+                      onclick="changePage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // Bouton suivant
+            html += `
+                <button class="pagination-button ${currentPage === totalPages ? 'disabled' : ''}" 
+                  ${currentPage === totalPages ? 'disabled' : 'onclick="changePage(' + (currentPage + 1) + ')"'}>
+                    &raquo;
+                </button>
+            `;
+            
+            paginationContainer.innerHTML = html;
+        }
+        
+        // Changer de page
+        function changePage(page) {
+            if (page === currentPage) return;
+            
+            currentPage = page;
+            fetchUsers();
+        }
+        
+        // Rechercher des utilisateurs
+        function handleSearch() {
+            currentPage = 1; // Revenir à la première page lors d'une recherche
+            fetchUsers();
+        }
+        
+        // Sélectionner un utilisateur
+        async function selectUser(userId) {
+            if (userId === selectedUserId) return;
+            
+            try {
+                selectedUserId = userId;
+                
+                // Mettre à jour la sélection dans le tableau
+                document.querySelectorAll('#users-list-body tr').forEach(row => {
+                    row.classList.remove('selected');
+                    if (parseInt(row.dataset.id) === userId) {
+                        row.classList.add('selected');
+                    }
+                });
+                
+                // Afficher l'interface de détails avec un état de chargement
+                userDetailSection.classList.add('visible');
+                noUserSelectedSection.style.display = 'none';
+                
+                // Réinitialiser les champs pendant le chargement
+                detailUsername.textContent = 'Chargement...';
+                detailPseudo.value = '';
+                detailEmail.value = '';
+                detailHeroName.value = '';
+                detailYear.value = '';
+                statLevel.textContent = '-';
+                statMaxLevel.textContent = '-';
+                statTotalScore.textContent = '-';
+                statCreatedAt.textContent = '-';
+                statEnergy.textContent = '-';
+                
+                // Récupérer les détails de l'utilisateur
+                const user = await fetchWithAuth(`/api/users/${userId}`);
+                
+                // Mettre à jour les champs de détails
+                detailUsername.textContent = user.username;
+                detailPseudo.value = user.username;
+                detailEmail.value = user.email || '';
+                detailHeroName.value = user.heroName || '';
+                detailYear.value = user.year || '';
+                
+                // Mettre à jour les statistiques
+                statLevel.textContent = user.level;
+                statMaxLevel.textContent = user.stats.maxLevel;
+                statTotalScore.textContent = user.stats.totalScore;
+                statCreatedAt.textContent = new Date(user.createdAt).toLocaleDateString();
+                statEnergy.textContent = `${user.energy.current} / ${user.energy.max}`;
+                
+            } catch (error) {
+                // Réinitialiser en cas d'erreur
+                selectedUserId = null;
+                userDetailSection.classList.remove('visible');
+                noUserSelectedSection.style.display = 'block';
+                showNotification(`Erreur lors du chargement des détails: ${error.message}`, 'error');
+            }
+        }
+        
+        // Désélectionner un utilisateur
+        function deselectUser() {
+            selectedUserId = null;
+            
+            // Mettre à jour la sélection dans le tableau
+            document.querySelectorAll('#users-list-body tr').forEach(row => {
+                row.classList.remove('selected');
+            });
+            
+            // Masquer les détails
+            userDetailSection.classList.remove('visible');
+            noUserSelectedSection.style.display = 'block';
+        }
+        
+        // Basculer une permission utilisateur
+        function togglePermission(userId, permission) {
+            const checkbox = document.getElementById(`${permission}-${userId}`);
+            const newValue = checkbox.checked;
+            
+            // Remettre la case à son état précédent (sera mise à jour après confirmation)
+            checkbox.checked = !newValue;
+            
+            pendingAction = {
+                type: 'toggle-permission',
+                userId,
+                permission,
+                value: newValue
+            };
+            
+            openModal(
+                `Modifier les droits de ${permission}`,
+                `Êtes-vous sûr de vouloir ${newValue ? 'ajouter' : 'retirer'} les droits de ${permission} à cet utilisateur?`
+            );
+        }
+        
+        // Recharger rapidement l'énergie d'un utilisateur (depuis la liste)
+        function quickRechargeEnergy(userId) {
+            pendingAction = {
+                type: 'recharge-energy',
+                userId
+            };
+            
+            openModal(
+                'Recharger l\'énergie',
+                `Êtes-vous sûr de vouloir recharger l'énergie de cet utilisateur?`
+            );
+        }
+        
+        // Confirmer la recharge d'énergie (depuis la section détails)
+        function confirmRechargeEnergy() {
+            if (!selectedUserId) return;
+            
+            pendingAction = {
+                type: 'recharge-energy',
+                userId: selectedUserId
+            };
+            
+            openModal(
+                'Recharger l\'énergie',
+                `Êtes-vous sûr de vouloir recharger l'énergie de cet utilisateur?`
+            );
+        }
+        
+        // Recharger l'énergie d'un utilisateur
+        async function rechargeEnergy(userId) {
+            try {
+                // Afficher le spinner
+                rechargeButtonText.style.display = 'none';
+                rechargeSpinner.style.display = 'inline-block';
+                
+                // Envoyer la requête API
+                const result = await fetchWithAuth(`/api/users/${userId}/recharge-energy`, {
+                    method: 'POST'
+                });
+                
+                // Mettre à jour l'interface si c'est l'utilisateur sélectionné
+                if (selectedUserId === userId) {
+                    statEnergy.textContent = `${result.energy.current} / ${result.energy.max}`;
+                }
+                
+                showNotification('Énergie rechargée avec succès', 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de la recharge d'énergie: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner
+                rechargeButtonText.style.display = 'inline';
+                rechargeSpinner.style.display = 'none';
+            }
+        }
+        
+        // Annuler les modifications d'un utilisateur
+        function cancelUserEdit() {
+            if (!selectedUserId) return;
+            
+            // Recharger les détails de l'utilisateur
+            selectUser(selectedUserId);
+            showNotification('Modifications annulées', 'warning');
+        }
+        
+        // Enregistrer les modifications d'un utilisateur
+        async function saveUserChanges() {
+            if (!selectedUserId) return;
+            
+            try {
+                // Afficher le spinner
+                saveButtonText.style.display = 'none';
+                saveSpinner.style.display = 'inline-block';
+                
+                // Préparer les données
+                const userData = {
+                    username: detailPseudo.value,
+                    email: detailEmail.value,
+                    heroName: detailHeroName.value,
+                    year: detailYear.value
+                };
+                
+                // Envoyer la requête API
+                await fetchWithAuth(`/api/users/${selectedUserId}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(userData)
+                });
+                
+                // Mettre à jour le nom affiché
+                detailUsername.textContent = userData.username;
+                
+                // Mettre à jour la liste (pour refléter les changements)
+                fetchUsers();
+                
+                showNotification('Utilisateur mis à jour avec succès', 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de la mise à jour: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner
+                saveButtonText.style.display = 'inline';
+                saveSpinner.style.display = 'none';
+            }
+        }
+        
+        // Ouvrir une modal de confirmation
+        function openModal(title, message) {
+            modalTitle.textContent = title;
+            modalBody.textContent = message;
+            modalConfirmText.style.display = 'inline';
+            modalSpinner.style.display = 'none';
+            confirmModal.classList.add('active');
+        }
+        
+        // Fermer la modal de confirmation
+        function closeModal() {
+            confirmModal.classList.remove('active');
+            pendingAction = null;
+        }
+        
+        // Gérer la confirmation d'une action dans la modal
+        async function handleModalConfirm() {
+            if (!pendingAction) {
+                closeModal();
+                return;
+            }
+            
+            // Afficher le spinner
+            modalConfirmText.style.display = 'none';
+            modalSpinner.style.display = 'inline-block';
+            
+            try {
+                switch (pendingAction.type) {
+                    case 'toggle-permission':
+                        await applyPermissionChange(
+                            pendingAction.userId,
+                            pendingAction.permission,
+                            pendingAction.value
+                        );
+                        break;
+                        
+                    case 'recharge-energy':
+                        await rechargeEnergy(pendingAction.userId);
+                        break;
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+            } finally {
+                // Masquer le spinner et fermer la modal
+                modalConfirmText.style.display = 'inline';
+                modalSpinner.style.display = 'none';
+                closeModal();
+            }
+        }
+        
+        // Appliquer un changement de permission
+        async function applyPermissionChange(userId, permission, value) {
+            try {
+                // Préparer les données
+                const permissionData = {};
+                permissionData[permission] = value;
+                
+                // Envoyer la requête API
+                await fetchWithAuth(`/api/users/${userId}/permissions`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(permissionData)
+                });
+                
+                // Mettre à jour la case à cocher
+                const checkbox = document.getElementById(`${permission}-${userId}`);
+                if (checkbox) {
+                    checkbox.checked = value;
+                }
+                
+                // Si l'utilisateur est sélectionné, mettre à jour les détails
+                if (selectedUserId === userId) {
+                    selectUser(userId);
+                }
+                
+                const action = value ? 'ajoutés' : 'retirés';
+                showNotification(`Droits de ${permission} ${action} avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de la mise à jour des droits: ${error.message}`, 'error');
+            }
+        }
+        
+        // Afficher une notification
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = 'notification';
+            notification.classList.add(type);
+            notification.classList.add('active');
+            
+            setTimeout(() => {
+                notification.classList.remove('active');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
