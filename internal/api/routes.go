@@ -25,6 +25,9 @@ func SetupRoutes(mux *http.ServeMux) {
 	assetsDir := http.FileServer(http.Dir("./web/public/assets"))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", assetsDir))
 
+	adminDir := http.FileServer(http.Dir("./web/public/admin"))
+	mux.Handle("/admin/", http.StripPrefix("/admin/", adminDir))
+
 	jsDir := http.FileServer(http.Dir("./web/public/js"))
 	mux.Handle("/js/", http.StripPrefix("/js/", jsDir))
 

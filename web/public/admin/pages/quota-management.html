@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des quotas</title>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            padding: 20px;
+        }
+        
+        .page-header {
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+        
+        .breadcrumb {
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .breadcrumb-item {
+            font-size: 14px;
+            color: #a9a9c9;
+        }
+        
+        .breadcrumb-item:not(:last-child)::after {
+            content: '/';
+            margin: 0 8px;
+        }
+        
+        .breadcrumb-item a {
+            color: #6542fe;
+            text-decoration: none;
+        }
+        
+        .content-section {
+            background-color: rgba(47, 47, 77, 0.9);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        p {
+            color: #a9a9c9;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Gestion des quotas</h1>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Parent</a></li>
+                <li class="breadcrumb-item">Quotas</li>
+            </ul>
+        </div>
+        
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Temps de jeu</h2>
+            </div>
+            <p>Définissez des limites de temps de jeu pour votre enfant.</p>
+        </div>
+        
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Activités autorisées</h2>
+            </div>
+            <p>Gérez les mini-jeux et activités accessibles à votre enfant.</p>
+        </div>
+    </div>
+</body>
+</html>

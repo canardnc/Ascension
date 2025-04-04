@@ -11,7 +11,7 @@ import (
 // UserUpdateRequest représente une demande de mise à jour du profil utilisateur
 type UserUpdateRequest struct {
 	HeroName string `json:"heroName"`
-	Year     string `json:"year"` // Nouveau champ
+	Year     string `json:"year"`
 }
 
 // UserResponse représente les informations de l'utilisateur renvoyées à l'API
@@ -19,9 +19,12 @@ type UserResponse struct {
 	ID        int    `json:"id"`
 	Username  string `json:"username"`
 	HeroName  string `json:"heroName,omitempty"`
-	Year      string `json:"year,omitempty"` // Nouveau champ
+	Year      string `json:"year,omitempty"`
 	Level     int    `json:"level"`
 	BestScore int    `json:"bestScore"`
+	Admin     bool   `json:"admin"`
+	Teacher   bool   `json:"teacher"`
+	Parent    bool   `json:"parent"`
 }
 
 // GetUserInfo récupère les informations de l'utilisateur courant
@@ -45,9 +48,12 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		ID:        user.ID,
 		Username:  user.Username,
 		HeroName:  user.HeroName,
-		Year:      user.Year, // Ajouter le champ year
+		Year:      user.Year,
 		Level:     user.Level,
 		BestScore: bestScore,
+		Admin:     user.Admin,
+		Teacher:   user.Teacher,
+		Parent:    user.Parent,
 	}
 
 	middleware.RespondWithJSON(w, http.StatusOK, response)
@@ -76,7 +82,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.HeroName = request.HeroName
-	user.Year = request.Year // Mise à jour du champ year
+	user.Year = request.Year
 
 	if err := user.Update(); err != nil {
 		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la mise à jour du profil")
