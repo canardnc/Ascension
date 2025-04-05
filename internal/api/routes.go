@@ -145,6 +145,25 @@ func SetupRoutes(mux *http.ServeMux) {
 			}
 			return
 		}
+		// Route pour recharger l'énergie: /api/users/{id}/recharge-energy
+		if len(parts) >= 5 && parts[4] == "recharge-energy" {
+			if r.Method == http.MethodPost {
+				middleware.JWTAuth(handlers.RechargeUserEnergy)(w, r)
+			} else {
+				http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		// Route pour réinitialiser un utilisateur: /api/users/{id}/reset
+		if len(parts) >= 5 && parts[4] == "reset" {
+			if r.Method == http.MethodPost {
+				middleware.JWTAuth(handlers.ResetUser)(w, r)
+			} else {
+				http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+			}
+			return
+		}
 
 		// Route par défaut pour les détails et mises à jour: /api/users/{id}
 		switch r.Method {
@@ -152,6 +171,8 @@ func SetupRoutes(mux *http.ServeMux) {
 			middleware.JWTAuth(handlers.GetUserDetails)(w, r)
 		case http.MethodPut:
 			middleware.JWTAuth(handlers.AdminUpdateUser)(w, r)
+		case http.MethodDelete:
+			middleware.JWTAuth(handlers.DeleteUser)(w, r)
 		default:
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
@@ -211,15 +232,6 @@ func SetupRoutes(mux *http.ServeMux) {
 		case http.MethodPut:
 			middleware.JWTAuth(handlers.UpdatePlayerStats)(w, r)
 		default:
-			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-		}
-	})
-
-	// Entraînement
-	mux.HandleFunc("/api/training/complete", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			middleware.JWTAuth(handlers.CompleteTraining)(w, r)
-		} else {
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
 	})

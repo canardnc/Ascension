@@ -819,39 +819,56 @@
             users.forEach(user => {
                 const isSelected = user.id === selectedUserId ? 'selected' : '';
                 html += `
-                    <tr class="${isSelected}" data-id="${user.id}" onclick="selectUser(${user.id})">
-                        <td>${user.id}</td>
-                        <td>${user.username}</td>
-                        <td>${user.email || '-'}</td>
-                        <td>${user.heroName || '-'}</td>
-                        <td>
-                            <div class="user-permissions">
-                                <div class="permission-checkbox">
-                                    <input type="checkbox" id="admin-${user.id}" ${user.admin ? 'checked' : ''} onclick="event.stopPropagation(); togglePermission(${user.id}, 'admin')">
-                                    <label for="admin-${user.id}">Admin</label>
-                                </div>
-                                <div class="permission-checkbox">
-                                    <input type="checkbox" id="teacher-${user.id}" ${user.teacher ? 'checked' : ''} onclick="event.stopPropagation(); togglePermission(${user.id}, 'teacher')">
-                                    <label for="teacher-${user.id}">Prof</label>
-                                </div>
-                                <div class="permission-checkbox">
-                                    <input type="checkbox" id="parent-${user.id}" ${user.parent ? 'checked' : ''} onclick="event.stopPropagation(); togglePermission(${user.id}, 'parent')">
-                                    <label for="parent-${user.id}">Parent</label>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="user-actions">
-                                <button class="action-button energy" title="Recharger l'énergie" onclick="event.stopPropagation(); quickRechargeEnergy(${user.id})">⚡</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+    <tr class="${isSelected}" data-id="${user.id}" onclick="selectUser(${user.id})">
+        <td>${user.id}</td>
+        <td>${user.username}</td>
+        <td>${user.email || '-'}</td>
+        <td>${user.heroName || '-'}</td>
+        <td>
+            <div class="user-permissions">
+                <!-- Permissions existantes -->
+            </div>
+        </td>
+        <td>
+            <div class="user-actions">
+                <button class="action-button energy" title="Recharger l'énergie" onclick="event.stopPropagation(); quickRechargeEnergy(${user.id})">⚡</button>
+                <button class="action-button" style="background-color: rgba(255, 165, 0, 0.2); color: #FFA500;" title="Réinitialiser l'utilisateur" onclick="event.stopPropagation(); confirmResetUser(${user.id})">🔄</button>
+                <button class="action-button" style="background-color: rgba(255, 0, 0, 0.2); color: #FF0000;" title="Supprimer l'utilisateur" onclick="event.stopPropagation(); confirmDeleteUser(${user.id})">❌</button>
+            </div>
+        </td>
+    </tr>
+`;
             });
             
             usersListBody.innerHTML = html;
         }
         
+        // Confirmation de suppression d'utilisateur
+function confirmDeleteUser(userId) {
+    pendingAction = {
+        type: 'delete-user',
+        userId
+    };
+    
+    openModal(
+        'Supprimer l\'utilisateur',
+        'Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur et toutes ses données associées? Cette action est irréversible.'
+    );
+}
+
+// Confirmation de réinitialisation d'utilisateur
+function confirmResetUser(userId) {
+    pendingAction = {
+        type: 'reset-user',
+        userId
+    };
+    
+    openModal(
+        'Réinitialiser l\'utilisateur',
+        'Êtes-vous sûr de vouloir réinitialiser cet utilisateur? Toutes ses données de progression seront perdues, mais son compte sera conservé.'
+    );
+}
+
         // Mettre à jour la pagination
         function updatePagination() {
             let html = '';
@@ -1114,41 +1131,91 @@
             pendingAction = null;
         }
         
+        // Fonction pour supprimer un utilisateur
+async function deleteUser(userId) {
+    try {
+        const response = await fetchWithAuth(`/api/users/${userId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response) {
+            // Si l'utilisateur supprimé était l'utilisateur sélectionné, le désélectionner
+            if (selectedUserId === userId) {
+                deselectUser();
+            }
+            
+            // Recharger la liste des utilisateurs
+            fetchUsers();
+            showNotification("Utilisateur supprimé avec succès", 'success');
+        }
+    } catch (error) {
+        showNotification(`Erreur lors de la suppression: ${error.message}`, 'error');
+    }
+}
+
+// Fonction pour réinitialiser un utilisateur
+async function resetUser(userId) {
+    try {
+        const response = await fetchWithAuth(`/api/users/${userId}/reset`, {
+            method: 'POST'
+        });
+        
+        if (response) {
+            // Si l'utilisateur réinitialisé était l'utilisateur sélectionné, rafraîchir ses détails
+            if (selectedUserId === userId) {
+                selectUser(userId);
+            }
+            
+            // Recharger la liste des utilisateurs
+            fetchUsers();
+            showNotification("Utilisateur réinitialisé avec succès", 'success');
+        }
+    } catch (error) {
+        showNotification(`Erreur lors de la réinitialisation: ${error.message}`, 'error');
+    }
+}
         // Gérer la confirmation d'une action dans la modal
         async function handleModalConfirm() {
-            if (!pendingAction) {
-                closeModal();
-                return;
-            }
-            
-            // Afficher le spinner
-            modalConfirmText.style.display = 'none';
-            modalSpinner.style.display = 'inline-block';
-            
-            try {
-                switch (pendingAction.type) {
-                    case 'toggle-permission':
-                        await applyPermissionChange(
-                            pendingAction.userId,
-                            pendingAction.permission,
-                            pendingAction.value
-                        );
-                        break;
-                        
-                    case 'recharge-energy':
-                        await rechargeEnergy(pendingAction.userId);
-                        break;
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-            } finally {
-                // Masquer le spinner et fermer la modal
-                modalConfirmText.style.display = 'inline';
-                modalSpinner.style.display = 'none';
-                closeModal();
-            }
+    if (!pendingAction) {
+        closeModal();
+        return;
+    }
+    
+    // Afficher le spinner
+    modalConfirmText.style.display = 'none';
+    modalSpinner.style.display = 'inline-block';
+    
+    try {
+        switch (pendingAction.type) {
+            case 'toggle-permission':
+                await applyPermissionChange(
+                    pendingAction.userId,
+                    pendingAction.permission,
+                    pendingAction.value
+                );
+                break;
+                
+            case 'recharge-energy':
+                await rechargeEnergy(pendingAction.userId);
+                break;
+                
+            case 'delete-user':
+                await deleteUser(pendingAction.userId);
+                break;
+                
+            case 'reset-user':
+                await resetUser(pendingAction.userId);
+                break;
         }
-        
+    } catch (error) {
+        console.error('Erreur:', error);
+    } finally {
+        // Masquer le spinner et fermer la modal
+        modalConfirmText.style.display = 'inline';
+        modalSpinner.style.display = 'none';
+        closeModal();
+    }
+}
         // Appliquer un changement de permission
         async function applyPermissionChange(userId, permission, value) {
             try {

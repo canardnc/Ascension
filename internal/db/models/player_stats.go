@@ -698,26 +698,3 @@ func AddPointsToCategory(userID int, categoryName string, points int) error {
 	// Mettre à jour les points
 	return UpdatePlayerStat(userID, category.ID, stat.Points+points)
 }
-
-// RecordTrainingCompletion enregistre un exercice d'entraînement complété
-func RecordTrainingCompletion(userID int, category string, exerciseName string, difficulty, pointsEarned int) error {
-	// 1. Récupérer l'ID de la catégorie
-	categoryObj, err := GetStatCategoryByName(category)
-	if err != nil {
-		return fmt.Errorf("catégorie non trouvée: %s", category)
-	}
-
-	// 2. Enregistrer l'exercice
-	query := `
-		INSERT INTO training_completed 
-		(user_id, category, exercise_name, difficulty, points_earned)
-		VALUES ($1, $2, $3, $4, $5)
-	`
-	_, err = db.DB.Exec(query, userID, category, exerciseName, difficulty, pointsEarned)
-	if err != nil {
-		return err
-	}
-
-	// 3. Ajouter les points à la catégorie en utilisant son ID
-	return UpdatePlayerStat(userID, categoryObj.ID, pointsEarned)
-}

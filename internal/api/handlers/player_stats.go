@@ -399,39 +399,3 @@ func UpdatePlayerStats(w http.ResponseWriter, r *http.Request) {
 
 	middleware.RespondWithJSON(w, http.StatusOK, map[string]bool{"success": true})
 }
-
-// CompleteTraining enregistre un exercice d'entraînement complété
-func CompleteTraining(w http.ResponseWriter, r *http.Request) {
-	// Récupérer l'ID utilisateur depuis le contexte
-	userId := r.Context().Value("userId").(int)
-
-	var request TrainingRequest
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		middleware.RespondWithError(w, http.StatusBadRequest, "Données invalides")
-		return
-	}
-
-	if request.Category == "" || request.ExerciseName == "" || request.Difficulty <= 0 || request.PointsEarned <= 0 {
-		middleware.RespondWithError(w, http.StatusBadRequest, "Paramètres invalides")
-		return
-	}
-
-	// Enregistrer l'exercice complété
-	err := models.RecordTrainingCompletion(
-		userId,
-		request.Category,
-		request.ExerciseName,
-		request.Difficulty,
-		request.PointsEarned,
-	)
-	if err != nil {
-		middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de l'enregistrement de l'exercice")
-		return
-	}
-
-	middleware.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
-		"success":      true,
-		"pointsEarned": request.PointsEarned,
-	})
-
-}
