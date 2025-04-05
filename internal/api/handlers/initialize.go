@@ -247,97 +247,62 @@ func completePlayerInitialization(userID int, heroName, year string) error {
 	}
 	log.Printf("✓ Mini-jeux initialisés")
 
-	// 9. Activer certains mini-jeux selon l'année scolaire
-	var minigamesToActivate []struct {
-		ID    int
-		Level int
-	}
+	// 9. Activer les mini-jeux selon l'année scolaire à partir de la table minigames_year
+	rows, err = db.DB.Query(`
+SELECT mg.minigame_id, mg.difficulty_level
+FROM minigames_year mg
+WHERE mg.year = $1
+`, year)
 
-	// Déterminer quels mini-jeux activer selon l'année scolaire
-	switch year {
-	case "CP":
-		// CP: Activer uniquement le mini-jeu 1, difficulté 1
-		minigamesToActivate = append(minigamesToActivate, struct {
+	if err != nil {
+		log.Printf("Erreur lors de la récupération des mini-jeux pour l'année %s: %v", year, err)
+		nonCriticalErrors = append(nonCriticalErrors, err.Error())
+	} else {
+		// Collecter les mini-jeux à activer
+		var minigamesToActivate []struct {
 			ID    int
 			Level int
-		}{1, 1})
+		}
 
-	case "CE1":
-		// CE1: Activer mini-jeux 1 et 2, difficulté 1
-		minigamesToActivate = append(minigamesToActivate,
-			struct {
+		for rows.Next() {
+			var mg struct {
 				ID    int
 				Level int
-			}{1, 1},
-			struct {
-				ID    int
-				Level int
-			}{2, 1})
+			}
+			if err := rows.Scan(&mg.ID, &mg.Level); err != nil {
+				log.Printf("Erreur lors de la lecture des données de mini-jeux: %v", err)
+				continue
+			}
+			minigamesToActivate = append(minigamesToActivate, mg)
+		}
+		rows.Close()
 
-	case "CE2":
-		// CE2: Activer les 3 premiers mini-jeux en difficulté 1
-		minigamesToActivate = append(minigamesToActivate,
-			struct {
-				ID    int
-				Level int
-			}{1, 1},
-			struct {
-				ID    int
-				Level int
-			}{2, 1},
-			struct {
-				ID    int
-				Level int
-			}{3, 1})
-
-	case "CM1":
-		// CM1: Mini-jeux 1-6 en difficulté 1, 1-2 en difficulté 2
-		for _, mg := range miniGames {
+		// Si aucun mini-jeu trouvé, utiliser la configuration par défaut pour CP
+		if len(minigamesToActivate) == 0 {
+			log.Printf("Aucun mini-jeu trouvé pour l'année %s, utilisation de la configuration par défaut", year)
 			minigamesToActivate = append(minigamesToActivate, struct {
 				ID    int
 				Level int
-			}{mg.ID, 1})
+			}{1, 1})
+		}
 
-			if mg.ID <= 2 {
-				minigamesToActivate = append(minigamesToActivate, struct {
-					ID    int
-					Level int
-				}{mg.ID, 2})
+		// Activer les mini-jeux sélectionnés
+		for _, mg := range minigamesToActivate {
+			_, err := db.DB.Exec(`
+		UPDATE minigames_progress 
+		SET available = true 
+		WHERE user_id = $1 AND minigame_id = $2 AND difficulty_level = $3
+	`, userID, mg.ID, mg.Level)
+
+			if err != nil {
+				log.Printf("Erreur non critique: Activation mini-jeu %d niveau %d: %v",
+					mg.ID, mg.Level, err)
+				nonCriticalErrors = append(nonCriticalErrors, err.Error())
 			}
 		}
+		log.Printf("✓ Mini-jeux activés selon le niveau scolaire: %s", year)
 
-	case "CM2", "DYS":
-		// CM2/DYS: Tous les mini-jeux en difficulté 1 et 2
-		for _, mg := range miniGames {
-			minigamesToActivate = append(minigamesToActivate,
-				struct {
-					ID    int
-					Level int
-				}{mg.ID, 1})
-			minigamesToActivate = append(minigamesToActivate,
-				struct {
-					ID    int
-					Level int
-				}{mg.ID, 2})
-		}
 	}
-
-	// Activer les mini-jeux sélectionnés
-	for _, mg := range minigamesToActivate {
-		_, err := db.DB.Exec(`
-			UPDATE minigames_progress 
-			SET available = true 
-			WHERE user_id = $1 AND minigame_id = $2 AND difficulty_level = $3
-		`, userID, mg.ID, mg.Level)
-
-		if err != nil {
-			log.Printf("Erreur non critique: Activation mini-jeu %d niveau %d: %v",
-				mg.ID, mg.Level, err)
-			nonCriticalErrors = append(nonCriticalErrors, err.Error())
-			// Continuer malgré l'erreur
-		}
-	}
-	log.Printf("✓ Mini-jeux activés selon le niveau scolaire: %s", year)
 
 	// Si des erreurs non critiques se sont produites, les logger mais poursuivre
 	if len(nonCriticalErrors) > 0 {
