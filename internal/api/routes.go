@@ -62,10 +62,6 @@ func SetupRoutes(mux *http.ServeMux) {
 		http.ServeFile(w, r, "./web/public/battle.html")
 	})
 
-	mux.HandleFunc("/minigame.html", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./web/public/minigame.html")
-	})
-
 	mux.HandleFunc("/game.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/public/game.html")
 	})

@@ -3,10 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini-jeux</title>
+    <title>Administration des Mini-jeux</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+        
+        /* Variables CSS */
+        :root {
+            --primary: #6542fe;
+            --primary-light: #a16bff;
+            --primary-dark: #5234d9;
+            --secondary: #ff7e5f;
+            --background: #1f1f3a;
+            --card-bg: rgba(47, 47, 77, 0.9);
+            --text: #ffffff;
+            --text-secondary: #a9a9c9;
+            --success: #4ae07c;
+            --warning: #ffcc00;
+            --danger: #e04a4a;
+            --info: #4aa7e0;
+            --card-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Styles globaux */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: 'Montserrat', sans-serif;
+            background-color: var(--background);
+            color: var(--text);
             padding: 0;
             margin: 0;
         }
@@ -23,7 +51,7 @@
             font-size: 24px;
             font-weight: 700;
             margin-bottom: 5px;
-            color: #ffffff;
+            color: var(--text);
         }
         
         .breadcrumb {
@@ -34,7 +62,7 @@
         
         .breadcrumb-item {
             font-size: 14px;
-            color: #a9a9c9;
+            color: var(--text-secondary);
         }
         
         .breadcrumb-item:not(:last-child)::after {
@@ -43,15 +71,15 @@
         }
         
         .breadcrumb-item a {
-            color: #6542fe;
+            color: var(--primary);
             text-decoration: none;
         }
         
         .content-section {
-            background-color: rgba(47, 47, 77, 0.9);
+            background-color: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--card-shadow);
             margin-bottom: 30px;
         }
         
@@ -65,31 +93,2081 @@
         .section-title {
             font-size: 18px;
             font-weight: 600;
-            color: #ffffff;
+            color: var(--text);
         }
         
-        p {
-            color: #a9a9c9;
-            line-height: 1.6;
+        /* Liste des mini-jeux */
+        .search-container {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .search-container input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: none;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .search-container input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .search-container .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .minigames-list {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .minigames-list th, .minigames-list td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .minigames-list th {
+            background-color: rgba(101, 66, 254, 0.2);
+            color: var(--text);
+            font-weight: 600;
+        }
+        
+        .minigames-list tr {
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .minigames-list tr:hover {
+            background-color: rgba(101, 66, 254, 0.1);
+        }
+        
+        .minigames-list tr.selected {
+            background-color: rgba(101, 66, 254, 0.3);
+        }
+        
+        .difficulty-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 5px;
+            margin-bottom: 3px;
+            background-color: rgba(101, 66, 254, 0.3);
+            color: var(--text);
+        }
+        
+        .game-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        .action-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .action-button.delete {
+            background-color: rgba(224, 74, 74, 0.2);
+            color: var(--danger);
+        }
+        
+        .action-button.delete:hover {
+            background-color: rgba(224, 74, 74, 0.4);
+        }
+        
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        .pagination-button {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 5px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .pagination-button:hover, .pagination-button.active {
+            background-color: rgba(101, 66, 254, 0.5);
+        }
+        
+        .pagination-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Détails du mini-jeu */
+        .minigame-detail-section {
+            display: none;
+        }
+        
+        .minigame-detail-section.visible {
+            display: block;
+        }
+        
+        .minigame-form {
+            margin-bottom: 20px;
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+            padding: 0 10px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* Onglets de difficulté */
+        .difficulty-tabs {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .difficulty-tab {
+            padding: 10px 15px;
+            background-color: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .difficulty-tab:hover {
+            color: var(--text);
+        }
+        
+        .difficulty-tab.active {
+            color: var(--primary-light);
+        }
+        
+        .difficulty-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary);
+        }
+        
+        .difficulty-tab.add-tab {
+            color: var(--success);
+        }
+        
+        .difficulty-tab .close-icon {
+            margin-left: 8px;
+            font-size: 12px;
+            opacity: 0.6;
+        }
+        
+        .difficulty-tab:hover .close-icon {
+            opacity: 1;
+        }
+        
+        .difficulty-content {
+            display: none;
+        }
+        
+        .difficulty-content.active {
+            display: block;
+        }
+        
+        /* Mise en page à 3 colonnes */
+        .three-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .column {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .column-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary-light);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .column-subheader {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 15px 0 10px;
+            color: var(--text);
+        }
+        
+        .relation-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .relation-card-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text);
+            font-size: 14px;
+            padding-right: 20px; /* Make room for delete button */
+        }
+        
+        .relation-card-subtitle {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        .relation-card .delete-relation {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(224, 74, 74, 0.2);
+            color: var(--danger);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+        
+        .relation-card .delete-relation:hover {
+            background-color: rgba(224, 74, 74, 0.4);
+            transform: scale(1.1);
+        }
+        
+        .add-relation-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+            padding: 8px;
+            background-color: rgba(74, 224, 124, 0.2);
+            color: var(--success);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        
+        .add-relation-btn:hover {
+            background-color: rgba(74, 224, 124, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-light);
+        }
+        
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #3bc667;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c73a3a;
+        }
+        
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background-color: rgba(47, 47, 77, 0.95);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            padding: 20px;
+            position: relative;
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            color: var(--text);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+        }
+        
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 4px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .notification.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .notification.success {
+            background-color: var(--success);
+        }
+        
+        .notification.error {
+            background-color: var(--danger);
+        }
+        
+        .notification.warning {
+            background-color: var(--warning);
+            color: #333;
+        }
+        
+        /* Loading indicator */
+        .loading-container {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(101, 66, 254, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .btn .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border-width: 2px;
+            margin: 0;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Message quand aucun mini-jeu n'est sélectionné */
+        .no-minigame-selected {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-secondary);
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 992px) {
+            .three-column-layout {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .minigames-list th:nth-child(3),
+            .minigames-list td:nth-child(3) {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .minigames-list th:nth-child(4),
+            .minigames-list td:nth-child(4) {
+                display: none;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .form-group {
+                min-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="page-header">
-            <h1 class="page-title">Gestion des mini-jeux</h1>
+            <h1 class="page-title">Administration des Mini-jeux</h1>
             <ul class="breadcrumb">
                 <li class="breadcrumb-item"><a href="#">Administration</a></li>
                 <li class="breadcrumb-item">Mini-jeux</li>
             </ul>
         </div>
         
+        <!-- Liste des mini-jeux -->
         <div class="content-section">
             <div class="section-header">
-                <h2 class="section-title">Liste des mini-jeux</h2>
+                <h2 class="section-title">Liste des mini-jeux (<span id="minigames-count">0</span>)</h2>
+                <button class="btn btn-primary" id="add-minigame-btn">
+                    <span>+ Ajouter un mini-jeu</span>
+                </button>
             </div>
-            <p>Contenu de la gestion des mini-jeux à implémenter.</p>
+            
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-minigames" placeholder="Rechercher par titre, catégorie...">
+            </div>
+            
+            <div id="minigames-table-container">
+                <table class="minigames-list" id="minigames-list">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Titre</th>
+                            <th>Catégorie</th>
+                            <th>Description</th>
+                            <th>Niveaux de difficulté</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="minigames-list-body">
+                        <!-- Les mini-jeux seront ajoutés ici dynamiquement -->
+                        <tr>
+                            <td colspan="6" class="loading-container">
+                                <div class="loading-spinner"></div>
+                                <div style="margin-top: 10px;">Chargement des mini-jeux...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination" id="pagination">
+                <!-- Les boutons de pagination seront ajoutés ici dynamiquement -->
+            </div>
+        </div>
+        
+        <!-- Détails du mini-jeu -->
+        <div class="content-section minigame-detail-section" id="minigame-detail-section">
+            <div class="section-header">
+                <h2 class="section-title">Détails du mini-jeu: <span id="detail-title">-</span></h2>
+            </div>
+            
+            <!-- Formulaire d'édition du mini-jeu -->
+            <div class="minigame-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="detail-id">ID</label>
+                        <input type="text" id="detail-id" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="detail-title-input">Titre</label>
+                        <input type="text" id="detail-title-input" placeholder="Titre du mini-jeu">
+                    </div>
+                    <div class="form-group">
+                        <label for="detail-category">Catégorie</label>
+                        <select id="detail-category">
+                            <option value="1">Force</option>
+                            <option value="2">Endurance</option>
+                            <option value="3">Récupération</option>
+                            <option value="4">Agilité</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label for="detail-description">Description</label>
+                        <textarea id="detail-description" placeholder="Description du mini-jeu"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-secondary" id="cancel-edit-button">Annuler</button>
+                    <button class="btn btn-primary" id="save-minigame-button">
+                        <span id="save-button-text">Enregistrer</span>
+                        <span id="save-spinner" class="loading-spinner" style="display: none;"></span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Onglets des niveaux de difficulté -->
+            <div class="difficulty-tabs" id="difficulty-tabs">
+                <!-- Les onglets seront ajoutés ici dynamiquement -->
+                <button class="difficulty-tab add-tab" id="add-difficulty-tab">+ Ajouter un niveau</button>
+            </div>
+            
+            <!-- Contenu des niveaux de difficulté -->
+            <div id="difficulty-contents">
+                <!-- Le contenu des niveaux de difficulté sera ajouté ici dynamiquement -->
+            </div>
+        </div>
+        
+        <!-- Message quand aucun mini-jeu n'est sélectionné -->
+        <div class="content-section" id="no-minigame-selected">
+            <div class="no-minigame-selected">
+                <h3>Sélectionnez un mini-jeu pour voir les détails</h3>
+                <p>Cliquez sur une ligne dans le tableau des mini-jeux ci-dessus</p>
+            </div>
         </div>
     </div>
+    
+    <!-- Modal de confirmation de suppression -->
+    <div class="modal-overlay" id="confirm-delete-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirmer la suppression</h3>
+                <button class="modal-close" id="delete-modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="delete-modal-body">
+                Êtes-vous sûr de vouloir supprimer ce mini-jeu ? Cette action est irréversible et supprimera toutes les données associées.
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="delete-modal-cancel">Annuler</button>
+                <button class="btn btn-danger" id="delete-modal-confirm">
+                    <span id="delete-confirm-text">Supprimer</span>
+                    <span id="delete-spinner" class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal d'ajout de mini-jeu -->
+    <div class="modal-overlay" id="add-minigame-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un nouveau mini-jeu</h3>
+                <button class="modal-close" id="add-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-minigame-title">Titre</label>
+                    <input type="text" id="new-minigame-title" placeholder="Titre du mini-jeu">
+                </div>
+                <div class="form-group">
+                    <label for="new-minigame-category">Catégorie</label>
+                    <select id="new-minigame-category">
+                        <option value="1">Force</option>
+                        <option value="2">Endurance</option>
+                        <option value="3">Récupération</option>
+                        <option value="4">Agilité</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-minigame-description">Description</label>
+                    <textarea id="new-minigame-description" placeholder="Description du mini-jeu"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="new-minigame-difficulty">Niveau de difficulté initial</label>
+                    <select id="new-minigame-difficulty">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="add-modal-cancel">Annuler</button>
+                <button class="btn btn-primary" id="add-modal-confirm">
+                    <span id="add-confirm-text">Ajouter</span>
+                    <span id="add-spinner" class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal d'ajout de niveau de difficulté -->
+    <div class="modal-overlay" id="add-difficulty-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un niveau de difficulté</h3>
+                <button class="modal-close" id="difficulty-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-difficulty-level">Niveau de difficulté</label>
+                    <select id="new-difficulty-level">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="difficulty-modal-cancel">Annuler</button>
+                <button class="btn btn-primary" id="difficulty-modal-confirm">
+                    <span id="difficulty-confirm-text">Ajouter</span>
+                    <span id="difficulty-spinner" class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal d'ajout d'année scolaire -->
+    <div class="modal-overlay" id="add-year-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter une année scolaire</h3>
+                <button class="modal-close" id="year-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-year-value">Année scolaire</label>
+                    <select id="new-year-value">
+                        <option value="CP">CP</option>
+                        <option value="CE1">CE1</option>
+                        <option value="CE2">CE2</option>
+                        <option value="CM1">CM1</option>
+                        <option value="CM2">CM2</option>
+                        <option value="DYS">DYS</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="year-modal-cancel">Annuler</button>
+                <button class="btn btn-primary" id="year-modal-confirm">
+                    <span id="year-confirm-text">Ajouter</span>
+                    <span id="year-spinner" class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal d'ajout de prérequis -->
+    <div class="modal-overlay" id="add-prerequisite-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un prérequis</h3>
+                <button class="modal-close" id="prerequisite-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="prerequisite-minigame">Mini-jeu prérequis</label>
+                    <select id="prerequisite-minigame">
+                        <!-- Options ajoutées dynamiquement -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prerequisite-difficulty">Niveau de difficulté</label>
+                    <select id="prerequisite-difficulty">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="prerequisite-score">Score requis</label>
+                    <input type="number" id="prerequisite-score" min="1" value="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="prerequisite-modal-cancel">Annuler</button>
+                <button class="btn btn-primary" id="prerequisite-modal-confirm">
+                    <span id="prerequisite-confirm-text">Ajouter</span>
+                    <span id="prerequisite-spinner" class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal d'ajout de débloquage -->
+    <div class="modal-overlay" id="add-unlock-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un mini-jeu à débloquer</h3>
+                <button class="modal-close" id="unlock-modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="unlock-minigame">Mini-jeu à débloquer</label>
+                    <select id="unlock-minigame">
+                        <!-- Options ajoutées dynamiquement -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="unlock-difficulty">Niveau de difficulté</label>
+                    <select id="unlock-difficulty">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="unlock-score">Score requis</label>
+                    <input type="number" id="unlock-score" min="1" value="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="unlock-modal-cancel">Annuler</button>
+                <button class="btn btn-primary" id="unlock-modal-confirm">
+                    <span id="unlock-confirm-text">Ajouter</span>
+                    <span id="unlock-spinner" class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        // Configuration
+        const ITEMS_PER_PAGE = 10;
+        let currentPage = 1;
+        let totalPages = 1;
+        let selectedMinigameId = null;
+        let selectedDifficultyLevel = null;
+        let minigames = [];
+        let categories = {
+            1: "Force",
+            2: "Endurance",
+            3: "Récupération",
+            4: "Agilité"
+        };
+        
+        // Éléments DOM
+        const minigamesListBody = document.getElementById('minigames-list-body');
+        const minigameDetailSection = document.getElementById('minigame-detail-section');
+        const noMinigameSelectedSection = document.getElementById('no-minigame-selected');
+        const minigamesCountElement = document.getElementById('minigames-count');
+        const searchInput = document.getElementById('search-minigames');
+        const paginationContainer = document.getElementById('pagination');
+        const difficultyTabs = document.getElementById('difficulty-tabs');
+        const difficultyContents = document.getElementById('difficulty-contents');
+        const addDifficultyTab = document.getElementById('add-difficulty-tab');
+        
+        // Détails mini-jeu
+        const detailTitle = document.getElementById('detail-title');
+        const detailId = document.getElementById('detail-id');
+        const detailTitleInput = document.getElementById('detail-title-input');
+        const detailCategory = document.getElementById('detail-category');
+        const detailDescription = document.getElementById('detail-description');
+        const cancelEditButton = document.getElementById('cancel-edit-button');
+        const saveMinigameButton = document.getElementById('save-minigame-button');
+        
+        // Modals
+        const confirmDeleteModal = document.getElementById('confirm-delete-modal');
+        const addMinigameModal = document.getElementById('add-minigame-modal');
+        const addDifficultyModal = document.getElementById('add-difficulty-modal');
+        const addYearModal = document.getElementById('add-year-modal');
+        const addPrerequisiteModal = document.getElementById('add-prerequisite-modal');
+        const addUnlockModal = document.getElementById('add-unlock-modal');
+        
+        // Boutons et notifications
+        const addMinigameBtn = document.getElementById('add-minigame-btn');
+        const notification = document.getElementById('notification');
+        const deleteModalConfirm = document.getElementById('delete-modal-confirm');
+        const addModalConfirm = document.getElementById('add-modal-confirm');
+        const difficultyModalConfirm = document.getElementById('difficulty-modal-confirm');
+        const yearModalConfirm = document.getElementById('year-modal-confirm');
+        const prerequisiteModalConfirm = document.getElementById('prerequisite-modal-confirm');
+        const unlockModalConfirm = document.getElementById('unlock-modal-confirm');
+        
+        // Variables pour tracking des actions en cours
+        let pendingDeleteId = null;
+        let pendingDifficulty = null;
+        
+        // Charger les mini-jeux au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchMinigames();
+            
+            // Initialiser les écouteurs d'événements
+            initEventListeners();
+        });
+        
+        // Initialiser tous les écouteurs d'événements
+        function initEventListeners() {
+            // Recherche
+            searchInput.addEventListener('input', debounce(handleSearch, 300));
+            
+            // Boutons d'édition
+            cancelEditButton.addEventListener('click', cancelMinigameEdit);
+            saveMinigameButton.addEventListener('click', saveMinigameChanges);
+            
+            // Ajout d'onglet de difficulté
+            addDifficultyTab.addEventListener('click', showAddDifficultyModal);
+            
+            // Boutons et modals
+            addMinigameBtn.addEventListener('click', showAddMinigameModal);
+            
+            // Modal de suppression
+            document.getElementById('delete-modal-close').addEventListener('click', () => closeModal(confirmDeleteModal));
+            document.getElementById('delete-modal-cancel').addEventListener('click', () => closeModal(confirmDeleteModal));
+            deleteModalConfirm.addEventListener('click', confirmDeleteMinigame);
+            
+            // Modal d'ajout de mini-jeu
+            document.getElementById('add-modal-close').addEventListener('click', () => closeModal(addMinigameModal));
+            document.getElementById('add-modal-cancel').addEventListener('click', () => closeModal(addMinigameModal));
+            addModalConfirm.addEventListener('click', addNewMinigame);
+            
+            // Modal d'ajout de niveau de difficulté
+            document.getElementById('difficulty-modal-close').addEventListener('click', () => closeModal(addDifficultyModal));
+            document.getElementById('difficulty-modal-cancel').addEventListener('click', () => closeModal(addDifficultyModal));
+            difficultyModalConfirm.addEventListener('click', addNewDifficultyLevel);
+            
+            // Modal d'ajout d'année scolaire
+            document.getElementById('year-modal-close').addEventListener('click', () => closeModal(addYearModal));
+            document.getElementById('year-modal-cancel').addEventListener('click', () => closeModal(addYearModal));
+            yearModalConfirm.addEventListener('click', addNewYear);
+            
+            // Modal d'ajout de prérequis
+            document.getElementById('prerequisite-modal-close').addEventListener('click', () => closeModal(addPrerequisiteModal));
+            document.getElementById('prerequisite-modal-cancel').addEventListener('click', () => closeModal(addPrerequisiteModal));
+            prerequisiteModalConfirm.addEventListener('click', addNewPrerequisite);
+            
+            // Modal d'ajout de débloquage
+            document.getElementById('unlock-modal-close').addEventListener('click', () => closeModal(addUnlockModal));
+            document.getElementById('unlock-modal-cancel').addEventListener('click', () => closeModal(addUnlockModal));
+            unlockModalConfirm.addEventListener('click', addNewUnlock);
+        }
+        
+        // Fonction de debounce pour limiter le nombre d'appels lors des recherches
+        function debounce(func, delay) {
+            let timeoutId;
+            return function() {
+                const context = this;
+                const args = arguments;
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(context, args);
+                }, delay);
+            };
+        }
+        
+        // Fonction pour effectuer des requêtes API avec authentification
+        async function fetchWithAuth(url, options = {}) {
+            try {
+                // Get token from parent window (iframe communication)
+                const token = window.parent.localStorage.getItem('token');
+                
+                if (!token) {
+                    showNotification("Vous n'êtes pas authentifié", 'error');
+                    return null;
+                }
+                
+                const defaultOptions = {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                const mergedOptions = {
+                    ...defaultOptions,
+                    ...options,
+                    headers: {
+                        ...defaultOptions.headers,
+                        ...options.headers
+                    }
+                };
+                
+                const response = await fetch(url, mergedOptions);
+                
+                if (response.status === 401 || response.status === 403) {
+                    showNotification("Session expirée ou accès refusé", 'error');
+                    setTimeout(() => {
+                        window.parent.location.href = '/';
+                    }, 2000);
+                    return null;
+                }
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
+                    throw new Error(errorData?.error || `Erreur ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Erreur API:', error);
+                showNotification(`Erreur: ${error.message}`, 'error');
+                return null;
+            }
+        }
+        
+        // Fonction pour récupérer les mini-jeux
+        async function fetchMinigames() {
+            try {
+                // Afficher l'indicateur de chargement
+                minigamesListBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-top: 10px;">Chargement des mini-jeux...</div>
+                        </td>
+                    </tr>
+                `;
+                
+                // Préparer les paramètres de requête
+                const searchTerm = searchInput.value.trim();
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    perPage: ITEMS_PER_PAGE
+                });
+                
+                if (searchTerm) {
+                    params.append('q', searchTerm);
+                }
+                
+                // TODO: Remplacer par l'API réelle
+                // Simulation de données pour le moment
+                const mockData = {
+                    totalCount: 15,
+                    totalPages: 2,
+                    page: 1,
+                    minigames: [
+                        {
+                            minigame_id: 1,
+                            title: "Quiz de mathématiques",
+                            category_id: 1,
+                            description: "Quiz interactif sur les mathématiques de base",
+                            difficulties: [1, 2, 3]
+                        },
+                        {
+                            minigame_id: 2,
+                            title: "Jeu de mémoire",
+                            category_id: 2,
+                            description: "Retrouvez les paires d'images identiques",
+                            difficulties: [1, 2]
+                        },
+                        {
+                            minigame_id: 3,
+                            title: "Dictée",
+                            category_id: 3,
+                            description: "Écrivez les mots correctement",
+                            difficulties: [1]
+                        },
+                        {
+                            minigame_id: 4,
+                            title: "Puzzle de lettres",
+                            category_id: 4,
+                            description: "Reconstituez les mots à partir de lettres mélangées",
+                            difficulties: [1, 2, 3]
+                        },
+                        {
+                            minigame_id: 5,
+                            title: "Questions de sciences",
+                            category_id: 1,
+                            description: "Testez vos connaissances en sciences",
+                            difficulties: [1, 2]
+                        }
+                    ]
+                };
+                
+                // Simuler un délai de chargement
+                setTimeout(() => {
+                    const data = mockData;
+                    
+                    // Mettre à jour les variables globales
+                    minigames = data.minigames || [];
+                    totalPages = data.totalPages || 1;
+                    
+                    // Mettre à jour l'interface
+                    minigamesCountElement.textContent = data.totalCount || minigames.length;
+                    updateMinigamesTable();
+                    updatePagination();
+                }, 500);
+                
+            } catch (error) {
+                showNotification(`Erreur lors du chargement des mini-jeux: ${error.message}`, 'error');
+                minigamesListBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px;">
+                            Erreur lors du chargement des mini-jeux. <br>
+                            <button class="btn btn-primary" style="margin-top: 10px;" onclick="fetchMinigames()">
+                                Réessayer
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Mettre à jour le tableau des mini-jeux
+        function updateMinigamesTable() {
+            if (!minigames || minigames.length === 0) {
+                minigamesListBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Aucun mini-jeu trouvé</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            minigames.forEach(minigame => {
+                const isSelected = minigame.minigame_id === selectedMinigameId ? 'selected' : '';
+                
+                // Générer les tags de difficulté
+                let difficultyTags = '';
+                minigame.difficulties.forEach(level => {
+                    difficultyTags += `<span class="difficulty-tag">Niveau ${level}</span>`;
+                });
+                
+                html += `
+                    <tr class="${isSelected}" data-id="${minigame.minigame_id}" onclick="selectMinigame(${minigame.minigame_id})">
+                        <td>${minigame.minigame_id}</td>
+                        <td>${minigame.title}</td>
+                        <td>${categories[minigame.category_id] || 'Non catégorisé'}</td>
+                        <td>${minigame.description.length > 50 ? minigame.description.substring(0, 50) + '...' : minigame.description}</td>
+                        <td>${difficultyTags}</td>
+                        <td>
+                            <div class="game-actions">
+                                <button class="action-button delete" title="Supprimer ce mini-jeu" onclick="event.stopPropagation(); showDeleteConfirmation(${minigame.minigame_id})">❌</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            minigamesListBody.innerHTML = html;
+        }
+        
+        // Mettre à jour la pagination
+        function updatePagination() {
+            let html = '';
+            
+            // Bouton précédent
+            html += `
+                <button class="pagination-button ${currentPage === 1 ? 'disabled' : ''}" 
+                  ${currentPage === 1 ? 'disabled' : 'onclick="changePage(' + (currentPage - 1) + ')"'}>
+                    &laquo;
+                </button>
+            `;
+            
+            // Pages
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, startPage + 4);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <button class="pagination-button ${i === currentPage ? 'active' : ''}" 
+                      onclick="changePage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // Bouton suivant
+            html += `
+                <button class="pagination-button ${currentPage === totalPages ? 'disabled' : ''}" 
+                  ${currentPage === totalPages ? 'disabled' : 'onclick="changePage(' + (currentPage + 1) + ')"'}>
+                    &raquo;
+                </button>
+            `;
+            
+            paginationContainer.innerHTML = html;
+        }
+        
+        // Changer de page
+        function changePage(page) {
+            if (page === currentPage) return;
+            
+            currentPage = page;
+            fetchMinigames();
+        }
+        
+        // Rechercher des mini-jeux
+        function handleSearch() {
+            currentPage = 1; // Revenir à la première page lors d'une recherche
+            fetchMinigames();
+        }
+        
+        // Sélectionner un mini-jeu
+        function selectMinigame(minigameId) {
+            if (minigameId === selectedMinigameId) return;
+            
+            try {
+                selectedMinigameId = minigameId;
+                
+                // Mettre à jour la sélection dans le tableau
+                document.querySelectorAll('#minigames-list-body tr').forEach(row => {
+                    row.classList.remove('selected');
+                    if (parseInt(row.dataset.id) === minigameId) {
+                        row.classList.add('selected');
+                    }
+                });
+                
+                // Trouver le mini-jeu
+                const minigame = minigames.find(m => m.minigame_id === minigameId);
+                if (!minigame) {
+                    throw new Error("Mini-jeu non trouvé");
+                }
+                
+                // Mise à jour des champs de formulaire
+                detailId.value = minigame.minigame_id;
+                detailTitle.textContent = minigame.title;
+                detailTitleInput.value = minigame.title;
+                detailCategory.value = minigame.category_id;
+                detailDescription.value = minigame.description;
+                
+                // Afficher la section de détails
+                minigameDetailSection.classList.add('visible');
+                noMinigameSelectedSection.style.display = 'none';
+                
+                // Générer les onglets de difficulté
+                generateDifficultyTabs(minigame.difficulties);
+                
+                // Sélectionner le premier niveau de difficulté par défaut
+                if (minigame.difficulties.length > 0) {
+                    selectDifficultyLevel(minigame.difficulties[0]);
+                }
+                
+            } catch (error) {
+                console.error(error);
+                showNotification(`Erreur: ${error.message}`, 'error');
+                
+                // Réinitialiser la sélection
+                selectedMinigameId = null;
+                minigameDetailSection.classList.remove('visible');
+                noMinigameSelectedSection.style.display = 'block';
+            }
+        }
+        
+        // Générer les onglets de difficulté
+        function generateDifficultyTabs(difficulties) {
+            // Réinitialiser les onglets existants, sauf le bouton d'ajout
+            const tabs = Array.from(difficultyTabs.querySelectorAll('.difficulty-tab:not(.add-tab)'));
+            tabs.forEach(tab => tab.remove());
+            
+            // Ajouter les nouveaux onglets avant le bouton d'ajout
+            difficulties.forEach(level => {
+                const tab = document.createElement('button');
+                tab.className = 'difficulty-tab';
+                tab.setAttribute('data-level', level);
+                tab.innerHTML = `Niveau ${level} <span class="close-icon" title="Supprimer ce niveau" onclick="event.stopPropagation(); confirmDeleteDifficulty(${level})">×</span>`;
+                tab.addEventListener('click', () => selectDifficultyLevel(level));
+                
+                difficultyTabs.insertBefore(tab, addDifficultyTab);
+            });
+            
+            // Vider le contenu des niveaux
+            difficultyContents.innerHTML = '';
+        }
+        
+        // Sélectionner un niveau de difficulté
+        function selectDifficultyLevel(level) {
+            selectedDifficultyLevel = level;
+            
+            // Mettre à jour l'onglet actif
+            document.querySelectorAll('.difficulty-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.getAttribute('data-level') == level) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Mettre à jour le contenu
+            loadDifficultyContent(level);
+        }
+        
+        // Charger le contenu d'un niveau de difficulté
+        function loadDifficultyContent(level) {
+            // Simuler le chargement des données
+            const minigameId = selectedMinigameId;
+            
+            // Simuler des données pour les exemples
+            const years = ["CP", "CE1"];
+            const prerequisites = [
+                { minigame_id: 2, title: "Jeu de mémoire", difficulty_level: 1, score_required: 200 }
+            ];
+            const unlocks = [
+                { minigame_id: 3, title: "Dictée", difficulty_level: 1, score_required: 150 }
+            ];
+            
+            // Vider le contenu précédent
+            difficultyContents.innerHTML = '';
+            
+            // Créer le contenu
+            const content = document.createElement('div');
+            content.className = 'difficulty-content active';
+            content.setAttribute('data-level', level);
+            
+            // Layout à 3 colonnes
+            content.innerHTML = `
+                <div class="three-column-layout">
+                    <!-- Colonne de gauche: Years et Prerequisites -->
+                    <div class="column">
+                        <!-- Years -->
+                        <div class="column-header">
+                            <span>Années scolaires</span>
+                            <button class="btn btn-secondary" onclick="showAddYearModal()">+</button>
+                        </div>
+                        <div id="years-container">
+                            ${years.map(year => `
+                                <div class="relation-card">
+                                    <h4 class="relation-card-title">${year}</h4>
+                                    <button class="delete-relation" onclick="deleteYear('${year}')" title="Supprimer cette année">×</button>
+                                </div>
+                            `).join('') || '<p style="color: var(--text-secondary);">Aucune année scolaire associée</p>'}
+                        </div>
+                        
+                        <!-- Prerequisites -->
+                        <div class="column-subheader">
+                            <span>Prérequis pour débloquer ce mini-jeu</span>
+                        </div>
+                        <div id="prerequisites-container">
+                            ${prerequisites.map(prereq => `
+                                <div class="relation-card">
+                                    <h4 class="relation-card-title">${prereq.title}</h4>
+                                    <div class="relation-card-subtitle">
+                                        Niveau ${prereq.difficulty_level} • Score min: ${prereq.score_required}
+                                    </div>
+                                    <button class="delete-relation" onclick="deletePrerequisite(${prereq.minigame_id}, ${prereq.difficulty_level})" title="Supprimer ce prérequis">×</button>
+                                </div>
+                            `).join('') || '<p style="color: var(--text-secondary);">Aucun prérequis</p>'}
+                        </div>
+                        
+                        <button class="add-relation-btn" onclick="showAddPrerequisiteModal()">
+                            + Ajouter un prérequis
+                        </button>
+                    </div>
+                    
+                    <!-- Colonne du milieu: Informations sur le mini-jeu -->
+                    <div class="column">
+                        <div class="column-header">
+                            <span>Informations du mini-jeu</span>
+                        </div>
+                        <div id="minigame-info">
+                            <div class="relation-card">
+                                <h4 class="relation-card-title">Identifiant: ${minigameId}</h4>
+                                <div class="relation-card-subtitle">
+                                    Niveau de difficulté: ${level}
+                                </div>
+                            </div>
+                            
+                            <div class="relation-card">
+                                <h4 class="relation-card-title">Statistiques</h4>
+                                <div class="relation-card-subtitle">
+                                    Nombre de joueurs: <strong>128</strong><br>
+                                    Score moyen: <strong>245</strong><br>
+                                    Temps moyen: <strong>2 min 30 s</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Colonne de droite: Débloquages -->
+                    <div class="column">
+                        <div class="column-header">
+                            <span>Mini-jeux débloqués</span>
+                            <button class="btn btn-secondary" onclick="showAddUnlockModal()">+</button>
+                        </div>
+                        <div id="unlocks-container">
+                            ${unlocks.map(unlock => `
+                                <div class="relation-card">
+                                    <h4 class="relation-card-title">${unlock.title}</h4>
+                                    <div class="relation-card-subtitle">
+                                        Niveau ${unlock.difficulty_level} • Score requis: ${unlock.score_required}
+                                    </div>
+                                    <button class="delete-relation" onclick="deleteUnlock(${unlock.minigame_id}, ${unlock.difficulty_level})" title="Supprimer ce débloquage">×</button>
+                                </div>
+                            `).join('') || '<p style="color: var(--text-secondary);">Ne débloque aucun mini-jeu</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            difficultyContents.appendChild(content);
+        }
+        
+        // Annuler les modifications d'un mini-jeu
+        function cancelMinigameEdit() {
+            if (!selectedMinigameId) return;
+            
+            // Recharger les détails du mini-jeu
+            selectMinigame(selectedMinigameId);
+            showNotification('Modifications annulées', 'warning');
+        }
+        
+        // Enregistrer les modifications d'un mini-jeu
+        async function saveMinigameChanges() {
+            if (!selectedMinigameId) return;
+            
+            // Simuler la sauvegarde
+            try {
+                // Afficher le spinner
+                const saveButtonText = document.getElementById('save-button-text');
+                const saveSpinner = document.getElementById('save-spinner');
+                saveButtonText.style.display = 'none';
+                saveSpinner.style.display = 'inline-block';
+                
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Mettre à jour les données locales
+                const minigame = minigames.find(m => m.minigame_id === selectedMinigameId);
+                if (minigame) {
+                    minigame.title = detailTitleInput.value;
+                    minigame.category_id = parseInt(detailCategory.value);
+                    minigame.description = detailDescription.value;
+                    
+                    // Mettre à jour l'interface
+                    updateMinigamesTable();
+                    detailTitle.textContent = minigame.title;
+                }
+                
+                showNotification('Mini-jeu mis à jour avec succès', 'success');
+            } catch (error) {
+                showNotification(`Erreur lors de la mise à jour: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner
+                const saveButtonText = document.getElementById('save-button-text');
+                const saveSpinner = document.getElementById('save-spinner');
+                saveButtonText.style.display = 'inline';
+                saveSpinner.style.display = 'none';
+            }
+        }
+        
+        // Afficher la confirmation de suppression d'un mini-jeu
+        function showDeleteConfirmation(minigameId) {
+            pendingDeleteId = minigameId;
+            
+            // Trouver le mini-jeu pour afficher son titre
+            const minigame = minigames.find(m => m.minigame_id === minigameId);
+            if (minigame) {
+                document.getElementById('delete-modal-body').textContent = 
+                    `Êtes-vous sûr de vouloir supprimer le mini-jeu "${minigame.title}" ? Cette action est irréversible et supprimera toutes les données associées.`;
+            }
+            
+            confirmDeleteModal.classList.add('active');
+        }
+        
+        // Confirmer la suppression d'un mini-jeu
+        async function confirmDeleteMinigame() {
+            if (!pendingDeleteId) {
+                closeModal(confirmDeleteModal);
+                return;
+            }
+            
+            try {
+                // Afficher le spinner
+                const deleteConfirmText = document.getElementById('delete-confirm-text');
+                const deleteSpinner = document.getElementById('delete-spinner');
+                deleteConfirmText.style.display = 'none';
+                deleteSpinner.style.display = 'inline-block';
+                
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Simuler la suppression
+                minigames = minigames.filter(m => m.minigame_id !== pendingDeleteId);
+                
+                // Si le mini-jeu supprimé était sélectionné, désélectionner
+                if (selectedMinigameId === pendingDeleteId) {
+                    selectedMinigameId = null;
+                    minigameDetailSection.classList.remove('visible');
+                    noMinigameSelectedSection.style.display = 'block';
+                }
+                
+                // Mettre à jour l'interface
+                updateMinigamesTable();
+                showNotification('Mini-jeu supprimé avec succès', 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de la suppression: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner et fermer la modal
+                const deleteConfirmText = document.getElementById('delete-confirm-text');
+                const deleteSpinner = document.getElementById('delete-spinner');
+                deleteConfirmText.style.display = 'inline';
+                deleteSpinner.style.display = 'none';
+                
+                closeModal(confirmDeleteModal);
+                pendingDeleteId = null;
+            }
+        }
+        
+        // Afficher la modal d'ajout de mini-jeu
+        function showAddMinigameModal() {
+            // Réinitialiser les champs
+            document.getElementById('new-minigame-title').value = '';
+            document.getElementById('new-minigame-category').value = '1';
+            document.getElementById('new-minigame-description').value = '';
+            document.getElementById('new-minigame-difficulty').value = '1';
+            
+            addMinigameModal.classList.add('active');
+        }
+        
+        // Ajouter un nouveau mini-jeu
+        async function addNewMinigame() {
+            try {
+                // Récupérer les valeurs
+                const title = document.getElementById('new-minigame-title').value.trim();
+                const category = parseInt(document.getElementById('new-minigame-category').value);
+                const description = document.getElementById('new-minigame-description').value.trim();
+                const difficulty = parseInt(document.getElementById('new-minigame-difficulty').value);
+                
+                // Validation
+                if (!title) {
+                    showNotification('Le titre du mini-jeu est requis', 'error');
+                    return;
+                }
+                
+                // Afficher le spinner
+                const addConfirmText = document.getElementById('add-confirm-text');
+                const addSpinner = document.getElementById('add-spinner');
+                addConfirmText.style.display = 'none';
+                addSpinner.style.display = 'inline-block';
+                
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Simuler l'ajout
+                const newMinigame = {
+                    minigame_id: Math.max(...minigames.map(m => m.minigame_id), 0) + 1,
+                    title,
+                    category_id: category,
+                    description,
+                    difficulties: [difficulty]
+                };
+                
+                minigames.unshift(newMinigame);
+                
+                // Mettre à jour l'interface
+                updateMinigamesTable();
+                closeModal(addMinigameModal);
+                showNotification('Mini-jeu ajouté avec succès', 'success');
+                
+                // Sélectionner le nouveau mini-jeu
+                selectMinigame(newMinigame.minigame_id);
+                
+            } catch (error) {
+                showNotification(`Erreur lors de l'ajout: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner
+                const addConfirmText = document.getElementById('add-confirm-text');
+                const addSpinner = document.getElementById('add-spinner');
+                addConfirmText.style.display = 'inline';
+                addSpinner.style.display = 'none';
+            }
+        }
+        
+        // Confirmer la suppression d'un niveau de difficulté
+        function confirmDeleteDifficulty(level) {
+            pendingDifficulty = level;
+            
+            document.getElementById('delete-modal-body').textContent = 
+                `Êtes-vous sûr de vouloir supprimer le niveau de difficulté ${level} ? Cette action supprimera toutes les données associées, y compris les relations avec les années scolaires et les autres mini-jeux.`;
+            
+            // Remplacer la fonction du bouton de confirmation
+            deleteModalConfirm.onclick = deleteDifficultyLevel;
+            
+            confirmDeleteModal.classList.add('active');
+        }
+        
+        // Supprimer un niveau de difficulté
+        async function deleteDifficultyLevel() {
+            if (!selectedMinigameId || !pendingDifficulty) {
+                closeModal(confirmDeleteModal);
+                return;
+            }
+            
+            try {
+                // Afficher le spinner
+                const deleteConfirmText = document.getElementById('delete-confirm-text');
+                const deleteSpinner = document.getElementById('delete-spinner');
+                deleteConfirmText.style.display = 'none';
+                deleteSpinner.style.display = 'inline-block';
+                
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Trouver le mini-jeu
+                const minigame = minigames.find(m => m.minigame_id === selectedMinigameId);
+                if (minigame) {
+                    // Simuler la suppression du niveau
+                    minigame.difficulties = minigame.difficulties.filter(d => d !== pendingDifficulty);
+                    
+                    // Mettre à jour l'interface
+                    updateMinigamesTable();
+                    generateDifficultyTabs(minigame.difficulties);
+                    
+                    // Si plus aucun niveau, sélectionner le premier restant, sinon désélectionner
+                    if (minigame.difficulties.length > 0) {
+                        selectDifficultyLevel(minigame.difficulties[0]);
+                    } else {
+                        // Réinitialiser le contenu
+                        difficultyContents.innerHTML = '';
+                    }
+                }
+                
+                showNotification(`Niveau de difficulté ${pendingDifficulty} supprimé avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de la suppression: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner et fermer la modal
+                const deleteConfirmText = document.getElementById('delete-confirm-text');
+                const deleteSpinner = document.getElementById('delete-spinner');
+                deleteConfirmText.style.display = 'inline';
+                deleteSpinner.style.display = 'none';
+                
+                closeModal(confirmDeleteModal);
+                pendingDifficulty = null;
+                
+                // Remettre la fonction originale
+                deleteModalConfirm.onclick = confirmDeleteMinigame;
+            }
+        }
+        
+        // Afficher la modal d'ajout de niveau de difficulté
+        function showAddDifficultyModal() {
+            if (!selectedMinigameId) return;
+            
+            // Trouver le mini-jeu pour déterminer quels niveaux sont déjà utilisés
+            const minigame = minigames.find(m => m.minigame_id === selectedMinigameId);
+            if (!minigame) return;
+            
+            // Réinitialiser le sélecteur
+            const select = document.getElementById('new-difficulty-level');
+            select.innerHTML = '';
+            
+            // Ajouter uniquement les niveaux non utilisés
+            for (let i = 1; i <= 3; i++) {
+                if (!minigame.difficulties.includes(i)) {
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = i;
+                    select.appendChild(option);
+                }
+            }
+            
+            // Si tous les niveaux sont utilisés, désactiver le bouton de confirmation
+            if (select.options.length === 0) {
+                select.innerHTML = '<option value="">Aucun niveau disponible</option>';
+                document.getElementById('difficulty-modal-confirm').disabled = true;
+            } else {
+                document.getElementById('difficulty-modal-confirm').disabled = false;
+            }
+            
+            addDifficultyModal.classList.add('active');
+        }
+        
+        // Ajouter un nouveau niveau de difficulté
+        async function addNewDifficultyLevel() {
+            if (!selectedMinigameId) {
+                closeModal(addDifficultyModal);
+                return;
+            }
+            
+            try {
+                // Récupérer le niveau sélectionné
+                const level = parseInt(document.getElementById('new-difficulty-level').value);
+                if (isNaN(level) || level <= 0) {
+                    showNotification('Veuillez sélectionner un niveau de difficulté valide', 'error');
+                    return;
+                }
+                
+                // Afficher le spinner
+                const difficultyConfirmText = document.getElementById('difficulty-confirm-text');
+                const difficultySpinner = document.getElementById('difficulty-spinner');
+                difficultyConfirmText.style.display = 'none';
+                difficultySpinner.style.display = 'inline-block';
+                
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Trouver le mini-jeu
+                const minigame = minigames.find(m => m.minigame_id === selectedMinigameId);
+                if (minigame) {
+                    // Ajouter le niveau et trier
+                    minigame.difficulties.push(level);
+                    minigame.difficulties.sort((a, b) => a - b);
+                    
+                    // Mettre à jour l'interface
+                    updateMinigamesTable();
+                    generateDifficultyTabs(minigame.difficulties);
+                    selectDifficultyLevel(level);
+                }
+                
+                showNotification(`Niveau de difficulté ${level} ajouté avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de l'ajout: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner et fermer la modal
+                const difficultyConfirmText = document.getElementById('difficulty-confirm-text');
+                const difficultySpinner = document.getElementById('difficulty-spinner');
+                difficultyConfirmText.style.display = 'inline';
+                difficultySpinner.style.display = 'none';
+                
+                closeModal(addDifficultyModal);
+            }
+        }
+        
+        // Afficher la modal d'ajout d'année scolaire
+        function showAddYearModal() {
+            if (!selectedMinigameId || !selectedDifficultyLevel) return;
+            
+            // Réinitialiser le sélecteur
+            document.getElementById('new-year-value').value = 'CP';
+            
+            addYearModal.classList.add('active');
+        }
+        
+        // Ajouter une nouvelle année scolaire
+        async function addNewYear() {
+            if (!selectedMinigameId || !selectedDifficultyLevel) {
+                closeModal(addYearModal);
+                return;
+            }
+            
+            try {
+                // Récupérer l'année sélectionnée
+                const year = document.getElementById('new-year-value').value;
+                if (!year) {
+                    showNotification('Veuillez sélectionner une année scolaire', 'error');
+                    return;
+                }
+                
+                // Afficher le spinner
+                const yearConfirmText = document.getElementById('year-confirm-text');
+                const yearSpinner = document.getElementById('year-spinner');
+                yearConfirmText.style.display = 'none';
+                yearSpinner.style.display = 'inline-block';
+                
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Simuler l'ajout
+                // Note: Dans une implémentation réelle, vous feriez un appel API ici
+                
+                // Mettre à jour l'interface (recharger le contenu)
+                loadDifficultyContent(selectedDifficultyLevel);
+                
+                showNotification(`Année scolaire ${year} ajoutée avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de l'ajout: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner et fermer la modal
+                const yearConfirmText = document.getElementById('year-confirm-text');
+                const yearSpinner = document.getElementById('year-spinner');
+                yearConfirmText.style.display = 'inline';
+                yearSpinner.style.display = 'none';
+                
+                closeModal(addYearModal);
+            }
+        }
+        
+        // Supprimer une année scolaire
+        async function deleteYear(year) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer l'année scolaire ${year} ?`)) {
+                return;
+            }
+            
+            try {
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Simuler la suppression
+                // Note: Dans une implémentation réelle, vous feriez un appel API ici
+                
+                // Mettre à jour l'interface (recharger le contenu)
+                loadDifficultyContent(selectedDifficultyLevel);
+                
+                showNotification(`Année scolaire ${year} supprimée avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de la suppression: ${error.message}`, 'error');
+            }
+        }
+        
+        // Afficher la modal d'ajout de prérequis
+        function showAddPrerequisiteModal() {
+            if (!selectedMinigameId || !selectedDifficultyLevel) return;
+            
+            // Remplir les options de mini-jeux (exclure le mini-jeu actuel)
+            const select = document.getElementById('prerequisite-minigame');
+            select.innerHTML = '<option value="">Sélectionnez un mini-jeu</option>';
+            
+            minigames.forEach(minigame => {
+                if (minigame.minigame_id !== selectedMinigameId) {
+                    const option = document.createElement('option');
+                    option.value = minigame.minigame_id;
+                    option.textContent = minigame.title;
+                    select.appendChild(option);
+                }
+            });
+            
+            // Réinitialiser les autres champs
+            document.getElementById('prerequisite-difficulty').value = '1';
+            document.getElementById('prerequisite-score').value = '100';
+            
+            addPrerequisiteModal.classList.add('active');
+        }
+        
+        // Ajouter un nouveau prérequis
+        async function addNewPrerequisite() {
+            if (!selectedMinigameId || !selectedDifficultyLevel) {
+                closeModal(addPrerequisiteModal);
+                return;
+            }
+            
+            try {
+                // Récupérer les valeurs
+                const prereqMinigameId = parseInt(document.getElementById('prerequisite-minigame').value);
+                const prereqDifficulty = parseInt(document.getElementById('prerequisite-difficulty').value);
+                const prereqScore = parseInt(document.getElementById('prerequisite-score').value);
+                
+                // Validation
+                if (isNaN(prereqMinigameId) || prereqMinigameId <= 0) {
+                    showNotification('Veuillez sélectionner un mini-jeu', 'error');
+                    return;
+                }
+                
+                if (isNaN(prereqScore) || prereqScore <= 0) {
+                    showNotification('Le score requis doit être un nombre positif', 'error');
+                    return;
+                }
+                
+                // Afficher le spinner
+                const prereqConfirmText = document.getElementById('prerequisite-confirm-text');
+                const prereqSpinner = document.getElementById('prerequisite-spinner');
+                prereqConfirmText.style.display = 'none';
+                prereqSpinner.style.display = 'inline-block';
+                
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Simuler l'ajout
+                // Note: Dans une implémentation réelle, vous feriez un appel API ici
+                
+                // Mettre à jour l'interface (recharger le contenu)
+                loadDifficultyContent(selectedDifficultyLevel);
+                
+                showNotification(`Prérequis ajouté avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de l'ajout: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner et fermer la modal
+                const prereqConfirmText = document.getElementById('prerequisite-confirm-text');
+                const prereqSpinner = document.getElementById('prerequisite-spinner');
+                prereqConfirmText.style.display = 'inline';
+                prereqSpinner.style.display = 'none';
+                
+                closeModal(addPrerequisiteModal);
+            }
+        }
+        
+        // Supprimer un prérequis
+        async function deletePrerequisite(minigameId, difficultyLevel) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer ce prérequis ?`)) {
+                return;
+            }
+            
+            try {
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Simuler la suppression
+                // Note: Dans une implémentation réelle, vous feriez un appel API ici
+                
+                // Mettre à jour l'interface (recharger le contenu)
+                loadDifficultyContent(selectedDifficultyLevel);
+                
+                showNotification(`Prérequis supprimé avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de la suppression: ${error.message}`, 'error');
+            }
+        }
+        
+        // Afficher la modal d'ajout de débloquage
+        function showAddUnlockModal() {
+            if (!selectedMinigameId || !selectedDifficultyLevel) return;
+            
+            // Remplir les options de mini-jeux (exclure le mini-jeu actuel)
+            const select = document.getElementById('unlock-minigame');
+            select.innerHTML = '<option value="">Sélectionnez un mini-jeu</option>';
+            
+            minigames.forEach(minigame => {
+                if (minigame.minigame_id !== selectedMinigameId) {
+                    const option = document.createElement('option');
+                    option.value = minigame.minigame_id;
+                    option.textContent = minigame.title;
+                    select.appendChild(option);
+                }
+            });
+            
+            // Réinitialiser les autres champs
+            document.getElementById('unlock-difficulty').value = '1';
+            document.getElementById('unlock-score').value = '100';
+            
+            addUnlockModal.classList.add('active');
+        }
+        
+        // Ajouter un nouveau débloquage
+        async function addNewUnlock() {
+            if (!selectedMinigameId || !selectedDifficultyLevel) {
+                closeModal(addUnlockModal);
+                return;
+            }
+            
+            try {
+                // Récupérer les valeurs
+                const unlockMinigameId = parseInt(document.getElementById('unlock-minigame').value);
+                const unlockDifficulty = parseInt(document.getElementById('unlock-difficulty').value);
+                const unlockScore = parseInt(document.getElementById('unlock-score').value);
+                
+                // Validation
+                if (isNaN(unlockMinigameId) || unlockMinigameId <= 0) {
+                    showNotification('Veuillez sélectionner un mini-jeu', 'error');
+                    return;
+                }
+                
+                if (isNaN(unlockScore) || unlockScore <= 0) {
+                    showNotification('Le score requis doit être un nombre positif', 'error');
+                    return;
+                }
+                
+                // Afficher le spinner
+                const unlockConfirmText = document.getElementById('unlock-confirm-text');
+                const unlockSpinner = document.getElementById('unlock-spinner');
+                unlockConfirmText.style.display = 'none';
+                unlockSpinner.style.display = 'inline-block';
+                
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // Simuler l'ajout
+                // Note: Dans une implémentation réelle, vous feriez un appel API ici
+                
+                // Mettre à jour l'interface (recharger le contenu)
+                loadDifficultyContent(selectedDifficultyLevel);
+                
+                showNotification(`Débloquage ajouté avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de l'ajout: ${error.message}`, 'error');
+            } finally {
+                // Masquer le spinner et fermer la modal
+                const unlockConfirmText = document.getElementById('unlock-confirm-text');
+                const unlockSpinner = document.getElementById('unlock-spinner');
+                unlockConfirmText.style.display = 'inline';
+                unlockSpinner.style.display = 'none';
+                
+                closeModal(addUnlockModal);
+            }
+        }
+        
+        // Supprimer un débloquage
+        async function deleteUnlock(minigameId, difficultyLevel) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer ce débloquage ?`)) {
+                return;
+            }
+            
+            try {
+                // Simuler un délai de traitement
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Simuler la suppression
+                // Note: Dans une implémentation réelle, vous feriez un appel API ici
+                
+                // Mettre à jour l'interface (recharger le contenu)
+                loadDifficultyContent(selectedDifficultyLevel);
+                
+                showNotification(`Débloquage supprimé avec succès`, 'success');
+                
+            } catch (error) {
+                showNotification(`Erreur lors de la suppression: ${error.message}`, 'error');
+            }
+        }
+        
+        // Fermer une modal
+        function closeModal(modal) {
+            modal.classList.remove('active');
+        }
+        
+        // Afficher une notification
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = 'notification';
+            notification.classList.add(type);
+            notification.classList.add('active');
+            
+            setTimeout(() => {
+                notification.classList.remove('active');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
