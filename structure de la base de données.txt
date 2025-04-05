@@ -66,6 +66,9 @@ CREATE TABLE public.users (
 	username varchar(255) NOT NULL,
 	"level" int4 DEFAULT 1 NULL,
 	"year" varchar(10) NULL,
+	"admin" bool DEFAULT false NULL,
+	teacher bool DEFAULT false NULL,
+	parent bool DEFAULT false NULL,
 	CONSTRAINT users_email_key UNIQUE (email),
 	CONSTRAINT users_pkey PRIMARY KEY (id),
 	CONSTRAINT users_username_key UNIQUE (username)
@@ -100,6 +103,7 @@ CREATE TABLE public.level_progress (
 	level_id int4 NOT NULL,
 	stars int4 DEFAULT 0 NULL,
 	completed_at timestamp DEFAULT CURRENT_TIMESTAMP NULL,
+	score int4 DEFAULT 0 NOT NULL,
 	CONSTRAINT level_progress_pkey PRIMARY KEY (user_id, level_id),
 	CONSTRAINT level_progress_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
@@ -170,6 +174,12 @@ CREATE INDEX idx_minigames_progress_user_id ON public.minigames_progress USING b
 
 -- Table Triggers
 
+create trigger trigger_unlock_minigames after
+insert
+    or
+update
+    of points on
+    public.minigames_progress for each row execute function unlock_minigames();
 create trigger trigger_update_player_stats after
 insert
     or
@@ -178,12 +188,6 @@ delete
 update
     on
     public.minigames_progress for each row execute function update_player_stats();
-create trigger trigger_unlock_minigames after
-insert
-    or
-update
-    of points on
-    public.minigames_progress for each row execute function unlock_minigames();
 
 
 -- public.minigames_requirements definition
@@ -204,6 +208,22 @@ CREATE TABLE public.minigames_requirements (
 );
 CREATE INDEX idx_minigames_requirements_minigame ON public.minigames_requirements USING btree (minigame_id, difficulty_level);
 CREATE INDEX idx_minigames_requirements_required ON public.minigames_requirements USING btree (minigame_id_required, difficulty_level_required);
+
+
+-- public.minigames_year definition
+
+-- Drop table
+
+-- DROP TABLE public.minigames_year;
+
+CREATE TABLE public.minigames_year (
+	"year" text NOT NULL,
+	minigame_id int4 NOT NULL,
+	difficulty_level int4 DEFAULT 1 NOT NULL,
+	CONSTRAINT minigames_year_pkey PRIMARY KEY (year, minigame_id, difficulty_level),
+	CONSTRAINT minigames_year_minigame_id_fkey FOREIGN KEY (minigame_id) REFERENCES public.minigames(minigame_id) ON DELETE CASCADE
+);
+CREATE INDEX idx_minigames_year_year ON public.minigames_year USING btree (year);
 
 
 -- public.player_energy definition
