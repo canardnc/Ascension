@@ -142,10 +142,12 @@ CREATE TABLE public.minigames (
 	category_id int4 NOT NULL,
 	title varchar(255) NOT NULL,
 	description text NULL,
+	difficulty_level int4 DEFAULT 1 NOT NULL,
 	CONSTRAINT minigames_pkey PRIMARY KEY (minigame_id),
 	CONSTRAINT minigames_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.stat_categories(id)
 );
 CREATE INDEX idx_minigames_category_id ON public.minigames USING btree (category_id);
+CREATE INDEX idx_minigames_difficulty_level ON public.minigames USING btree (difficulty_level);
 
 
 -- public.minigames_progress definition
