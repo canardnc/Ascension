@@ -261,4 +261,7 @@ func SetupRoutes(mux *http.ServeMux) {
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
 	})
+
+	// Configurer les routes d'administration des mini-jeux
+	SetupAdminMinigamesRoutes(mux)
 }
