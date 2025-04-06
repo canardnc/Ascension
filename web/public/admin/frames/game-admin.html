@@ -431,7 +431,33 @@
             font-size: 12px;
             margin-right: 5px;
         }
-        
+        /* Style personnalisé pour les menus déroulants */
+select {
+    background-color: rgba(47, 47, 77, 0.95);
+    color: #ffffff;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10'%3E%3Cpath fill='%23ffffff' d='M7 10L0 0h14z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px;
+}
+
+select:focus {
+    outline: none;
+    background-color: rgba(47, 47, 77, 1);
+}
+
+select option {
+    background-color: rgba(47, 47, 77, 0.95);
+    color: #ffffff;
+}
+
         /* Responsive */
         @media (max-width: 992px) {
             .form-row {
@@ -571,7 +597,7 @@
             <div class="tab-content" id="content-levels">
                 <div class="section-header">
                     <h2 class="section-title">Liste des niveaux</h2>
-                    <button class="btn btn-primary" onclick="showAddLevelModal()">
+                    <button class="btn btn-primary" onclick="openAddLevelModal()()">
                         <span class="btn-icon">+</span> Ajouter un niveau
                     </button>
                 </div>
@@ -691,27 +717,221 @@
             </div>
         </div>
     </div>
+
+    
     
     <!-- Add Level Modal -->
     <div class="modal-overlay" id="add-level-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Ajouter un nouveau niveau</h3>
-                <button class="modal-close" onclick="closeModal('add-level-modal')">&times;</button>
+                <button class="modal-close" id="level-modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
                     <label for="new-level-number">Numéro du niveau</label>
-                    <input type="number" id="new-level-number" min="1" step="1">
+                    <input type="number" id="new-level-number" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label for="new-level-monster">Monstre</label>
+                    <select id="new-level-monster">
+                        <!-- Options chargées dynamiquement depuis la liste des monstres -->
+                        <option value="">Chargement des monstres...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="new-level-monster-level">Niveau du monstre</label>
+                    <input type="number" id="new-level-monster-level" min="1" value="1">
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="new-level-coords-x">Position X</label>
+                        <input type="number" id="new-level-coords-x" value="0">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="new-level-coords-y">Position Y</label>
+                        <input type="number" id="new-level-coords-y" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="new-level-spawn-time">Temps d'apparition (en secondes)</label>
+                    <input type="number" id="new-level-spawn-time" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="new-level-amount">Quantité</label>
+                    <input type="number" id="new-level-amount" min="1" value="1">
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('add-level-modal')">Annuler</button>
-                <button class="btn btn-primary" onclick="addNewLevel()">Ajouter</button>
+                <button class="btn btn-secondary" id="level-modal-cancel">Annuler</button>
+                <button class="btn btn-primary" id="level-modal-confirm">
+                    <span id="level-confirm-text">Ajouter</span>
+                    <span id="level-spinner" class="loading-spinner" style="display: none;"></span>
+                </button>
             </div>
         </div>
     </div>
+    <script>
+        // Cette fonction devrait être appelée lors de l'ouverture du modal
+        // Fonction améliorée pour charger les monstres
+// Fonction pour charger les monstres dans le formulaire d'ajout de niveau
+function loadMonstersForLevelForm() {
+    const selectElement = document.getElementById('new-level-monster');
+    selectElement.innerHTML = ''; // Vider le select
     
+    // Utiliser la variable monsters existante qui a été remplie par loadMonsters()
+    if (monsters && monsters.length > 0) {
+        monsters.forEach(monster => {
+            const option = document.createElement('option');
+            option.value = monster.monster_id;
+            option.textContent = `${monster.monster_name}`;
+            selectElement.appendChild(option);
+        });
+        console.log(`${monsters.length} monstres chargés dans le formulaire`);
+    } else {
+        // Ajouter une option par défaut si pas de monstres
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Aucun monstre disponible';
+        selectElement.appendChild(option);
+    }
+}
+// Fonction pour ajouter un niveau
+        async function addLevel() {
+            // Récupérer les valeurs du formulaire
+            const levelNumber = parseInt(document.getElementById('new-level-number').value);
+            const monsterId = parseInt(document.getElementById('new-level-monster').value);
+            const monsterLevel = parseInt(document.getElementById('new-level-monster-level').value);
+            const coordsX = parseInt(document.getElementById('new-level-coords-x').value);
+            const coordsY = parseInt(document.getElementById('new-level-coords-y').value);
+            const spawnTime = parseInt(document.getElementById('new-level-spawn-time').value);
+            const amount = parseInt(document.getElementById('new-level-amount').value);
+            
+            // Valider les entrées
+            if (isNaN(levelNumber) || levelNumber <= 0) {
+                showNotification('Le numéro de niveau doit être un nombre positif', 'error');
+                return;
+            }
+            
+            if (isNaN(monsterId) || monsterId <= 0) {
+                showNotification('Veuillez sélectionner un monstre valide', 'error');
+                return;
+            }
+            
+            if (isNaN(monsterLevel) || monsterLevel <= 0) {
+                showNotification('Le niveau du monstre doit être un nombre positif', 'error');
+                return;
+            }
+            
+            if (isNaN(amount) || amount <= 0) {
+                showNotification('La quantité doit être un nombre positif', 'error');
+                return;
+            }
+            
+            // Afficher le spinner
+            document.getElementById('level-confirm-text').style.display = 'none';
+            document.getElementById('level-spinner').style.display = 'inline-block';
+            
+            try {
+                // D'abord, créer le niveau s'il n'existe pas déjà
+                // (Notez: Selon votre API, cela peut ne pas être nécessaire si addMonsterToLevel crée automatiquement le niveau)
+                await fetch('/api/game/levels', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({
+                        level: levelNumber
+                    })
+                });
+                
+                // Ensuite, ajouter le monstre au niveau
+                const response = await fetch(`/api/game/levels/${levelNumber}/monsters`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({
+                        level: levelNumber,
+                        monster_id: monsterId,
+                        monster_level: monsterLevel,
+                        coords_x: coordsX,
+                        coords_y: coordsY,
+                        spawn_time: spawnTime,
+                        amount: amount
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erreur lors de l\'ajout du monstre au niveau');
+                }
+                
+                // Fermer le modal et rafraîchir la liste des niveaux
+                closeModal('add-level-modal');
+                showNotification('Monstre ajouté au niveau avec succès', 'success');
+                
+                // Recharger la liste des niveaux si nécessaire
+                if (typeof loadLevels === 'function') {
+                    loadLevels();
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification(error.message || 'Erreur lors de l\'ajout du niveau', 'error');
+            } finally {
+                // Cacher le spinner et réafficher le texte
+                document.getElementById('level-confirm-text').style.display = 'inline-block';
+                document.getElementById('level-spinner').style.display = 'none';
+            }
+        }
+        
+        // Ajouter les écouteurs d'événements
+        document.getElementById('level-modal-confirm').addEventListener('click', addLevel);
+        document.getElementById('level-modal-cancel').addEventListener('click', () => closeModal('add-level-modal'));
+        document.getElementById('level-modal-close').addEventListener('click', () => closeModal('add-level-modal'));
+        
+        // Fonction pour ouvrir le modal
+        function openAddLevelModal() {
+    // Vérifier que les monstres sont chargés
+    if (!monsters || monsters.length === 0) {
+        showNotification('Chargement des monstres nécessaire avant d\'ajouter un niveau', 'warning');
+        // Charger les monstres si nécessaire
+        loadMonsters().then(() => {
+            // Une fois les monstres chargés, ouvrir le modal et remplir le select
+            document.getElementById('add-level-modal').classList.add('active');
+            loadMonstersForLevelForm();
+        });
+    } else {
+        // Les monstres sont déjà chargés, ouvrir le modal directement
+        document.getElementById('add-level-modal').classList.add('active');
+        loadMonstersForLevelForm();
+    }
+}
+        
+        // Fonction pour fermer le modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        // Fonction pour ouvrir le modal
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        // Fonction pour afficher une notification
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification ' + type;
+            notification.classList.add('active');
+            
+            setTimeout(() => {
+                notification.classList.remove('active');
+            }, 3000);
+        }
+        </script>
     <!-- Add Level Monster Modal -->
     <div class="modal-overlay" id="add-level-monster-modal">
         <div class="modal-content">
