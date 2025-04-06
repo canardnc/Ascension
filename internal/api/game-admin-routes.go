@@ -12,6 +12,18 @@ import (
 func SetupGameAdminRoutes(mux *http.ServeMux) {
 	// Routes pour la gestion des monstres
 
+	// Route pour la liste des monstres (sans slash à la fin)
+	mux.HandleFunc("/api/game/monsters", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			middleware.JWTAuth(handlers.GetMonsters)(w, r)
+		case http.MethodPost:
+			middleware.JWTAuth(handlers.CreateMonster)(w, r)
+		default:
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
 	mux.HandleFunc("/api/game/monsters/", func(w http.ResponseWriter, r *http.Request) {
 		// Extraire l'ID monster de l'URL
 		path := r.URL.Path
