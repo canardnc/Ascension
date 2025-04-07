@@ -32,6 +32,9 @@ func SetupRoutes(mux *http.ServeMux) {
 	jsDir := http.FileServer(http.Dir("./web/public/js"))
 	mux.Handle("/js/", http.StripPrefix("/js/", jsDir))
 
+	cssDir := http.FileServer(http.Dir("./web/public/css"))
+	mux.Handle("/css/", http.StripPrefix("/css/", cssDir))
+
 	iconsDir := http.FileServer(http.Dir("./web/public/icons"))
 	mux.Handle("/icons/", http.StripPrefix("/icons/", iconsDir))
 
@@ -70,6 +73,9 @@ func SetupRoutes(mux *http.ServeMux) {
 		http.ServeFile(w, r, "./web/public/manifest.json")
 	})
 
+	mux.HandleFunc("/stats.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web/public/stats.html")
+	})
 	// Configurer les routes d'administration du jeu
 	SetupGameAdminRoutes(mux)
 
