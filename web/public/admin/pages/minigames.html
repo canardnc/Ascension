@@ -231,7 +231,19 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+        /* Style pour les options dans les listes déroulantes */
+.form-group select option {
+    background-color: var(--card-bg); /* Fond sombre */
+    color: var(--text); /* Texte blanc */
+    padding: 8px;
+}
+
+/* Style pour garantir la visibilité dans Firefox et autres navigateurs */
+.form-group select {
+    color: var(--text);
+    background-color: rgba(47, 47, 77, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
         /* Détails du mini-jeu */
         .minigame-detail-section {
             display: none;

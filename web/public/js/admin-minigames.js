@@ -472,6 +472,88 @@ async function loadDifficultyContent(level) {
         `;
     }
 }
+function addNewPrerequisite() {
+    if (!selectedMinigameId || !selectedDifficultyLevel) {
+        closeModal(addPrerequisiteModal);
+        return;
+    }
+    
+    try {
+        // Récupérer les valeurs avec vérification
+        const minigameSelect = document.getElementById('prerequisite-minigame');
+        const difficultySelect = document.getElementById('prerequisite-difficulty');
+        const scoreInput = document.getElementById('prerequisite-score');
+        
+        if (!minigameSelect || !difficultySelect || !scoreInput) {
+            showNotification('Erreur: éléments du formulaire non trouvés', 'error');
+            return;
+        }
+        
+        const minigame_id = parseInt(minigameSelect.value);
+        const difficulty_level = parseInt(difficultySelect.value);
+        const score_required = parseInt(scoreInput.value);
+        
+        // Validation
+        if (isNaN(minigame_id) || minigame_id <= 0) {
+            showNotification('Veuillez sélectionner un mini-jeu', 'error');
+            return;
+        }
+        
+        if (isNaN(score_required) || score_required <= 0) {
+            showNotification('Le score requis doit être un nombre positif', 'error');
+            return;
+        }
+        
+        // Afficher le spinner
+        const prereqConfirmText = document.getElementById('prerequisite-confirm-text');
+        const prereqSpinner = document.getElementById('prerequisite-spinner');
+        
+        if (prereqConfirmText && prereqSpinner) {
+            prereqConfirmText.style.display = 'none';
+            prereqSpinner.style.display = 'inline-block';
+        }
+        
+        // Envoyer la requête
+        fetchWithAuth(`/api/admin/minigames/${selectedMinigameId}/difficulty/${selectedDifficultyLevel}/prerequisite`, {
+            method: 'POST',
+            body: JSON.stringify({
+                minigame_id,
+                difficulty_level,
+                score_required
+            })
+        }).then(response => {
+            if (!response) return;
+            
+            // Recharger le contenu du niveau
+            closeModal(addPrerequisiteModal);
+            loadDifficultyContent(selectedDifficultyLevel);
+            
+            showNotification(`Prérequis ajouté avec succès`, 'success');
+        }).catch(error => {
+            console.error('Erreur addNewPrerequisite:', error);
+            showNotification(`Erreur lors de l'ajout: ${error.message}`, 'error');
+        }).finally(() => {
+            // Masquer le spinner
+            if (prereqConfirmText && prereqSpinner) {
+                prereqConfirmText.style.display = 'inline';
+                prereqSpinner.style.display = 'none';
+            }
+        });
+        
+    } catch (error) {
+        console.error('Erreur addNewPrerequisite:', error);
+        showNotification(`Erreur lors de l'ajout: ${error.message}`, 'error');
+        
+        // Masquer le spinner en cas d'erreur
+        const prereqConfirmText = document.getElementById('prerequisite-confirm-text');
+        const prereqSpinner = document.getElementById('prerequisite-spinner');
+        
+        if (prereqConfirmText && prereqSpinner) {
+            prereqConfirmText.style.display = 'inline';
+            prereqSpinner.style.display = 'none';
+        }
+    }
+}
 
 // Afficher le contenu d'un niveau de difficulté
 function renderDifficultyContent(level, difficultyData) {
@@ -1070,17 +1152,22 @@ function showAddPrerequisiteModal() {
     fetchWithAuth('/api/admin/minigames?perPage=100').then(data => {
         if (!data || !data.minigames) return;
         
-        // Remplir les options de mini-jeux (exclure le mini-jeu actuel)
+        // Remplir les options de mini-jeux (INCLURE le mini-jeu actuel avec une mention spéciale)
         const select = document.getElementById('prerequisite-minigame');
         select.innerHTML = '<option value="">Sélectionnez un mini-jeu</option>';
         
         data.minigames.forEach(minigame => {
-            if (minigame.minigame_id !== selectedMinigameId) {
-                const option = document.createElement('option');
-                option.value = minigame.minigame_id;
+            const option = document.createElement('option');
+            option.value = minigame.minigame_id;
+            
+            // Ajouter une mention spéciale pour le mini-jeu actuel
+            if (minigame.minigame_id === selectedMinigameId) {
+                option.textContent = `${minigame.title || `Mini-jeu #${minigame.minigame_id}`} (mini-jeu actuel)`;
+            } else {
                 option.textContent = minigame.title || `Mini-jeu #${minigame.minigame_id}`;
-                select.appendChild(option);
             }
+            
+            select.appendChild(option);
         });
         
         // Réinitialiser les autres champs
@@ -1091,65 +1178,6 @@ function showAddPrerequisiteModal() {
     });
 }
 
-// Ajouter un nouveau prérequis
-async function addNewPrerequisite() {
-    if (!selectedMinigameId || !selectedDifficultyLevel) {
-        closeModal(addPrerequisiteModal);
-        return;
-    }
-    
-    try {
-        // Récupérer les valeurs
-        const minigame_id = parseInt(document.getElementById('prerequisite-minigame').value);
-        const difficulty_level = parseInt(document.getElementById('prerequisite-difficulty').value);
-        const score_required = parseInt(document.getElementById('prerequisite-score').value);
-        
-        // Validation
-        if (isNaN(minigame_id) || minigame_id <= 0) {
-            showNotification('Veuillez sélectionner un mini-jeu', 'error');
-            return;
-        }
-        
-        if (isNaN(score_required) || score_required <= 0) {
-            showNotification('Le score requis doit être un nombre positif', 'error');
-            return;
-        }
-        
-        // Afficher le spinner
-        const prereqConfirmText = document.getElementById('prerequisite-confirm-text');
-        const prereqSpinner = document.getElementById('prerequisite-spinner');
-        prereqConfirmText.style.display = 'none';
-        prereqSpinner.style.display = 'inline-block';
-        
-        // Envoyer la requête
-        const response = await fetchWithAuth(`/api/admin/minigames/${selectedMinigameId}/difficulty/${selectedDifficultyLevel}/prerequisite`, {
-            method: 'POST',
-            body: JSON.stringify({
-                minigame_id,
-                difficulty_level,
-                score_required
-            })
-        });
-        
-        if (!response) return;
-        
-        // Recharger le contenu du niveau
-        closeModal(addPrerequisiteModal);
-        loadDifficultyContent(selectedDifficultyLevel);
-        
-        showNotification(`Prérequis ajouté avec succès`, 'success');
-        
-    } catch (error) {
-        console.error('Erreur addNewPrerequisite:', error);
-        showNotification(`Erreur lors de l'ajout: ${error.message}`, 'error');
-    } finally {
-        // Masquer le spinner
-        const prereqConfirmText = document.getElementById('prerequisite-confirm-text');
-        const prereqSpinner = document.getElementById('prerequisite-spinner');
-        prereqConfirmText.style.display = 'inline';
-        prereqSpinner.style.display = 'none';
-    }
-}
 
 // Supprimer un prérequis
 async function deletePrerequisite(prereqMinigameId, prereqLevel) {
@@ -1226,8 +1254,36 @@ async function activateMinigameForUsers() {
 
 // Afficher la modal d'ajout de débloquage
 function showAddUnlockModal() {
-    // Fonctionnalité non implémentée
-    showNotification("Cette fonctionnalité sera disponible dans une prochaine mise à jour", "warning");
+    if (!selectedMinigameId || !selectedDifficultyLevel) return;
+    
+    // Récupérer la liste des mini-jeux pour le sélecteur
+    fetchWithAuth('/api/admin/minigames?perPage=100').then(data => {
+        if (!data || !data.minigames) return;
+        
+        // Remplir les options de mini-jeux (INCLURE le mini-jeu actuel avec une mention spéciale)
+        const select = document.getElementById('unlock-minigame');
+        select.innerHTML = '<option value="">Sélectionnez un mini-jeu</option>';
+        
+        data.minigames.forEach(minigame => {
+            const option = document.createElement('option');
+            option.value = minigame.minigame_id;
+            
+            // Ajouter une mention spéciale pour le mini-jeu actuel
+            if (minigame.minigame_id === selectedMinigameId) {
+                option.textContent = `${minigame.title || `Mini-jeu #${minigame.minigame_id}`} (mini-jeu actuel)`;
+            } else {
+                option.textContent = minigame.title || `Mini-jeu #${minigame.minigame_id}`;
+            }
+            
+            select.appendChild(option);
+        });
+        
+        // Réinitialiser les autres champs
+        document.getElementById('unlock-difficulty').value = '1';
+        document.getElementById('unlock-score').value = '100';
+        
+        addUnlockModal.classList.add('active');
+    });
 }
 
 // Ajouter un nouveau débloquage

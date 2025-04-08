@@ -1112,12 +1112,6 @@ func AddPrerequisite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Vérifier que le mini-jeu prérequis n'est pas le même que le mini-jeu cible
-	if request.MinigameID == minigameID {
-		middleware.RespondWithError(w, http.StatusBadRequest, "Un mini-jeu ne peut pas être son propre prérequis")
-		return
-	}
-
 	// Vérifier que le mini-jeu prérequis existe
 	var prereqExists bool
 	prereqExistsQuery := `
