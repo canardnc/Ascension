@@ -117,6 +117,15 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
+	// Route pour obtenir le statut d'un mini-jeu (disponibilité et coût en énergie)
+	mux.HandleFunc("/api/minigame/status", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			middleware.JWTAuth(handlers.GetMinigameStatus)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
 	mux.HandleFunc("/api/users/", func(w http.ResponseWriter, r *http.Request) {
 		// Extraire l'ID de l'URL
 		path := r.URL.Path

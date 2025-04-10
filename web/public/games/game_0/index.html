@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exemple de Mini-jeu</title>
+    <style>
+        .game-example {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: 'Comic Neue', 'Arial', sans-serif;
+        }
+        
+        .game-title {
+            font-size: 2.5rem;
+            color: #4a6ee0;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .timer-container {
+            margin: 2rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .timer-label {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+        
+        .timer-display {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #e07c4a;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .instructions {
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 80%;
+            margin: 2rem auto;
+            line-height: 1.6;
+        }
+        
+        .game-controls {
+            margin-top: 2rem;
+        }
+        
+        .game-button {
+            background-color: #4a6ee0;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 0.5rem;
+        }
+        
+        .game-button:hover {
+            background-color: #3a5ec0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .game-button:active {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-message {
+            font-size: 1.2rem;
+            color: #4ae07c;
+            margin-top: 1.5rem;
+            min-height: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-example">
+        <h1 class="game-title">Compte à Rebours</h1>
+        
+        <div class="instructions">
+            Ceci est un exemple de mini-jeu très simple. Lorsque vous cliquez sur "Démarrer", 
+            un compte à rebours de 10 secondes commence. À la fin du compte, le jeu terminera 
+            automatiquement et vous verrez l'écran de fin de jeu.
+        </div>
+        
+        <div class="timer-container">
+            <div class="timer-label">Temps restant :</div>
+            <div id="timer" class="timer-display">10</div>
+        </div>
+        
+        <div class="game-controls">
+            <button id="start-button" class="game-button">Démarrer</button>
+            <button id="reset-button" class="game-button" disabled>Réinitialiser</button>
+        </div>
+        
+        <div id="status-message" class="status-message"></div>
+    </div>
+</body>
+</html>

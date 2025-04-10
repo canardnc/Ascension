@@ -1,0 +1,287 @@
+/* Variables globales */
+:root {
+    --primary-color: #4a6ee0;
+    --secondary-color: #e07c4a;
+    --success-color: #4ae07c;
+    --error-color: #e04a4a;
+    --background-color: #f5f7ff;
+    --text-color: #333;
+    --text-light: #fff;
+    --border-radius: 15px;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    --transition: all 0.3s ease;
+}
+
+/* Reset et styles de base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Comic Neue', 'Arial', sans-serif;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+    color: var(--text-color);
+}
+
+/* Conteneur d'arrière-plan */
+#background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background-color: #333; /* Couleur par défaut en attendant l'image */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Conteneur principal du jeu */
+#game-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    background-color: rgba(255, 255, 255, 0.7); /* Transparence ajustée */
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    transition: var(--transition);
+}
+
+/* Conteneur du mini-jeu */
+#minigame-container {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    display: none; /* Masqué jusqu'à ce que les dialogues soient terminés */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+/* Conteneur du professeur */
+#teacher-container {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 80%;
+    z-index: 10;
+    transition: right 0.5s ease-out;
+}
+
+#teacher-container img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+}
+
+#teacher-container.active {
+    right: 0;
+}
+
+/* Bulle de dialogue */
+#dialogue-bubble {
+    position: absolute;
+    top: 30%;
+    right: 15%;
+    transform: translateY(-50%);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 50%;
+    min-height: 150px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 20;
+}
+
+#dialogue-bubble.active {
+    opacity: 1;
+}
+
+#dialogue-text {
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+#dialogue-continue {
+    font-size: 0.9rem;
+    color: #777;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Modal d'erreur */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.modal h2 {
+    color: var(--error-color);
+    margin-bottom: 15px;
+}
+
+.modal p {
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+}
+
+.game-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.game-button:hover {
+    transform: scale(1.1);
+}
+
+.game-button img {
+    width: 120px;
+    height: auto;
+}
+
+/* Overlay de chargement */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.5s ease;
+}
+
+#loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Utilitaires */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    #game-container {
+        width: 90%;
+        height: 90%;
+        padding: 15px;
+    }
+    
+    #teacher-container {
+        height: 60%;
+    }
+    
+    #dialogue-bubble {
+        width: 70%;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    #game-container {
+        width: 95%;
+        height: 95%;
+        padding: 10px;
+    }
+    
+    #teacher-container {
+        height: 50%;
+    }
+    
+    #dialogue-bubble {
+        width: 80%;
+        padding: 15px;
+        right: 10%;
+    }
+    
+    #dialogue-text {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #teacher-container {
+        height: 40%;
+    }
+    
+    #dialogue-bubble {
+        width: 90%;
+        min-height: 120px;
+        padding: 10px;
+    }
+}

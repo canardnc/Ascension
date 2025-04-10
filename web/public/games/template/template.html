@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini-jeu Ascension</title>
+    
+    <!-- Styles communs pour tous les mini-jeux -->
+    <link rel="stylesheet" href="/games/template/template.css">
+    
+    <!-- Polices -->
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Utilitaires d'authentification et mini-jeux -->
+    <script src="/js/auth-utils.js" defer></script>
+    <script src="/js/minigame-utils.js" defer></script>
+    
+    <!-- Script principal du template -->
+    <script src="/games/template/template.js" defer></script>
+    
+    <!-- Script de fin de jeu -->
+    <script src="/games/template/end-game.js" defer></script>
+</head>
+<body>
+    <!-- Conteneur pour l'image d'arrière-plan -->
+    <div id="background-container">
+        <!-- L'image de fond sera chargée dynamiquement par JavaScript -->
+    </div>
+    
+    <!-- Professeur/personnage (maintenant en dehors du conteneur de jeu) -->
+    <div id="teacher-container">
+        <!-- L'image du professeur sera chargée dynamiquement -->
+    </div>
+    
+    <!-- Modal d'erreur pour l'énergie ou disponibilité -->
+    <div id="error-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="error-title">Erreur</h2>
+            <p id="error-message"></p>
+            <div class="modal-buttons">
+                <button id="quit-button" class="game-button">
+                    <img src="/assets/images/quit.png" alt="Quitter">
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Conteneur principal du jeu -->
+    <div id="game-container">        
+        <!-- Bulle de dialogue -->
+        <div id="dialogue-bubble" class="hidden">
+            <div id="dialogue-text"></div>
+            <div id="dialogue-continue">(Cliquez pour continuer)</div>
+        </div>
+        
+        <!-- Conteneur pour le contenu du mini-jeu -->
+        <div id="minigame-container">
+            <!-- Le contenu du mini-jeu sera chargé ici dynamiquement -->
+        </div>
+    </div>
+
+    <!-- Overlay de chargement -->
+    <div id="loading-overlay">
+        <div class="loader"></div>
+        <p>Chargement en cours...</p>
+    </div>
+
+    <!-- Template pour les données du jeu qui sera rempli par JavaScript -->
+    <script id="game-data" type="application/json">
+        {
+            "gameId": 0,
+            "difficulty": 1,
+            "available": false,
+            "cost": 0,
+            "currentEnergy": 0
+        }
+    </script>
+</body>
+</html>
