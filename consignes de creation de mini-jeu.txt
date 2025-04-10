@@ -1,0 +1,124 @@
+﻿Structure indispensable pour la création d'un mini-jeu Ascension
+Ce guide détaille les éléments structurels essentiels pour intégrer correctement votre mini-jeu dans le système de template Ascension.
+1. Structure de dossiers et fichiers
+Pour chaque nouveau mini-jeu, créez un dossier respectant la convention suivante :
+/web/public/games/game_XX/        (où XX est l'identifiant numérique du jeu)
+Fichiers obligatoires :
+* index.html - Structure HTML de base du mini-jeu
+* script.js - Logique du jeu séparée du HTML
+2. Structure minimale du fichier HTML (index.html)
+html
+* <!DOCTYPE html>
+* <html lang="fr">
+* <head>
+*     <meta charset="UTF-8">
+*     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+*     <title>Titre du Mini-jeu</title>
+*     <style>
+*         /* Styles spécifiques à votre mini-jeu */
+*         /* Recommandation : utilisez des classes uniques pour éviter les conflits */
+*     </style>
+* </head>
+* <body>
+*     <div class="votre-conteneur-principal">
+*         <!-- Structure de votre jeu -->
+*         <!-- Veillez à utiliser des ID uniques pour les éléments à manipuler -->
+*         
+*         <!-- Exemple d'éléments courants : -->
+*         <div id="game-title">Titre du jeu</div>
+*         <div id="game-instructions">Instructions...</div>
+*         <div id="game-content">
+*             <!-- Contenu principal du jeu -->
+*         </div>
+*         <div id="game-controls">
+*             <!-- Contrôles (boutons, etc.) -->
+*         </div>
+*         <div id="game-status">
+*             <!-- Zone pour afficher le statut (score, temps, etc.) -->
+*         </div>
+*     </div>
+* </body>
+</html>
+IMPORTANT : Évitez d'inclure des balises <script> dans ce fichier. Tout le code JavaScript doit être placé dans le fichier script.js séparé.
+3. Structure obligatoire du fichier JavaScript (script.js)
+javascript
+* // Variables du jeu
+* // Déclarez ici toutes les variables globales dont votre jeu a besoin
+* * // Éléments DOM
+* // Déclarez (sans initialiser) les références aux éléments DOM
+* * // Fonction d'initialisation (OBLIGATOIRE)
+* function initGame() {
+*     // Cette fonction est appelée automatiquement par le template
+*     console.log('Initialisation du mini-jeu');
+*     
+*     // 1. Récupérer les références aux éléments DOM
+*     
+*     // 2. Configurer l'état initial du jeu
+*     
+*     // 3. Ajouter les écouteurs d'événements
+*     
+*     // 4. Initialiser d'autres composants si nécessaire
+* }
+* * // Fonction de démarrage du jeu (recommandée)
+* function startGame() {
+*     // Code pour démarrer le jeu
+* }
+* * // Fonction pour terminer le jeu (OBLIGATOIRE)
+* function endGameWithResults() {
+*     // 1. Arrêter les timers ou animations en cours
+*     
+*     // 2. Calculer le score final et le temps écoulé
+*     
+*     // 3. Appeler la fonction endGame du template
+*     window.GameEnd.endGame({
+*         score: votreScore,            // Score obtenu
+*         maxScore: scoreMaximum,       // Score maximum possible
+*         timeSpent: tempsEcoule        // Temps écoulé en secondes
+*     }, resetGame);
+* }
+* * // Fonction de réinitialisation du jeu (OBLIGATOIRE)
+* function resetGame() {
+*     // Code pour réinitialiser le jeu afin de pouvoir recommencer
+*     
+*     // Cette fonction sera utilisée par l'écran de fin de jeu
+*     // lorsque le joueur clique sur "Rejouer"
+* }
+* * // Autres fonctions spécifiques à votre jeu
+// ...
+4. Intégration avec le système de fin de jeu
+Pour que l'écran de fin s'affiche correctement, assurez-vous de :
+1. Calculer un score valide (nombre entier, >= 0)
+2. Déterminer un score maximum possible
+3. Mesurer précisément le temps écoulé (en secondes)
+4. Utiliser correctement la fonction window.GameEnd.endGame()
+Exemple de code pour mesurer le temps écoulé :
+javascript
+* let gameStartTime = Date.now(); // Au démarrage du jeu
+* * // À la fin :
+const tempsEcoule = Math.ceil((Date.now() - gameStartTime) / 1000);
+5. Communication avec le template
+Le template expose plusieurs objets et fonctions globales que vous pouvez utiliser :
+* window.GameEnd.endGame(gameData, resetFunction) - Pour terminer le jeu
+* window.GameTemplate.exitGame() - Pour quitter immédiatement
+* window.GameTemplate.gameState - Pour accéder aux données du jeu (ID, difficulté, etc.)
+Vous pouvez inspecter les données du jeu disponibles avec :
+javascript
+console.log('Données du jeu :', window.GameTemplate.gameState);
+6. Bonnes pratiques
+1. Isolation : Préfixez vos variables et fonctions pour éviter les conflits
+2. Débogage : Utilisez console.log() avec parcimonie pour faciliter le débogage
+3. Performance : Limitez les opérations coûteuses, nettoyez les écouteurs d'événements
+4. Accessibilité : Utilisez des contrastes suffisants et des textes lisibles
+5. Responsive : Assurez-vous que votre jeu s'adapte à différentes tailles d'écran
+6. Gestion des erreurs : Implémentez des try/catch pour les opérations critiques
+7. Exemple complet de cycle de vie d'un mini-jeu
+1. Le template charge l'environnement et vérifie l'énergie du joueur
+2. Si les conditions sont remplies, le template charge index.html et script.js
+3. Une fois chargé, le template appelle automatiquement initGame()
+4. Le joueur interagit avec le jeu
+5. À la fin du jeu, votre code appelle endGameWithResults()
+6. Le template affiche l'écran de fin avec le score et les étoiles
+7. Si le joueur clique sur "Rejouer", le template appelle votre fonction resetGame()
+8. Si le joueur clique sur "Quitter", le template redirige vers la page d'entraînement
+En suivant scrupuleusement cette structure, vous garantirez une intégration fluide de votre mini-jeu dans l'écosystème Ascension.
+*

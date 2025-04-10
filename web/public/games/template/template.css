@@ -60,7 +60,17 @@ body {
     align-items: center;
     padding: 20px;
     transition: var(--transition);
+    /* Nouvelles propriétés pour l'animation */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.8s ease, visibility 0.8s ease;
 }
+/* Classe pour afficher le conteneur */
+#game-container.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
 
 /* Conteneur du mini-jeu */
 #minigame-container {
@@ -96,16 +106,22 @@ body {
     right: 0;
 }
 
+/* Nouveau style pour le professeur miniaturisé */
+#teacher-container.minimized {
+    height: 40%; /* Hauteur réduite de moitié */
+    top: auto; /* Annuler le positionnement vertical du centre */
+    bottom: 20px; /* Positionné en bas */
+    right: 20px; /* Un peu d'espace à droite */
+    transform: none; /* Annuler la transformation précédente */
+}
+
 /* Bulle de dialogue */
 #dialogue-bubble {
-    position: absolute;
-    top: 30%;
-    right: 15%;
-    transform: translateY(-50%);
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    width: 50%;
+    position: fixed;
+    top: 40%; /* Position verticale un peu plus haute */
+    left: 50%; /* Position horizontale au centre */
+    transform: translate(-50%, -50%); /* Centrage parfait */
+    width: 60%; /* Légèrement plus large */
     min-height: 150px;
     padding: 30px;
     display: flex;
@@ -113,18 +129,38 @@ body {
     justify-content: center;
     align-items: center;
     opacity: 0;
-    transition: opacity 0.5s ease;
-    z-index: 20;
+    transition: opacity 0.5s ease, height 0.3s ease;
+    z-index: 50;
+    pointer-events: auto;
 }
 
 #dialogue-bubble.active {
     opacity: 1;
 }
 
+#dialogue-bubble.hidden {
+    display: none;
+}
+
+/* Styles pour le SVG */
+.dialogue-bubble-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.2));
+}
+
 #dialogue-text {
     font-size: 1.2rem;
     text-align: center;
     margin-bottom: 15px;
+    z-index: 1;
+    padding: 0 10px;
+    width: 100%;
+    word-wrap: break-word;
 }
 
 #dialogue-continue {
@@ -132,6 +168,7 @@ body {
     color: #777;
     text-align: center;
     font-style: italic;
+    z-index: 1;
 }
 
 /* Modal d'erreur */

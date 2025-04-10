@@ -37,6 +37,11 @@ const GameState = {
     // Chemin de base pour les ressources du jeu
     get gamePath() {
         return `${TemplateConfig.baseUrl}game_${this.gameId}/`;
+    },
+    
+    // NOUVEAU: Chemin spécifique à la difficulté
+    get difficultyPath() {
+        return `${this.gamePath}difficulty_${this.difficulty}/`;
     }
 };
 
@@ -63,6 +68,54 @@ const DOM = {
     // Template de données
     gameData: document.getElementById('game-data')
 };
+
+/**
+ * Vérifie si une ressource existe et renvoie son chemin
+ * @param {string} basePath - Chemin de base à vérifier d'abord
+ * @param {string} difficultyPath - Chemin spécifique à la difficulté à vérifier ensuite
+ * @param {string} filename - Nom du fichier à vérifier
+ * @returns {Promise<string|null>} - Chemin de la ressource trouvée ou null
+ */
+async function getResourcePath(basePath, difficultyPath, filename) {
+    // D'abord essayer dans le répertoire de difficulté
+    try {
+        const difficultyUrl = `${difficultyPath}${filename}`;
+        const response = await fetch(difficultyUrl, { method: 'HEAD' });
+        if (response.ok) {
+            console.log(`Ressource trouvée dans le répertoire de difficulté: ${difficultyUrl}`);
+            return difficultyUrl;
+        }
+    } catch (error) {
+        console.log(`Ressource non trouvée dans le répertoire de difficulté: ${difficultyPath}${filename}`);
+    }
+    
+    // Ensuite essayer dans le répertoire de base
+    try {
+        const baseUrl = `${basePath}${filename}`;
+        const response = await fetch(baseUrl, { method: 'HEAD' });
+        if (response.ok) {
+            console.log(`Ressource trouvée dans le répertoire de base: ${baseUrl}`);
+            return baseUrl;
+        }
+    } catch (error) {
+        console.log(`Ressource non trouvée dans le répertoire de base: ${basePath}${filename}`);
+    }
+    
+    // Si rien n'est trouvé
+    console.log(`Ressource non trouvée: ${filename}`);
+    return null;
+}
+
+function showGameContainerAndLoad() {
+    // Rendre le conteneur visible avec animation
+    DOM.gameContainer.classList.add('visible');
+    
+    // Attendre la fin de l'animation du conteneur (800ms définie dans le CSS)
+    setTimeout(() => {
+        console.log('Conteneur de jeu visible, chargement du mini-jeu');
+        loadMinigame();
+    }, 800);
+}
 
 /**
  * Fonction d'initialisation principale
@@ -101,7 +154,10 @@ async function initTemplate() {
         // 5. Charger les ressources du jeu (teacher, dialogues)
         await loadGameResources();
         
-        // 6. Démarrer la séquence de dialogue si disponible
+        // 6. S'assurer que le conteneur de jeu est masqué au départ
+DOM.gameContainer.classList.remove('visible');
+
+        // 7. Démarrer la séquence de dialogue si disponible
         if (GameState.dialogueTexts.length > 0) {
             startDialogueSequence();
         } else {
@@ -109,7 +165,7 @@ async function initTemplate() {
             loadMinigame();
         }
         
-        // 7. Masquer l'écran de chargement
+        // 8. Masquer l'écran de chargement
         hideLoadingScreen();
         
     } catch (error) {
@@ -162,17 +218,21 @@ async function checkGameAvailability() {
 }
 
 /**
- * Charge l'arrière-plan spécifique au jeu
+ * Charge l'arrière-plan spécifique au jeu / difficulté
  */
 async function loadBackground() {
     try {
-        // Vérifier si le jeu a un arrière-plan personnalisé
-        const backgroundExists = await resourceExists(`${GameState.gamePath}background.webp`);
+        // Essayer de trouver l'arrière-plan dans le répertoire de difficulté ou de base
+        const backgroundUrl = await getResourcePath(
+            GameState.gamePath,
+            GameState.difficultyPath,
+            'background.webp'
+        );
         
-        if (backgroundExists) {
-            // Charger l'arrière-plan spécifique au jeu
-            DOM.backgroundContainer.style.backgroundImage = `url('${GameState.gamePath}background.webp')`;
-            console.log(`Arrière-plan spécifique chargé: ${GameState.gamePath}background.webp`);
+        if (backgroundUrl) {
+            // Charger l'arrière-plan spécifique trouvé
+            DOM.backgroundContainer.style.backgroundImage = `url('${backgroundUrl}')`;
+            console.log(`Arrière-plan chargé: ${backgroundUrl}`);
         } else {
             // Utiliser un arrière-plan par défaut
             DOM.backgroundContainer.style.backgroundImage = 'url("/assets/images/background/default.jpg")';
@@ -193,12 +253,17 @@ async function loadGameResources() {
         
         // Essayer de charger l'image du personnage/professeur
         try {
-            const teacherExists = await resourceExists(`${GameState.gamePath}teacher.webp`);
+            // Vérifier dans le répertoire de difficulté puis dans le répertoire de base
+            const teacherUrl = await getResourcePath(
+                GameState.gamePath,
+                GameState.difficultyPath,
+                'teacher.webp'
+            );
             
-            if (teacherExists) {
+            if (teacherUrl) {
                 // Créer l'élément d'image
                 const teacherImage = document.createElement('img');
-                teacherImage.src = `${GameState.gamePath}teacher.webp`;
+                teacherImage.src = teacherUrl;
                 teacherImage.alt = 'Professeur';
                 
                 // Ajouter au conteneur et afficher
@@ -234,10 +299,41 @@ async function loadDialogueTexts() {
     
     while (continueLoading) {
         try {
-            const textExists = await resourceExists(`${GameState.gamePath}text_${index}.txt`);
+            // Construction des chemins possibles
+            const baseTextPath = `${GameState.gamePath}text_${index}.txt`;
+            const difficultyTextPath = `${GameState.difficultyPath}text_${index}.txt`;
+            
+            // Essayer d'abord le chemin de difficulté
+            let textExists = false;
+            let textPath = '';
+            
+            try {
+                const response = await fetch(difficultyTextPath, { method: 'HEAD' });
+                if (response.ok) {
+                    textExists = true;
+                    textPath = difficultyTextPath;
+                    console.log(`Texte trouvé dans le répertoire de difficulté: text_${index}.txt`);
+                }
+            } catch (e) {
+                // Ignorer l'erreur et essayer le chemin de base
+            }
+            
+            // Si pas trouvé dans le répertoire de difficulté, essayer le répertoire de base
+            if (!textExists) {
+                try {
+                    const response = await fetch(baseTextPath, { method: 'HEAD' });
+                    if (response.ok) {
+                        textExists = true;
+                        textPath = baseTextPath;
+                        console.log(`Texte trouvé dans le répertoire de base: text_${index}.txt`);
+                    }
+                } catch (e) {
+                    // Ignorer l'erreur, le texte n'existe pas
+                }
+            }
             
             if (textExists) {
-                const response = await fetch(`${GameState.gamePath}text_${index}.txt`);
+                const response = await fetch(textPath);
                 const text = await response.text();
                 texts.push(text);
                 index++;
@@ -260,8 +356,8 @@ function startDialogueSequence() {
     GameState.dialogueIndex = 0;
     GameState.isDialogueActive = true;
     
-    // Charger l'image de bulle de texte
-    loadTextBubbleImage();
+    // Remplacer loadTextBubbleImage() par createSvgBubble()
+    createSvgBubble();
     
     showNextDialogue();
     
@@ -269,29 +365,56 @@ function startDialogueSequence() {
     document.addEventListener('click', handleDialogueClick);
 }
 
-/**
- * Charge l'image de la bulle de texte
- */
-async function loadTextBubbleImage() {
-    try {
-        const textBubbleExists = await resourceExists(`${GameState.gamePath}text.webp`);
-        
-        if (textBubbleExists) {
-            // Créer l'élément d'image de bulle de texte
-            DOM.dialogueBubble.style.backgroundImage = `url('${GameState.gamePath}text.webp')`;
-            console.log('Image de bulle de texte chargée');
-        } else {
-            // Utiliser l'image par défaut
-            console.log('Utilisation de l\'image de bulle par défaut');
-        }
-    } catch (error) {
-        console.error('Erreur lors du chargement de l\'image de bulle:', error);
+// Fonction pour créer la bulle SVG
+function createSvgBubble() {
+    // Supprimer toute bulle existante d'abord
+    const existingBubbleSvg = DOM.dialogueBubble.querySelector('svg');
+    if (existingBubbleSvg) {
+        existingBubbleSvg.remove();
     }
+    
+    // Supprimer l'image de fond s'il y en a une
+    DOM.dialogueBubble.style.backgroundImage = 'none';
+    
+    // Créer l'élément SVG
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute('class', 'dialogue-bubble-svg');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('viewBox', '0 0 100 100');
+    
+    // Créer le path pour la bulle avec des coins très arrondis
+    // mais conservant une pointe angulaire
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute('d', 'M 15,5 H 85 Q 100,5 100,20 V 65 Q 100,80 85,80 H 80 L 85,95 L 70,80 H 15 Q 0,80 0,65 V 20 Q 0,5 15,5 Z');
+    path.setAttribute('fill', 'rgba(255, 255, 255, 0.9)');
+    path.setAttribute('stroke', '#4a6ee0');
+    path.setAttribute('stroke-width', '2');
+    
+    // Ajouter le path au SVG
+    svg.appendChild(path);
+    
+    // Ajouter le SVG à la bulle de dialogue
+    DOM.dialogueBubble.prepend(svg);
 }
 
-/**
- * Affiche le dialogue suivant dans la séquence
- */
+// Fonction pour ajuster la taille de la bulle au contenu
+function adjustBubbleSize() {
+    // Calculer la hauteur nécessaire pour le contenu
+    const textHeight = DOM.dialogueText.scrollHeight;
+    const continueHeight = DOM.dialogueContinue.scrollHeight;
+    const contentHeight = textHeight + continueHeight + 40; // 40px pour le padding
+    
+    // Définir la hauteur minimale (150px par défaut)
+    const minHeight = 150;
+    const height = Math.max(minHeight, contentHeight);
+    
+    // Appliquer la hauteur à la bulle
+    DOM.dialogueBubble.style.height = `${height}px`;
+}
+
+// Fonction modifiée pour afficher le dialogue suivant
 function showNextDialogue() {
     if (GameState.dialogueIndex >= GameState.dialogueTexts.length) {
         endDialogueSequence();
@@ -300,8 +423,21 @@ function showNextDialogue() {
     
     const text = GameState.dialogueTexts[GameState.dialogueIndex];
     DOM.dialogueText.textContent = text;
+    
+    // Créer la bulle SVG
+    createSvgBubble();
+    
+    // Afficher la bulle
     DOM.dialogueBubble.classList.remove('hidden');
-    DOM.dialogueBubble.classList.add('active');
+    
+    // Laisser le DOM se mettre à jour
+    setTimeout(() => {
+        // Ajuster la taille de la bulle au contenu
+        adjustBubbleSize();
+        
+        // Après ajustement, rendre la bulle visible avec animation
+        DOM.dialogueBubble.classList.add('active');
+    }, 10);
 }
 
 /**
@@ -335,8 +471,29 @@ function endDialogueSequence() {
     // Supprimer l'écouteur d'événement
     document.removeEventListener('click', handleDialogueClick);
     
-    // Charger le mini-jeu
-    loadMinigame();
+    // Au lieu de charger directement le mini-jeu, on effectue la transition du professeur
+    transitionTeacherAndLoadGame();
+}
+
+function transitionTeacherAndLoadGame() {
+    console.log('Transition du professeur avant chargement du jeu...');
+    
+    // Vérifier si l'élément du professeur existe
+    const hasTeacher = DOM.teacherContainer && DOM.teacherContainer.querySelector('img');
+    
+    if (hasTeacher) {
+        // Ajouter la classe pour minimiser le professeur avec animation
+        DOM.teacherContainer.classList.add('minimized');
+        
+        // Attendre la fin de la transition du professeur (800ms définie dans le CSS)
+        setTimeout(() => {
+            console.log('Transition du professeur terminée, affichage du conteneur de jeu');
+            showGameContainerAndLoad();
+        }, 800);
+    } else {
+        // Pas de professeur, passer directement à l'affichage du conteneur
+        showGameContainerAndLoad();
+    }
 }
 
 /**
@@ -346,9 +503,28 @@ async function loadMinigame() {
     try {
         console.log('Chargement du mini-jeu...');
         
-        // Charger le contenu HTML du mini-jeu
-        const response = await fetch(`${GameState.gamePath}index.html`);
-        const html = await response.text();
+        // Essayer d'abord de charger le mini-jeu depuis le répertoire de difficulté
+        let response;
+        let html;
+        let fromDifficultyFolder = false;
+        
+        try {
+            response = await fetch(`${GameState.difficultyPath}index.html`);
+            if (response.ok) {
+                html = await response.text();
+                fromDifficultyFolder = true;
+                console.log(`Mini-jeu chargé depuis le répertoire de difficulté: ${GameState.difficultyPath}index.html`);
+            }
+        } catch (error) {
+            console.log('Mini-jeu non trouvé dans le répertoire de difficulté, tentative dans le répertoire de base...');
+        }
+        
+        // Si pas trouvé dans le répertoire de difficulté, essayer le répertoire de base
+        if (!fromDifficultyFolder) {
+            response = await fetch(`${GameState.gamePath}index.html`);
+            html = await response.text();
+            console.log(`Mini-jeu chargé depuis le répertoire de base: ${GameState.gamePath}index.html`);
+        }
         
         // Injecter le HTML dans le conteneur
         DOM.minigameContainer.innerHTML = html;
@@ -362,13 +538,57 @@ async function loadMinigame() {
         
         console.log('Mini-jeu chargé avec succès');
         
-        // Lancer tout script d'initialisation spécifique au mini-jeu
-        if (typeof initGame === 'function') {
-            initGame();
-        }
+        // Charger le script JavaScript approprié
+        await loadGameScript(fromDifficultyFolder);
+        
     } catch (error) {
         console.error('Erreur lors du chargement du mini-jeu:', error);
         showError('Erreur', 'Impossible de charger le contenu du mini-jeu');
+    }
+}
+
+/**
+ * Charge le script JavaScript du mini-jeu
+ * @param {boolean} fromDifficultyFolder - Indique si le HTML provient du dossier de difficulté
+ */
+async function loadGameScript(fromDifficultyFolder) {
+    try {
+        // Chemin du script basé sur le dossier d'où provient le HTML
+        const scriptPath = fromDifficultyFolder 
+            ? `${GameState.difficultyPath}script.js` 
+            : `${GameState.gamePath}script.js`;
+        
+        console.log(`Chargement du script: ${scriptPath}`);
+        
+        // Créer un élément script
+        const script = document.createElement('script');
+        script.src = scriptPath;
+        
+        // Promesse pour attendre le chargement du script
+        const scriptLoaded = new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+        });
+        
+        // Ajouter le script au document
+        document.body.appendChild(script);
+        
+        // Attendre le chargement
+        await scriptLoaded;
+        
+        console.log('Script chargé avec succès');
+        
+        // Appeler la fonction d'initialisation du jeu si elle existe
+        if (typeof initGame === 'function') {
+            console.log('Initialisation du jeu...');
+            initGame();
+        } else {
+            console.warn("Fonction initGame non trouvée dans le script du jeu");
+        }
+        
+    } catch (error) {
+        console.error('Erreur lors du chargement du script du jeu:', error);
+        showError('Erreur', 'Impossible de charger le script du mini-jeu');
     }
 }
 
