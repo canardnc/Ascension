@@ -635,15 +635,9 @@
         
         // Lancer un mini-jeu
         function launchMinigame(minigameId, difficultyLevel) {
-            // Obtenir le type de catégorie actuel
-            const categoryType = getTrainingType();
-            
-            // Convertir le type de catégorie en ID pour le mini-jeu
-            const categoryId = getCategoryIdByType(categoryType);
-            
-            // Rediriger vers le mini-jeu avec tous les paramètres nécessaires
-            window.location.href = `/games/game_${minigameId}/index.html?difficulty=${difficultyLevel}&category=${categoryType}&categoryId=${categoryId}`;
-        }
+    // Rediriger vers le template avec les paramètres demandés
+    window.location.href = `/games/template/template.html?game_id=${minigameId}&difficulty=${difficultyLevel}`;
+}
         
         // Vérifier s'il y a des résultats récents à animer
         function checkForRecentResults() {

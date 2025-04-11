@@ -108,7 +108,7 @@ body {
 
 /* Nouveau style pour le professeur miniaturisé */
 #teacher-container.minimized {
-    height: 40%; /* Hauteur réduite de moitié */
+    height: 30%; /* Hauteur réduite */
     top: auto; /* Annuler le positionnement vertical du centre */
     bottom: 20px; /* Positionné en bas */
     right: 20px; /* Un peu d'espace à droite */
