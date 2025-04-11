@@ -351,6 +351,7 @@ function checkAnswer(userAnswer, correctAnswer) {
         
         // Ajouter des points
         score += pointsPerCorrectAnswer;
+        updatetopbar_score(score);
     } else {
         // Marquer la réponse comme incorrecte
         const marker = document.createElement('div');
@@ -365,6 +366,7 @@ function checkAnswer(userAnswer, correctAnswer) {
         
         // Soustraire des points (sans passer en négatif)
         score = Math.max(0, score - 10);
+        updatetopbar_score(score);
     }
     
     // Désactiver les clics sur les réponses

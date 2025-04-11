@@ -47,6 +47,11 @@ const GameState = {
 
 // Éléments DOM
 const DOM = {
+    //Barre du haut 
+    gameTopBar: document.getElementById('game-top-bar'),
+    gameTitle: document.getElementById('game-title'),
+    backButton: document.getElementById('back-button'),
+    currenttopbar_score: document.getElementById('current-topbar_score'),
     // Conteneurs principaux
     backgroundContainer: document.getElementById('background-container'),
     gameContainer: document.getElementById('game-container'),
@@ -68,6 +73,65 @@ const DOM = {
     // Template de données
     gameData: document.getElementById('game-data')
 };
+
+/**
+ * Récupère et définit le titre du mini-jeu
+ */
+async function loadGameTopBar() {
+    try {
+        // Essayez d'abord de récupérer les métadonnées du jeu via l'API
+        const response = await fetchWithAuth(`${TemplateConfig.apiUrl}minigame/metadata?id=${GameState.gameId}`);
+        
+        if (response && response.title) {
+            // Définir le titre à partir des métadonnées de l'API
+            DOM.gameTitle.textContent = response.title;
+        } else {
+            // Si pas de titre depuis l'API, utiliser un titre générique
+            DOM.gameTitle.textContent = `Mini-jeu #${GameState.gameId}`;
+        }
+        
+        // Réinitialiser le topbar_score à 0
+        updatetopbar_score(0);
+        
+        // Configurer le bouton retour
+        DOM.backButton.addEventListener('click', exitGame);
+        
+        // Afficher la barre supérieure
+        DOM.gameTopBar.classList.add('visible');
+
+        
+
+        
+    } catch (error) {
+        console.error('Erreur lors du chargement du titre du jeu:', error);
+        // Utiliser un titre par défaut en cas d'erreur
+        DOM.gameTitle.textContent = `Mini-jeu #${GameState.gameId}`;
+        DOM.gameTopBar.classList.add('visible');
+    }
+}
+
+/**
+ * Met à jour l'affichage du topbar_score
+ * @param {number} topbar_score - Nouveau topbar_score à afficher
+ */
+function updatetopbar_score(topbar_score) {
+    // Vérifier que le topbar_score est un nombre
+    if (typeof topbar_score !== 'number') {
+        topbar_score = parseInt(topbar_score) || 0;
+    }
+    
+    // Mettre à jour l'affichage
+    DOM.currenttopbar_score.textContent = topbar_score;
+    
+    // Animer le changement
+    DOM.currenttopbar_score.classList.add('topbar_score-update');
+    
+    // Supprimer la classe d'animation après l'effet
+    setTimeout(() => {
+        DOM.currenttopbar_score.classList.remove('topbar_score-update');
+    }, 500);
+}
+
 
 /**
  * Vérifie si une ressource existe et renvoie son chemin
@@ -115,6 +179,7 @@ function showGameContainerAndLoad() {
         console.log('Conteneur de jeu visible, chargement du mini-jeu');
         loadMinigame();
     }, 800);
+    
 }
 
 /**
@@ -148,8 +213,10 @@ async function initTemplate() {
             return;
         }
         
-        // 4. Charger l'arrière-plan du jeu
+        // 4. Charger l'arrière-plan du jeu et la barre du haut
         await loadBackground();
+        await loadGameTopBar();
+
         
         // 5. Charger les ressources du jeu (teacher, dialogues)
         await loadGameResources();
@@ -679,7 +746,7 @@ function checkAuth() {
  */
 function exitGame() {
     // Rediriger vers la page d'entraînement (force par défaut)
-    window.location.href = `/training.html?type=strength`;
+    window.location.href = `/training.html`;
 }
 
 // Écouteurs d'événements
