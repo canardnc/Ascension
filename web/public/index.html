@@ -3,376 +3,797 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ascension</title>
+    <title>Ascension - Connexion</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#4CAF50">
+    <meta name="theme-color" content="#6542fe">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            background-color: #f0f0f0;
-            color: #333;
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        :root {
+            --primary-color: #6542fe;
+            --primary-dark: #5035d0;
+            --secondary-color: #ff6b6b;
+            --accent-color: #4ecdc4;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+            --text-light: #f8f9fa;
         }
-        .container { 
-            max-width: 800px; 
-            margin: 0 auto; 
-            padding: 20px; 
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            color: #3f51b5;
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
-        .login-container { 
-            text-align: center; 
-            margin-top: 50px;
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .welcome-box { 
-            background-color: white; 
-            padding: 30px; 
-            border-radius: 10px; 
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        .game-button { 
-            background-color: #3f51b5; 
-            padding: 15px 30px; 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            font-size: 16px; 
-            cursor: pointer; 
-            transition: background-color 0.3s;
-            margin-top: 15px;
-        }
-        .game-button:hover {
-            background-color: #303f9f;
-        }
-        .input-field {
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 250px;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-        .select-field {
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 250px;
-            margin-bottom: 15px;
-            background-color: white;
-        }
-        .input-group {
-            margin-bottom: 15px;
-        }
-        .label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            text-align: left;
-            padding-left: 20%;
-        }
-        .stats {
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
             display: flex;
-            justify-content: space-around;
+            flex-direction: column;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 480px;
+            overflow: hidden;
+            position: relative;
             margin: 20px 0;
         }
-        .stat-box {
+        
+        .auth-header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+        }
+        
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            width: 180px;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+        }
+        
+        .tagline {
+            font-size: 1.1rem;
+            margin-top: 10px;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: #f1f1f1;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab {
+            flex: 1;
             text-align: center;
             padding: 15px;
-            background-color: #e8eaf6;
-            border-radius: 5px;
-            width: 30%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 700;
+            color: var(--primary-dark);
+            position: relative;
+            overflow: hidden;
         }
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #3f51b5;
+        
+        .tab.active {
+            background-color: white;
+            color: var(--primary-color);
         }
-        #onboarding-area, #game-area, #loading-area {
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+        
+        .auth-body {
+            padding: 30px;
+        }
+        
+        .form-container {
             display: none;
         }
-        .loading-spinner {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3f51b5;
+        
+        .form-container.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .form-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(101, 66, 254, 0.2);
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+            cursor: pointer;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(101, 66, 254, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            margin-top: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(101, 66, 254, 0.1);
+            box-shadow: none;
+        }
+        
+        .form-footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #777;
+        }
+        
+        .form-link {
+            color: var(--primary-color);
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .form-link:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: var(--error-color);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .success-message {
+            color: var(--success-color);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+            display: none;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-loading .loader {
+            display: inline-block;
+        }
+        
+        /* Background animation */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .shape {
+            position: absolute;
+            background-color: rgba(101, 66, 254, 0.1);
+            border-radius: 50%;
+        }
+        
+        .shape-1 {
+            width: 600px;
+            height: 600px;
+            top: -200px;
+            right: -100px;
+            animation: float 20s infinite alternate;
+        }
+        
+        .shape-2 {
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            left: -100px;
+            animation: float 15s infinite alternate-reverse;
+        }
+        
+        .shape-3 {
+            width: 300px;
+            height: 300px;
+            top: 40%;
+            right: -50px;
+            animation: float 18s infinite alternate;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, 30px) rotate(10deg); }
+            100% { transform: translate(-30px, 15px) rotate(-10deg); }
+        }
+        
+        .hero-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(101, 66, 254, 0.2);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: #555;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 640px) {
+            .auth-card {
+                box-shadow: none;
+                background: transparent;
+            }
+            
+            .auth-body {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+                margin-top: 15px;
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Loading screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+        
+        .loading-logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
             width: 50px;
             height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 30px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .error-message {
-            color: #e74c3c;
-            margin-top: 10px;
-            display: none;
+            border: 5px solid rgba(101, 66, 254, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
         }
     </style>
 </head>
 <body>
+    <!-- Écran de chargement -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-logo">ASCENSION</div>
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Animation de fond -->
+    <div class="background-animation">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+    
     <div class="container">
-        <div class="header">
-            <h1>Ascension</h1>
-            <p>La quête du savoir commence ici</p>
-        </div>
-        
-        <div id="login-area" class="login-container">
-            <h2>Commencer l'aventure</h2>
-            <p>Entrez votre pseudo pour rejoindre le monde d'Ascension</p>
-            <div>
-                <input type="text" id="username" class="input-field" placeholder="Votre pseudo">
-                <button class="game-button" onclick="login()">Jouer</button>
+        <div class="hero-section">
+            <div class="logo-container">
+                <img src="/assets/images/logo.webp" alt="Ascension Logo" class="logo">
             </div>
-            <div id="login-error" class="error-message">Erreur de connexion. Veuillez réessayer.</div>
+            <h1 class="hero-title">ASCENSION</h1>
+            <p class="hero-subtitle">Rejoignez l'aventure pédagogique et progressez à travers des mini-jeux ludiques adaptés à votre niveau.</p>
         </div>
         
-        <div id="loading-area" class="login-container">
-            <h2>Chargement en cours...</h2>
-            <div class="loading-spinner"></div>
-        </div>
-        
-        <div id="onboarding-area" class="login-container">
-            <h2>Bienvenue dans l'aventure !</h2>
-            
-            <div class="input-group">
-                <label class="label" for="hero-name">Comment s'appelle votre héros ?</label>
-                <input type="text" id="hero-name" class="input-field" placeholder="Nom du héros">
+        <div class="auth-card">
+            <div class="tabs">
+                <div class="tab active" data-tab="login">Connexion</div>
+                <div class="tab" data-tab="register">Inscription</div>
             </div>
             
-            <div class="input-group">
-                <label class="label" for="school-year">Votre niveau scolaire :</label>
-                <select id="school-year" class="select-field">
-                    <option value="CP">CP</option>
-                    <option value="CE1">CE1</option>
-                    <option value="CE2">CE2</option>
-                    <option value="CM1">CM1</option>
-                    <option value="CM2">CM2</option>
-                    <option value="DYS">DYS</option>
-                </select>
-            </div>
-            
-            <button class="game-button" onclick="saveHeroInfo()">Commencer</button>
-            <div id="hero-error" class="error-message">Erreur de sauvegarde. Veuillez réessayer.</div>
-        </div>
-        
-        <div id="game-area">
-            <div class="welcome-box">
-                <h2>Bienvenue <span id="player-name">Aventurier</span> !</h2>
-                
-                <div class="stats">
-                    <div class="stat-box">
-                        <div>Meilleur Score</div>
-                        <div class="stat-value" id="best-score">0</div>
-                    </div>
-                    <div class="stat-box">
-                        <div>Niveau</div>
-                        <div class="stat-value" id="player-level">1</div>
-                    </div>
-                    <div class="stat-box">
-                        <div>Progression</div>
-                        <div class="stat-value" id="player-rank">Débutant</div>
+            <div class="auth-body">
+                <!-- Formulaire de connexion -->
+                <div class="form-container active" id="login-form">
+                    <form id="login">
+                        <div class="form-group">
+                            <label for="login-username" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" id="login-username" class="form-input" placeholder="Entrez votre nom d'utilisateur" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="login-password" class="form-label">Mot de passe</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="login-password" class="form-input" placeholder="Entrez votre mot de passe" required>
+                                <i class="input-icon fas fa-eye-slash toggle-password" data-target="login-password"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="error-message" id="login-error"></div>
+                        
+                        <button type="submit" class="btn" id="login-btn">
+                            <span class="loader"></span>
+                            Se connecter
+                        </button>
+                    </form>
+                    
+                    <div class="form-footer">
+                        <p>Mot de passe oublié ? <a class="form-link" id="show-reset">Réinitialiser</a></p>
                     </div>
                 </div>
                 
-                <div style="margin-top: 30px;">
-                    <button class="game-button" onclick="startGame()">Jouer</button>
+                <!-- Formulaire d'inscription -->
+                <div class="form-container" id="register-form">
+                    <form id="register">
+                        <div class="form-group">
+                            <label for="register-username" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" id="register-username" class="form-input" placeholder="Choisissez un nom d'utilisateur" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="register-email" class="form-label">Email</label>
+                            <input type="email" id="register-email" class="form-input" placeholder="Entrez votre adresse email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="register-password" class="form-label">Mot de passe</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="register-password" class="form-input" placeholder="Créez un mot de passe" required>
+                                <i class="input-icon fas fa-eye-slash toggle-password" data-target="register-password"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="register-confirm" class="form-label">Confirmer le mot de passe</label>
+                            <div class="input-with-icon">
+                                <input type="password" id="register-confirm" class="form-input" placeholder="Confirmez votre mot de passe" required>
+                                <i class="input-icon fas fa-eye-slash toggle-password" data-target="register-confirm"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="error-message" id="register-error"></div>
+                        
+                        <button type="submit" class="btn" id="register-btn">
+                            <span class="loader"></span>
+                            S'inscrire
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Formulaire de réinitialisation de mot de passe -->
+                <div class="form-container" id="reset-form">
+                    <form id="reset">
+                        <div class="form-group">
+                            <label for="reset-email" class="form-label">Email</label>
+                            <input type="email" id="reset-email" class="form-input" placeholder="Entrez votre adresse email" required>
+                        </div>
+                        
+                        <div class="error-message" id="reset-error"></div>
+                        <div class="success-message" id="reset-success">Un email de réinitialisation a été envoyé à votre adresse email.</div>
+                        
+                        <button type="submit" class="btn" id="reset-btn">
+                            <span class="loader"></span>
+                            Réinitialiser le mot de passe
+                        </button>
+                        
+                        <button type="button" class="btn btn-secondary" id="back-to-login">
+                            Retour à la connexion
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
     
     <script src="/js/auth-utils.js"></script>
-
     <script>
-        // Fonction pour vérifier si le token est valide via un appel API
-        function validateToken() {
-            const token = localStorage.getItem('token');
-            
-            // Si pas de token, pas besoin de vérifier
-            if (!token) {
-                return Promise.resolve(false);
+        // Fonctions utilitaires
+        function showLoading() {
+            document.getElementById('loading-screen').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            const loadingScreen = document.getElementById('loading-screen');
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+        
+        function setButtonLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            if (isLoading) {
+                button.classList.add('btn-loading');
+                button.disabled = true;
+            } else {
+                button.classList.remove('btn-loading');
+                button.disabled = false;
             }
-            
-            // Faire un appel API simple pour vérifier la validité du token
-            return fetch('/api/user', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            })
-            .then(response => {
-                // Si on reçoit 401 ou 403, le token est invalide
-                if (response.status === 401 || response.status === 403) {
-                    console.log('Token invalide, suppression du token');
-                    localStorage.removeItem('token'); // Supprimer le token invalide
-                    return false;
+        }
+        
+        function showError(errorId, message) {
+            const errorElement = document.getElementById(errorId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        
+        function hideError(errorId) {
+            document.getElementById(errorId).style.display = 'none';
+        }
+        
+        function showSuccess(successId, message) {
+            const successElement = document.getElementById(successId);
+            successElement.textContent = message;
+            successElement.style.display = 'block';
+        }
+        
+        function hideSuccess(successId) {
+            document.getElementById(successId).style.display = 'none';
+        }
+        
+        function validatePassword(password) {
+            // Au moins 8 caractères
+            return password.length >= 8;
+        }
+        
+        function validateForm(formData, isRegistration = false) {
+            if (isRegistration) {
+                if (formData.password !== formData.confirmPassword) {
+                    return "Les mots de passe ne correspondent pas";
                 }
                 
-                // Sinon, le token est valide
-                return response.ok;
-            })
-            .catch(error => {
-                console.error('Erreur lors de la validation du token:', error);
-                // En cas d'erreur réseau, on considère le token comme potentiellement valide
-                // et on laisse la page d'accueil gérer les erreurs API
-                return true;
+                if (!validatePassword(formData.password)) {
+                    return "Le mot de passe doit contenir au moins 8 caractères";
+                }
+            }
+            return null;
+        }
+        
+        // Gestion des onglets
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.getAttribute('data-tab');
+                
+                // Activer l'onglet
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Afficher le formulaire correspondant
+                document.querySelectorAll('.form-container').forEach(form => form.classList.remove('active'));
+                document.getElementById(targetTab + '-form').classList.add('active');
+                
+                // Masquer les messages d'erreur
+                hideError('login-error');
+                hideError('register-error');
+                hideError('reset-error');
+                hideSuccess('reset-success');
             });
-        }
+        });
         
-        // Cacher tous les écrans sauf celui de login
-        function showScreen(screenId) {
-            document.getElementById('login-area').style.display = 'none';
-            document.getElementById('loading-area').style.display = 'none';
-            document.getElementById('onboarding-area').style.display = 'none';
-            document.getElementById('game-area').style.display = 'none';
+        // Basculer l'affichage du mot de passe
+        document.querySelectorAll('.toggle-password').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const targetId = toggle.getAttribute('data-target');
+                const target = document.getElementById(targetId);
+                
+                if (target.type === 'password') {
+                    target.type = 'text';
+                    toggle.classList.remove('fa-eye-slash');
+                    toggle.classList.add('fa-eye');
+                } else {
+                    target.type = 'password';
+                    toggle.classList.remove('fa-eye');
+                    toggle.classList.add('fa-eye-slash');
+                }
+            });
+        });
+        
+        // Afficher le formulaire de réinitialisation
+        document.getElementById('show-reset').addEventListener('click', () => {
+            document.querySelectorAll('.form-container').forEach(form => form.classList.remove('active'));
+            document.getElementById('reset-form').classList.add('active');
             
-            document.getElementById(screenId).style.display = 'block';
-        }
+            // Réinitialiser les messages
+            hideError('reset-error');
+            hideSuccess('reset-success');
+        });
         
-        // Connexion simple avec un pseudo
-        function login() {
-            const username = document.getElementById('username').value.trim();
-            if (!username) {
-                alert('Veuillez entrer un pseudo');
+        // Retour au formulaire de connexion
+        document.getElementById('back-to-login').addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('[data-tab="login"]').classList.add('active');
+            
+            document.querySelectorAll('.form-container').forEach(form => form.classList.remove('active'));
+            document.getElementById('login-form').classList.add('active');
+            
+            // Masquer les messages
+            hideError('login-error');
+        });
+        
+        // Formulaire de connexion
+        document.getElementById('login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Masquer les erreurs précédentes
+            hideError('login-error');
+            
+            // Récupérer les valeurs
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            // Valider le formulaire
+            if (!username || !password) {
+                showError('login-error', 'Veuillez remplir tous les champs');
                 return;
             }
             
-            // Afficher l'écran de chargement
-            showScreen('loading-area');
+            // Afficher le chargement
+            setButtonLoading('login-btn', true);
             
-            // Cacher les messages d'erreur
-            document.getElementById('login-error').style.display = 'none';
-            
-            fetch('/api/auth/simple', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username })
-            })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error('Réponse réseau non valide');
+            try {
+                // Envoyer la requête de connexion
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erreur de connexion');
                 }
-                return res.json();
-            })
-            .then(data => {
+                
+                // Stocker le token
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('username', username);
+                localStorage.setItem('username', data.username);
                 
-                // Si nouvel utilisateur, afficher l'onboarding
-                if (data.isNewUser) {
-                    showScreen('onboarding-area');
+                // Rediriger l'utilisateur
+                if (data.needSetup) {
+                    // Rediriger vers la page d'onboarding (configuration du profil)
+                    window.location.href = '/onboarding.html';
                 } else {
-                    // Sinon charger les données utilisateur
-                    loadUserData();
+                    // Rediriger vers la page d'accueil du jeu
+                    window.location.href = '/home.html';
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Erreur:', error);
-                document.getElementById('login-error').style.display = 'block';
-                showScreen('login-area');
-            });
-        }
+                showError('login-error', error.message);
+                setButtonLoading('login-btn', false);
+            }
+        });
         
-        // Sauvegarder le nom du héros et l'année scolaire - UTILISE DIRECTEMENT initialize
-        function saveHeroInfo() {
-            const heroName = document.getElementById('hero-name').value.trim();
-            const schoolYear = document.getElementById('school-year').value;
+        // Formulaire d'inscription
+        document.getElementById('register').addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            if (!heroName) {
-                alert('Veuillez entrer un nom pour votre héros');
+            // Masquer les erreurs précédentes
+            hideError('register-error');
+            
+            // Récupérer les valeurs
+            const username = document.getElementById('register-username').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm').value;
+            
+            // Valider le formulaire
+            const formData = { username, email, password, confirmPassword };
+            const validationError = validateForm(formData, true);
+            
+            if (validationError) {
+                showError('register-error', validationError);
                 return;
             }
             
-            // Afficher l'écran de chargement
-            showScreen('loading-area');
+            // Afficher le chargement
+            setButtonLoading('register-btn', true);
             
-            // Cacher les messages d'erreur
-            document.getElementById('hero-error').style.display = 'none';
-            
-            // Appeler DIRECTEMENT la fonction d'initialisation complète
-            fetchWithAuth('/api/user/initialize', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    heroName: heroName,
-                    year: schoolYear
-                })
-            })
-            .then(data => {
-                if (data.success) {
-                    // Redirection directe vers la page d'accueil
-                    window.location.href = '/home.html';
-                } else {
-                    throw new Error(data.message || "Échec de l'initialisation");
+            try {
+                // Envoyer la requête d'inscription
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erreur d\'inscription');
                 }
-            })
-            .catch(error => {
-                console.error('Erreur d\'initialisation:', error);
-                document.getElementById('hero-error').style.display = 'block';
-                document.getElementById('hero-error').textContent = 'Erreur de sauvegarde: ' + error.message;
-                showScreen('onboarding-area');
-            });
-        }
-        
-        // Charger les données utilisateur
-        function loadUserData() {
-            // Afficher l'écran de chargement
-            showScreen('loading-area');
-            
-            fetchWithAuth('/api/user')
-            .then(data => {
-                // Redirection vers la nouvelle page d'accueil
-                window.location.href = '/home.html';
-            })
-            .catch(error => {
+                
+                // Stocker le token
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', data.username);
+                
+                // Rediriger vers la page d'onboarding
+                window.location.href = '/onboarding.html';
+            } catch (error) {
                 console.error('Erreur:', error);
-                // En cas d'erreur d'authentification, revenir à l'écran de login
-                localStorage.removeItem('token');
-                showScreen('login-area');
-            });
-        }
+                showError('register-error', error.message);
+                setButtonLoading('register-btn', false);
+            }
+        });
         
-        // Calculer le niveau du joueur basé sur son score
-        function calculateLevel(score) {
-            if (!score) return 1;
-            return Math.floor(Math.sqrt(score) / 2) + 1;
-        }
-        
-        // Déterminer le rang du joueur basé sur son niveau
-        function calculateRank(level) {
-            if (level >= 20) return "Érudit";
-            if (level >= 15) return "Maestro";
-            if (level >= 10) return "Expert";
-            if (level >= 5) return "Adepte";
-            return "Débutant";
-        }
-        
-        // Démarrer le jeu
-        function startGame() {
-            window.location.href = '/battle.html';
-        }
+        // Formulaire de réinitialisation de mot de passe
+        document.getElementById('reset').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Masquer les messages précédents
+            hideError('reset-error');
+            hideSuccess('reset-success');
+            
+            // Récupérer l'email
+            const email = document.getElementById('reset-email').value.trim();
+            
+            if (!email) {
+                showError('reset-error', 'Veuillez entrer votre adresse email');
+                return;
+            }
+            
+            // Afficher le chargement
+            setButtonLoading('reset-btn', true);
+            
+            try {
+                // Envoyer la requête de réinitialisation
+                const response = await fetch('/api/auth/request-reset', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erreur lors de la demande de réinitialisation');
+                }
+                
+                // Afficher le message de succès
+                showSuccess('reset-success', 'Si cette adresse email est associée à un compte, vous recevrez un email avec les instructions pour réinitialiser votre mot de passe.');
+                document.getElementById('reset-email').value = '';
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError('reset-error', error.message);
+            } finally {
+                setButtonLoading('reset-btn', false);
+            }
+        });
         
         // Vérifier si déjà connecté au chargement
         window.onload = function() {
             // D'abord afficher l'écran de chargement
-            showScreen('loading-area');
-                
+            showLoading();
+            
             // Vérifier si le token est valide
             validateToken()
                 .then(isValid => {
@@ -381,13 +802,13 @@
                         window.location.href = '/home.html';
                     } else {
                         // Sinon afficher la page de connexion
-                        showScreen('login-area');
+                        hideLoading();
                     }
                 })
                 .catch(error => {
                     // En cas d'erreur, afficher la page de connexion
                     console.error('Erreur lors de la vérification du token:', error);
-                    showScreen('login-area');
+                    hideLoading();
                 });
         };
     </script>

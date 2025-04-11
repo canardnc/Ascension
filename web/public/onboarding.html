@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascension - Configuration du profil</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6542fe">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        :root {
+            --primary-color: #6542fe;
+            --primary-dark: #5035d0;
+            --secondary-color: #ff6b6b;
+            --accent-color: #4ecdc4;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+            --text-light: #f8f9fa;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+        
+        .onboarding-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 580px;
+            overflow: hidden;
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .onboarding-header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+        }
+        
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            width: 140px;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+        }
+        
+        .onboarding-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .onboarding-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .onboarding-body {
+            padding: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .form-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(101, 66, 254, 0.2);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            font-family: 'Nunito', sans-serif;
+            background-color: white;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236542fe' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px;
+            padding-right: 35px;
+        }
+        
+        .form-select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(101, 66, 254, 0.2);
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(101, 66, 254, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            margin-top: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(101, 66, 254, 0.1);
+            box-shadow: none;
+        }
+        
+        .form-footer {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #777;
+        }
+        
+        .error-message {
+            color: var(--error-color);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .success-message {
+            color: var(--success-color);
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+            display: none;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn-loading .loader {
+            display: inline-block;
+        }
+        
+        /* Background animation */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .shape {
+            position: absolute;
+            background-color: rgba(101, 66, 254, 0.1);
+            border-radius: 50%;
+        }
+        
+        .shape-1 {
+            width: 600px;
+            height: 600px;
+            top: -200px;
+            right: -100px;
+            animation: float 20s infinite alternate;
+        }
+        
+        .shape-2 {
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            left: -100px;
+            animation: float 15s infinite alternate-reverse;
+        }
+        
+        .shape-3 {
+            width: 300px;
+            height: 300px;
+            top: 40%;
+            right: -50px;
+            animation: float 18s infinite alternate;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(30px, 30px) rotate(10deg); }
+            100% { transform: translate(-30px, 15px) rotate(-10deg); }
+        }
+        
+        /* Loading screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+        
+        .loading-logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(101, 66, 254, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        /* Hero preview */
+        .hero-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            background-color: rgba(101, 66, 254, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .hero-image {
+            width: 100px;
+            height: auto;
+            margin-right: 20px;
+        }
+        
+        .hero-info {
+            flex: 1;
+        }
+        
+        .hero-name-display {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .hero-level {
+            font-size: 1rem;
+            color: #777;
+        }
+        
+        .hero-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .hero-stat {
+            text-align: center;
+            background-color: white;
+            border-radius: 8px;
+            padding: 8px 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            min-width: 60px;
+        }
+        
+        .hero-stat-value {
+            font-weight: 800;
+            color: var(--primary-dark);
+            font-size: 1.2rem;
+        }
+        
+        .hero-stat-label {
+            font-size: 0.8rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <!-- Écran de chargement -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-logo">ASCENSION</div>
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- Animation de fond -->
+    <div class="background-animation">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+    
+    <div class="container">
+        <div class="onboarding-card">
+            <div class="onboarding-header">
+                <div class="logo-container">
+                    <img src="/assets/images/logo.webp" alt="Ascension Logo" class="logo">
+                </div>
+                <h1 class="onboarding-title">Bienvenue dans l'aventure !</h1>
+                <p class="onboarding-subtitle">Configurez votre héros pour commencer</p>
+            </div>
+            
+            <div class="onboarding-body">
+                <form id="onboarding-form">
+                    <div class="form-group">
+                        <label for="hero-name" class="form-label">Nom de votre héros</label>
+                        <input type="text" id="hero-name" class="form-input" placeholder="Entrez un nom pour votre héros" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="school-year" class="form-label">Niveau scolaire</label>
+                        <select id="school-year" class="form-select" required>
+                            <option value="">Sélectionnez votre niveau</option>
+                            <option value="CP">CP</option>
+                            <option value="CE1">CE1</option>
+                            <option value="CE2">CE2</option>
+                            <option value="CM1">CM1</option>
+                            <option value="CM2">CM2</option>
+                            <option value="DYS">DYS</option>
+                        </select>
+                    </div>
+                    
+                    <div class="hero-preview">
+                        <img src="/assets/images/caracter/caracter_1.png" alt="Héros" class="hero-image">
+                        <div class="hero-info">
+                            <div class="hero-name-display" id="hero-name-display">Votre Héros</div>
+                            <div class="hero-level">Niveau 1</div>
+                            <div class="hero-stats">
+                                <div class="hero-stat">
+                                    <div class="hero-stat-value">1</div>
+                                    <div class="hero-stat-label">Force</div>
+                                </div>
+                                <div class="hero-stat">
+                                    <div class="hero-stat-value">1</div>
+                                    <div class="hero-stat-label">Endurance</div>
+                                </div>
+                                <div class="hero-stat">
+                                    <div class="hero-stat-value">1</div>
+                                    <div class="hero-stat-label">Agilité</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="error-message" id="error-message"></div>
+                    
+                    <button type="submit" class="btn" id="onboarding-btn">
+                        <span class="loader"></span>
+                        Commencer l'aventure
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/js/auth-utils.js"></script>
+    <script>
+        // Fonctions utilitaires
+        function showLoading() {
+            document.getElementById('loading-screen').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            const loadingScreen = document.getElementById('loading-screen');
+            loadingScreen.style.opacity = '0';
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+        
+        function setButtonLoading(buttonId, isLoading) {
+            const button = document.getElementById(buttonId);
+            if (isLoading) {
+                button.classList.add('btn-loading');
+                button.disabled = true;
+            } else {
+                button.classList.remove('btn-loading');
+                button.disabled = false;
+            }
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('error-message');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        
+        function hideError() {
+            document.getElementById('error-message').style.display = 'none';
+        }
+        
+        // Mettre à jour l'aperçu du héros
+        function updateHeroPreview() {
+            const heroName = document.getElementById('hero-name').value.trim() || 'Votre Héros';
+            document.getElementById('hero-name-display').textContent = heroName;
+        }
+        
+        // Écouter les changements dans le nom du héros
+        document.getElementById('hero-name').addEventListener('input', updateHeroPreview);
+        
+        // Formulaire d'onboarding
+        document.getElementById('onboarding-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Masquer les erreurs précédentes
+            hideError();
+            
+            // Récupérer les valeurs
+            const heroName = document.getElementById('hero-name').value.trim();
+            const year = document.getElementById('school-year').value;
+            
+            // Valider le formulaire
+            if (!heroName || !year) {
+                showError('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            // Afficher le chargement
+            setButtonLoading('onboarding-btn', true);
+            
+            try {
+                // Vérifier si le token est présent
+                if (!localStorage.getItem('token')) {
+                    throw new Error('Session expirée. Veuillez vous reconnecter.');
+                }
+                
+                // Envoyer la requête d'initialisation
+                const response = await fetchWithAuth('/api/user/initialize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        heroName: heroName,
+                        year: year
+                    })
+                });
+                
+                if (!response.success) {
+                    throw new Error(response.message || 'Erreur lors de l\'initialisation du profil');
+                }
+                
+                // Rediriger vers la page d'accueil
+                window.location.href = '/home.html';
+            } catch (error) {
+                console.error('Erreur:', error);
+                showError(error.message);
+                setButtonLoading('onboarding-btn', false);
+            }
+        });
+        
+        // Vérifier l'authentification au chargement
+        window.onload = function() {
+            // Afficher l'écran de chargement
+            showLoading();
+            
+            // Vérifier si l'utilisateur est connecté
+            if (!checkAuth()) {
+                window.location.href = '/';
+                return;
+            }
+            
+            // Charger les données utilisateur (optionnel)
+            fetchWithAuth('/api/user')
+                .then(userData => {
+                    // Si l'utilisateur a déjà un profil, rediriger vers la page d'accueil
+                    if (userData.heroName) {
+                        window.location.href = '/home.html';
+                        return;
+                    }
+                    
+                    // Sinon, afficher la page d'onboarding
+                    hideLoading();
+                })
+                .catch(error => {
+                    console.error('Erreur lors du chargement des données utilisateur:', error);
+                    hideLoading();
+                });
+        };
+    </script>
+</body>
+</html>

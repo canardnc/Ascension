@@ -1,13 +1,36 @@
 package models
 
 import (
+	"database/sql"
+	"errors"
 	"log"
 	"time"
 
+	"github.com/canardnc/Ascension/internal/auth"
 	"github.com/canardnc/Ascension/internal/db"
+	"github.com/canardnc/Ascension/internal/email"
 )
 
-// User représente un utilisateur dans le système
+// UserAuth représente les données d'authentification d'un utilisateur
+type UserAuth struct {
+	ID        int       `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	Password  string    `json:"-"` // Le mot de passe n'est jamais renvoyé en JSON
+	Salt      string    `json:"-"` // Le sel n'est jamais renvoyé en JSON
+	IsActive  bool      `json:"isActive"`
+	EmailCode string    `json:"-"` // Le code de vérification n'est jamais renvoyé en JSON
+	HeroName  string    `json:"heroName,omitempty"`
+	Year      string    `json:"year,omitempty"`
+	Level     int       `json:"level"`
+	CreatedAt time.Time `json:"createdAt"`
+	Admin     bool      `json:"admin"`
+	Teacher   bool      `json:"teacher"`
+	Parent    bool      `json:"parent"`
+}
+
+// User est un alias pour la compatibilité avec le code existant
+// qui utiliserait encore l'ancienne structure
 type User struct {
 	ID        int       `json:"id"`
 	Username  string    `json:"username"`
@@ -16,25 +39,110 @@ type User struct {
 	Year      string    `json:"year,omitempty"`
 	Level     int       `json:"level"`
 	CreatedAt time.Time `json:"createdAt"`
-	Admin     bool      `json:"admin"`   // Nouveau champ pour le droit administrateur
-	Teacher   bool      `json:"teacher"` // Nouveau champ pour le droit enseignant
-	Parent    bool      `json:"parent"`  // Nouveau champ pour le droit parent
+	Admin     bool      `json:"admin"`
+	Teacher   bool      `json:"teacher"`
+	Parent    bool      `json:"parent"`
 }
 
-// Create crée un nouvel utilisateur dans la base de données
+// ToUserAuth convertit un User en UserAuth
+func (u *User) ToUserAuth() *UserAuth {
+	return &UserAuth{
+		ID:        u.ID,
+		Username:  u.Username,
+		Email:     u.Email,
+		HeroName:  u.HeroName,
+		Year:      u.Year,
+		Level:     u.Level,
+		CreatedAt: u.CreatedAt,
+		IsActive:  true, // On suppose que les anciens utilisateurs sont actifs
+		Admin:     u.Admin,
+		Teacher:   u.Teacher,
+		Parent:    u.Parent,
+	}
+}
+
+// ToUser convertit un UserAuth en User (pour la compatibilité)
+func (u *UserAuth) ToUser() *User {
+	return &User{
+		ID:        u.ID,
+		Username:  u.Username,
+		Email:     u.Email,
+		HeroName:  u.HeroName,
+		Year:      u.Year,
+		Level:     u.Level,
+		CreatedAt: u.CreatedAt,
+		Admin:     u.Admin,
+		Teacher:   u.Teacher,
+		Parent:    u.Parent,
+	}
+}
+
+// ----- TYPES POUR L'AUTHENTIFICATION -----
+
+// UserRegistration représente les données d'inscription d'un utilisateur
+type UserRegistration struct {
+	Username        string `json:"username"`
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
+}
+
+// UserLogin représente les données de connexion d'un utilisateur
+type UserLogin struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// UserPasswordReset représente les données de réinitialisation de mot de passe
+type UserPasswordReset struct {
+	Email string `json:"email"`
+}
+
+// UserPasswordUpdate représente les données de mise à jour de mot de passe
+type UserPasswordUpdate struct {
+	Code            string `json:"code"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
+}
+
+// ----- ERREURS COURANTES -----
+
+// ErrUserNotFound est renvoyé lorsqu'un utilisateur n'est pas trouvé
+var ErrUserNotFound = errors.New("utilisateur non trouvé")
+
+// ErrInvalidCredentials est renvoyé lors d'une tentative de connexion avec des identifiants invalides
+var ErrInvalidCredentials = errors.New("identifiants invalides")
+
+// ErrUserNotActive est renvoyé lorsqu'un utilisateur tente de se connecter avec un compte non activé
+var ErrUserNotActive = errors.New("compte non activé")
+
+// ErrEmailTaken est renvoyé lorsqu'un utilisateur tente de s'inscrire avec un email déjà utilisé
+var ErrEmailTaken = errors.New("cet email est déjà utilisé")
+
+// ErrUsernameTaken est renvoyé lorsqu'un utilisateur tente de s'inscrire avec un nom d'utilisateur déjà utilisé
+var ErrUsernameTaken = errors.New("ce nom d'utilisateur est déjà utilisé")
+
+// ----- MÉTHODES DE L'ENTITÉ USER -----
+
+// Create crée un nouvel utilisateur dans la base de données (compatibilité avec User)
 func (u *User) Create() error {
 	query := `
-		INSERT INTO users (username, email, hero_name, year, level, created_at, admin, teacher, parent)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO users (username, email, hero_name, year, level, created_at, admin, teacher, parent, is_active)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at
 	`
 	now := time.Now()
+	email := u.Email
+	if email == "" {
+		email = u.Username + "@gmail.com"
+	}
+
 	return db.DB.QueryRow(
-		query, u.Username, u.Username+"@gmail.com", u.HeroName, u.Year, 1, now, u.Admin, u.Teacher, u.Parent,
+		query, u.Username, email, u.HeroName, u.Year, 1, now, u.Admin, u.Teacher, u.Parent, true,
 	).Scan(&u.ID, &u.CreatedAt)
 }
 
-// Update met à jour les informations de l'utilisateur
+// Update met à jour les informations de l'utilisateur (compatibilité avec User)
 func (u *User) Update() error {
 	query := `
 		UPDATE users
@@ -46,20 +154,315 @@ func (u *User) Update() error {
 	return err
 }
 
-// GetUserByID récupère un utilisateur par son ID
-func GetUserByID(id int) (*User, error) {
+// ----- MÉTHODES DE L'ENTITÉ USERAUTH -----
+
+// Create crée un nouvel utilisateur dans la base de données
+func (u *UserAuth) Create() error {
 	query := `
-		SELECT id, username, hero_name, year, level, created_at, admin, teacher, parent
-		FROM users
-		WHERE id = $1
+		INSERT INTO users (username, email, password, salt, is_active, email_code, hero_name, year, level, created_at, admin, teacher, parent)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+		RETURNING id, created_at
+	`
+	now := time.Now()
+
+	return db.DB.QueryRow(
+		query, u.Username, u.Email, u.Password, u.Salt, u.IsActive, u.EmailCode,
+		u.HeroName, u.Year, u.Level, now, u.Admin, u.Teacher, u.Parent,
+	).Scan(&u.ID, &u.CreatedAt)
+}
+
+// Update met à jour les informations de l'utilisateur
+func (u *UserAuth) Update() error {
+	query := `
+		UPDATE users
+		SET hero_name = $1, year = $2, level = $3, admin = $4, teacher = $5, parent = $6
+		WHERE id = $7
 	`
 
-	var user User
-	err := db.DB.QueryRow(query, id).Scan(
-		&user.ID, &user.Username, &user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
+	_, err := db.DB.Exec(query, u.HeroName, u.Year, u.Level, u.Admin, u.Teacher, u.Parent, u.ID)
+	return err
+}
+
+// ----- FONCTIONS D'AUTHENTIFICATION -----
+
+// RegisterUser inscrit un nouvel utilisateur avec mot de passe
+func RegisterUser(reg UserRegistration, emailService *email.Service) (*UserAuth, error) {
+	// Vérifier si l'email est déjà utilisé
+	var count int
+	err := db.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = $1", reg.Email).Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+	if count > 0 {
+		return nil, ErrEmailTaken
+	}
+
+	// Vérifier si le nom d'utilisateur est déjà utilisé
+	err = db.DB.QueryRow("SELECT COUNT(*) FROM users WHERE username = $1", reg.Username).Scan(&count)
+	if err != nil {
+		return nil, err
+	}
+	if count > 0 {
+		return nil, ErrUsernameTaken
+	}
+
+	// Hasher le mot de passe
+	hashedPassword, salt, err := auth.HashPasswordWithDefaultParams(reg.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	// Générer un code de vérification d'email
+	verificationCode, err := email.GenerateVerificationCode()
+	if err != nil {
+		return nil, err
+	}
+
+	// Créer l'utilisateur dans la base de données
+	user := &UserAuth{
+		Username:  reg.Username,
+		Email:     reg.Email,
+		Password:  hashedPassword,
+		Salt:      salt,
+		IsActive:  false,
+		EmailCode: verificationCode,
+		Level:     1,
+	}
+
+	// Insertion dans la base de données
+	query := `
+		INSERT INTO users (username, email, password, salt, is_active, email_code, level, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, created_at
+	`
+	now := time.Now()
+
+	err = db.DB.QueryRow(
+		query, user.Username, user.Email, user.Password, user.Salt, user.IsActive, user.EmailCode, user.Level, now,
+	).Scan(&user.ID, &user.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	// Envoyer l'email de vérification
+	if emailService != nil {
+		err = emailService.SendVerificationEmail(user.Email, user.Username, user.EmailCode)
+		if err != nil {
+			log.Printf("Erreur lors de l'envoi de l'email de vérification: %v", err)
+			// On n'empêche pas l'inscription si l'email ne peut pas être envoyé
+		}
+	}
+
+	return user, nil
+}
+
+// VerifyEmail vérifie le code de vérification d'email et active le compte
+func VerifyEmail(code string) (*UserAuth, error) {
+	// Log pour débogage
+	log.Printf("Vérification du code d'email: %s", code)
+
+	// Rechercher l'utilisateur par code
+	var user UserAuth
+	var heroName, year sql.NullString
+
+	// Utiliser des sql.NullString pour gérer les valeurs NULL
+	query := `
+        SELECT id, username, email, is_active, 
+               hero_name, year, level, created_at,
+               admin, teacher, parent
+        FROM users
+        WHERE email_code = $1
+    `
+
+	err := db.DB.QueryRow(query, code).Scan(
+		&user.ID, &user.Username, &user.Email, &user.IsActive,
+		&heroName, &year, &user.Level, &user.CreatedAt,
+		&user.Admin, &user.Teacher, &user.Parent,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Aucun utilisateur trouvé avec le code: %s", code)
+			return nil, ErrUserNotFound
+		}
+		log.Printf("Erreur SQL lors de la recherche utilisateur avec code %s: %v", code, err)
+		return nil, err
+	}
+
+	// Convertir les sql.NullString en string
+	if heroName.Valid {
+		user.HeroName = heroName.String
+	} else {
+		user.HeroName = ""
+	}
+
+	if year.Valid {
+		user.Year = year.String
+	} else {
+		user.Year = ""
+	}
+
+	log.Printf("Utilisateur trouvé: ID=%d, Username=%s, IsActive=%t", user.ID, user.Username, user.IsActive)
+
+	// Si le compte est déjà actif, renvoyer l'utilisateur
+	if user.IsActive {
+		log.Printf("Le compte est déjà actif pour l'utilisateur: %s", user.Username)
+		return &user, nil
+	}
+
+	// Activer le compte
+	updateQuery := "UPDATE users SET is_active = true WHERE id = $1"
+	result, err := db.DB.Exec(updateQuery, user.ID)
+	if err != nil {
+		log.Printf("Erreur lors de l'activation du compte: %v", err)
+		return nil, err
+	}
+
+	// Vérifier que la mise à jour a bien été effectuée
+	rowsAffected, _ := result.RowsAffected()
+	log.Printf("Mise à jour réussie: %d lignes affectées", rowsAffected)
+
+	user.IsActive = true
+	return &user, nil
+}
+
+// LoginUser authentifie un utilisateur avec son nom d'utilisateur et son mot de passe
+func LoginUser(login UserLogin) (*UserAuth, error) {
+	// Rechercher l'utilisateur par nom d'utilisateur
+	var user UserAuth
+	query := `
+        SELECT id, username, email, password, is_active, 
+               COALESCE(hero_name, ''), COALESCE(year, ''), level, created_at,
+               admin, teacher, parent
+        FROM users
+        WHERE username = $1
+    `
+
+	err := db.DB.QueryRow(query, login.Username).Scan(
+		&user.ID, &user.Username, &user.Email, &user.Password, &user.IsActive,
+		&user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
 		&user.Admin, &user.Teacher, &user.Parent,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrInvalidCredentials
+		}
+		return nil, err
+	}
+
+	// Vérifier si le compte est actif
+	if !user.IsActive {
+		return nil, ErrUserNotActive
+	}
+
+	// Vérifier le mot de passe
+	isValid, err := auth.VerifyPassword(login.Password, user.Password)
+	if err != nil || !isValid {
+		return nil, ErrInvalidCredentials
+	}
+
+	// Ne pas renvoyer le mot de passe hashé
+	user.Password = ""
+	user.Salt = ""
+	user.EmailCode = ""
+
+	return &user, nil
+}
+
+// RequestPasswordReset demande une réinitialisation de mot de passe pour un email donné
+func RequestPasswordReset(reset UserPasswordReset, emailService *email.Service) error {
+	// Rechercher l'utilisateur par email
+	var user UserAuth
+	query := "SELECT id, username, email FROM users WHERE email = $1"
+
+	err := db.DB.QueryRow(query, reset.Email).Scan(&user.ID, &user.Username, &user.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Ne pas révéler si l'email existe ou non (protection contre l'énumération)
+			return nil
+		}
+		return err
+	}
+
+	// Générer un code de réinitialisation
+	resetCode, err := email.GenerateVerificationCode()
+	if err != nil {
+		return err
+	}
+
+	// Mettre à jour le code de réinitialisation dans la base de données
+	_, err = db.DB.Exec("UPDATE users SET email_code = $1 WHERE id = $2", resetCode, user.ID)
+	if err != nil {
+		return err
+	}
+
+	// Envoyer l'email de réinitialisation
+	if emailService != nil {
+		err = emailService.SendPasswordResetEmail(user.Email, user.Username, resetCode)
+		if err != nil {
+			log.Printf("Erreur lors de l'envoi de l'email de réinitialisation: %v", err)
+			// On renvoie quand même une réponse positive pour ne pas révéler si l'email existe
+		}
+	}
+
+	return nil
+}
+
+// UpdatePassword met à jour le mot de passe avec le code de réinitialisation
+func UpdatePassword(update UserPasswordUpdate) error {
+	// Rechercher l'utilisateur par code de réinitialisation
+	var userID int
+	query := "SELECT id FROM users WHERE email_code = $1"
+
+	err := db.DB.QueryRow(query, update.Code).Scan(&userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ErrUserNotFound
+		}
+		return err
+	}
+
+	// Hasher le nouveau mot de passe
+	hashedPassword, salt, err := auth.HashPasswordWithDefaultParams(update.Password)
+	if err != nil {
+		return err
+	}
+
+	// Mettre à jour le mot de passe et réinitialiser le code
+	_, err = db.DB.Exec(
+		"UPDATE users SET password = $1, salt = $2, email_code = NULL, is_active = true WHERE id = $3",
+		hashedPassword, salt, userID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ----- FONCTIONS DE RÉCUPÉRATION D'UTILISATEURS -----
+
+// GetUserByID récupère un utilisateur par son ID
+func GetUserByID(id int) (*UserAuth, error) {
+	// Utiliser COALESCE pour convertir les valeurs NULL en chaînes vides
+	query := `
+        SELECT id, username, email, is_active, 
+               COALESCE(hero_name, ''), COALESCE(year, ''), level, created_at, 
+               admin, teacher, parent
+        FROM users
+        WHERE id = $1
+    `
+
+	var user UserAuth
+	err := db.DB.QueryRow(query, id).Scan(
+		&user.ID, &user.Username, &user.Email, &user.IsActive,
+		&user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
+		&user.Admin, &user.Teacher, &user.Parent,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserNotFound
+		}
 		return nil, err
 	}
 
@@ -67,27 +470,53 @@ func GetUserByID(id int) (*User, error) {
 }
 
 // GetUserByUsername récupère un utilisateur par son nom d'utilisateur
-func GetUserByUsername(username string) (*User, error) {
+func GetUserByUsername(username string) (*UserAuth, error) {
+	// Utiliser COALESCE pour convertir les valeurs NULL en chaînes vides
 	query := `
-		SELECT id, username, hero_name, year, level, created_at, admin, teacher, parent
-		FROM users
-		WHERE username = $1
-	`
+        SELECT id, username, email, is_active, 
+               COALESCE(hero_name, ''), COALESCE(year, ''), level, created_at,
+               admin, teacher, parent
+        FROM users
+        WHERE username = $1
+    `
 
-	var user User
+	var user UserAuth
 	err := db.DB.QueryRow(query, username).Scan(
-		&user.ID, &user.Username, &user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
+		&user.ID, &user.Username, &user.Email, &user.IsActive,
+		&user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
 		&user.Admin, &user.Teacher, &user.Parent,
 	)
 	if err != nil {
-		log.Printf("Getuserbyname, Erreur lors de la récupération de l'utilisateur : %v", err)
+		if err == sql.ErrNoRows {
+			return nil, ErrUserNotFound
+		}
+		log.Printf("GetUserByUsername, Erreur lors de la récupération de l'utilisateur : %v", err)
 		return nil, err
 	}
 
 	return &user, nil
 }
 
+// ----- FONCTIONS LIÉES AUX SCORES ET NIVEAUX -----
+
 // GetBestScore récupère le meilleur score de l'utilisateur
+func (u *UserAuth) GetBestScore() (int, error) {
+	query := `
+		SELECT COALESCE(MAX(score), 0)
+		FROM game_scores
+		WHERE user_id = $1
+	`
+
+	var bestScore int
+	err := db.DB.QueryRow(query, u.ID).Scan(&bestScore)
+	if err != nil {
+		return 0, err
+	}
+
+	return bestScore, nil
+}
+
+// GetBestScore récupère le meilleur score de l'utilisateur (pour compatibilité avec User)
 func (u *User) GetBestScore() (int, error) {
 	query := `
 		SELECT COALESCE(MAX(score), 0)
@@ -122,9 +551,6 @@ func GetMaxLevelID() (int, error) {
         SELECT COALESCE(MAX(level), 0) 
         FROM levels
     `
-	// Alternative si vous stockez les niveaux dans une autre table :
-	// Si les niveaux sont dans une table "levels" avec une colonne "id" :
-	// SELECT COALESCE(MAX(id), 0) FROM levels
 
 	var maxLevelID int
 	err := db.DB.QueryRow(query).Scan(&maxLevelID)

@@ -6,14 +6,69 @@ import (
 
 	"github.com/canardnc/Ascension/internal/api/handlers"
 	"github.com/canardnc/Ascension/internal/api/middleware"
+	"github.com/canardnc/Ascension/internal/email"
 )
+
+// InitApp initialise l'application
+func InitApp() {
+	// Initialiser le service d'email
+	emailConfig := email.LoadEmailConfigFromEnvironment()
+	handlers.InitEmailService(emailConfig)
+}
 
 // SetupRoutes configure les routes de l'API
 func SetupRoutes(mux *http.ServeMux) {
+	// Initialiser l'application
+	InitApp()
+
+	// Fichiers de configuration
 	configsDir := http.FileServer(http.Dir("./web/public/configs"))
 	mux.Handle("/configs/", http.StripPrefix("/configs/", configsDir))
 
-	// Routes publiques
+	// ===== ROUTES D'AUTHENTIFICATION =====
+
+	// Nouvelles routes d'authentification
+	mux.HandleFunc("/api/auth/register", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			handlers.Register(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/auth/login", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			handlers.Login(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/auth/verify-email", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			handlers.VerifyEmail(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/auth/request-reset", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			handlers.RequestPasswordReset(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/auth/reset-password", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			handlers.ResetPassword(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Route d'authentification simplifiée (pour compatibilité)
 	mux.HandleFunc("/api/auth/simple", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			handlers.SimpleAuth(w, r)
@@ -22,7 +77,9 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
-	// Routes statiques - doivent être définis avant les routes spécifiques
+	// ===== ROUTES STATIQUES =====
+
+	// Routes pour les fichiers statiques - doivent être définies avant les routes spécifiques
 	assetsDir := http.FileServer(http.Dir("./web/public/assets"))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", assetsDir))
 
@@ -44,7 +101,22 @@ func SetupRoutes(mux *http.ServeMux) {
 	mainGameDir := http.FileServer(http.Dir("./web/public/main_game"))
 	mux.Handle("/main_game/", http.StripPrefix("/main_game/", mainGameDir))
 
-	// Routes HTML
+	// ===== ROUTES HTML =====
+
+	// Pages d'authentification et de vérification
+	mux.HandleFunc("/verify-email", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web/public/verify-email.html")
+	})
+
+	mux.HandleFunc("/reset-password", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web/public/reset-password.html")
+	})
+
+	mux.HandleFunc("/onboarding.html", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./web/public/onboarding.html")
+	})
+
+	// Routes HTML principales
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			http.ServeFile(w, r, "./web/public/index.html")
@@ -76,8 +148,13 @@ func SetupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/stats.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/public/stats.html")
 	})
+
+	// ===== ROUTES D'ADMINISTRATION DU JEU =====
+
 	// Configurer les routes d'administration du jeu
 	SetupGameAdminRoutes(mux)
+
+	// ===== ROUTES API =====
 
 	mux.HandleFunc("/api/icons/random", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
@@ -95,7 +172,7 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
-	// Routes authentifiées
+	// Routes authentifiées pour les utilisateurs
 	mux.HandleFunc("/api/user", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -111,7 +188,7 @@ func SetupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/users", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			middleware.JWTAuth(handlers.GetUsersList)(w, r)
+			middleware.RequireAdmin(handlers.GetUsersList)(w, r)
 		default:
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
@@ -126,6 +203,7 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
+	// Routes utilisateur avec paramètres d'URL
 	mux.HandleFunc("/api/users/", func(w http.ResponseWriter, r *http.Request) {
 		// Extraire l'ID de l'URL
 		path := r.URL.Path
@@ -156,15 +234,6 @@ func SetupRoutes(mux *http.ServeMux) {
 			}
 			return
 		}
-		// Route pour recharger l'énergie: /api/users/{id}/recharge-energy
-		if len(parts) >= 5 && parts[4] == "recharge-energy" {
-			if r.Method == http.MethodPost {
-				middleware.JWTAuth(handlers.RechargeUserEnergy)(w, r)
-			} else {
-				http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-			}
-			return
-		}
 
 		// Route pour réinitialiser un utilisateur: /api/users/{id}/reset
 		if len(parts) >= 5 && parts[4] == "reset" {
@@ -188,6 +257,7 @@ func SetupRoutes(mux *http.ServeMux) {
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
 	})
+
 	// Route d'initialisation des données du joueur
 	mux.HandleFunc("/api/user/initialize", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
@@ -196,6 +266,8 @@ func SetupRoutes(mux *http.ServeMux) {
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}
 	})
+
+	// ===== ROUTES DE JEU =====
 
 	// Scores
 	mux.HandleFunc("/api/scores", func(w http.ResponseWriter, r *http.Request) {
