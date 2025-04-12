@@ -103,6 +103,15 @@ func SetupRoutes(mux *http.ServeMux) {
 
 	// ===== ROUTES HTML =====
 
+	// Routes HTML principales
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.ServeFile(w, r, "./web/public/index.html")
+		} else {
+			http.NotFound(w, r)
+		}
+	})
+
 	// Pages d'authentification et de vérification
 	mux.HandleFunc("/verify-email", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/public/verify-email.html")
@@ -114,15 +123,6 @@ func SetupRoutes(mux *http.ServeMux) {
 
 	mux.HandleFunc("/onboarding.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/public/onboarding.html")
-	})
-
-	// Routes HTML principales
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
-			http.ServeFile(w, r, "./web/public/index.html")
-		} else {
-			http.NotFound(w, r)
-		}
 	})
 
 	mux.HandleFunc("/home.html", func(w http.ResponseWriter, r *http.Request) {
