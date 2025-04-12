@@ -52,7 +52,7 @@ func InitializePlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("InitializePlayer: Utilisateur trouvé: ID=%d, Username=%s", user.ID, user.Username)
+	log.Printf("InitializePlayer: Utilisateur trouvé: ID=%d", user.ID)
 
 	// Exécuter l'initialisation du joueur
 	err = completePlayerInitialization(userID, request.HeroName, request.Year)

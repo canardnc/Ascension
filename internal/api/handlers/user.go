@@ -23,7 +23,6 @@ type UserUpdateRequest struct {
 // UserResponse représente les informations de l'utilisateur renvoyées à l'API
 type UserResponse struct {
 	ID        int    `json:"id"`
-	Username  string `json:"username"`
 	HeroName  string `json:"heroName,omitempty"`
 	Year      string `json:"year,omitempty"`
 	Level     int    `json:"level"`
@@ -52,7 +51,6 @@ func GetUserInfo(w http.ResponseWriter, r *http.Request) {
 
 	response := UserResponse{
 		ID:        user.ID,
-		Username:  user.Username,
 		HeroName:  user.HeroName,
 		Year:      user.Year,
 		Level:     user.Level,

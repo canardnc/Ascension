@@ -147,7 +147,7 @@ function safeFetch(url, options = {}, redirectUrl = '/') {
 */
 function logout(redirectUrl = '/') {
   localStorage.removeItem('token');
-  localStorage.removeItem('username');
+  localStorage.removeItem('email');
   window.location.href = redirectUrl;
 }
 
@@ -180,9 +180,9 @@ function checkTeacherRights() {
 }
 
 /**
-* Récupère l'username stocké localement
-* @returns {string|null} - Username ou null
+* Récupère l'email stocké localement
+* @returns {string|null} - email ou null
 */
-function getUsername() {
-  return localStorage.getItem('username');
+function getEmail() {
+  return localStorage.getItem('email');
 }

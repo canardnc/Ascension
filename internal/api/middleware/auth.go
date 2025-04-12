@@ -42,7 +42,6 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 
 		// Extraire les claims du token
 		userID := int(claims["user_id"].(float64))
-		username, _ := claims["username"].(string)
 		email, _ := claims["email"].(string)
 		isAdmin, _ := claims["admin"].(bool)
 		isTeacher, _ := claims["teacher"].(bool)
@@ -68,7 +67,6 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 
 		// Créer un contexte avec les informations utilisateur
 		ctx := context.WithValue(r.Context(), "userId", userID)
-		ctx = context.WithValue(ctx, "username", username)
 		ctx = context.WithValue(ctx, "email", email)
 		ctx = context.WithValue(ctx, "isAdmin", isAdmin)
 		ctx = context.WithValue(ctx, "isTeacher", isTeacher)

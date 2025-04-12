@@ -44,8 +44,8 @@ func GetUsersPaginated(searchQuery string, page, perPage int) ([]*User, error) {
 
 	// Ajouter la condition de recherche si nécessaire
 	if searchQuery != "" {
-		query += fmt.Sprintf(" WHERE username ILIKE $%d OR email ILIKE $%d OR hero_name ILIKE $%d", 
-			paramIndex, paramIndex, paramIndex)
+		query += fmt.Sprintf(" WHERE email ILIKE $%d OR hero_name ILIKE $%d",
+			paramIndex, paramIndex)
 		params = append(params, "%"+searchQuery+"%")
 		paramIndex++
 	}
@@ -67,7 +67,7 @@ func GetUsersPaginated(searchQuery string, page, perPage int) ([]*User, error) {
 	for rows.Next() {
 		var user User
 		if err := rows.Scan(
-			&user.ID, &user.Username, &user.Email, &user.HeroName, &user.Year, 
+			&user.ID, &user.Email, &user.HeroName, &user.Year,
 			&user.Level, &user.CreatedAt, &user.Admin, &user.Teacher, &user.Parent,
 		); err != nil {
 			log.Printf("Erreur lors de la lecture des données utilisateurs: %v", err)

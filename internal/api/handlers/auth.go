@@ -8,7 +8,6 @@ import (
 
 	"github.com/canardnc/Ascension/internal/api/middleware"
 	"github.com/canardnc/Ascension/internal/config"
-	"github.com/canardnc/Ascension/internal/db"
 	"github.com/canardnc/Ascension/internal/db/models"
 	"github.com/canardnc/Ascension/internal/email"
 	"github.com/golang-jwt/jwt"
@@ -32,20 +31,18 @@ type AuthResponse struct {
 	Token     string `json:"token"`
 	IsNewUser bool   `json:"isNewUser"`
 	NeedSetup bool   `json:"needSetup"`
-	Username  string `json:"username"`
 	Email     string `json:"email"`
 }
 
 // generateToken génère un token JWT pour un utilisateur
 func generateToken(user *models.UserAuth) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"admin":    user.Admin,
-		"teacher":  user.Teacher,
-		"parent":   user.Parent,
-		"exp":      time.Now().Add(tokenDuration).Unix(),
+		"user_id": user.ID,
+		"email":   user.Email,
+		"admin":   user.Admin,
+		"teacher": user.Teacher,
+		"parent":  user.Parent,
+		"exp":     time.Now().Add(tokenDuration).Unix(),
 	})
 
 	return token.SignedString(config.GetJWTSecret())
@@ -61,7 +58,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Valider les données d'inscription
-	if request.Username == "" || request.Email == "" || request.Password == "" {
+	if request.Email == "" || request.Password == "" {
 		middleware.RespondWithError(w, http.StatusBadRequest, "Tous les champs sont obligatoires")
 		return
 	}
@@ -75,8 +72,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	user, err := models.RegisterUser(request, emailService)
 	if err != nil {
 		switch err {
-		case models.ErrUsernameTaken:
-			middleware.RespondWithError(w, http.StatusConflict, "Ce nom d'utilisateur est déjà utilisé")
 		case models.ErrEmailTaken:
 			middleware.RespondWithError(w, http.StatusConflict, "Cet email est déjà utilisé")
 		default:
@@ -99,7 +94,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		Token:     tokenString,
 		IsNewUser: true,
 		NeedSetup: true,
-		Username:  user.Username,
 		Email:     user.Email,
 	}
 
@@ -116,8 +110,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Valider les données de connexion
-	if request.Username == "" || request.Password == "" {
-		middleware.RespondWithError(w, http.StatusBadRequest, "Nom d'utilisateur et mot de passe requis")
+	if request.Email == "" || request.Password == "" {
+		middleware.RespondWithError(w, http.StatusBadRequest, "Email et mot de passe requis")
 		return
 	}
 
@@ -152,7 +146,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Token:     tokenString,
 		IsNewUser: false,
 		NeedSetup: needSetup,
-		Username:  user.Username,
 		Email:     user.Email,
 	}
 
@@ -185,7 +178,7 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Compte utilisateur activé avec succès: %s (ID: %d)", user.Username, user.ID)
+	log.Printf("Compte utilisateur activé avec succès: %s (ID: %d)", user.Email, user.ID)
 
 	// Générer un token JWT pour l'utilisateur
 	tokenString, err := generateToken(user)
@@ -203,12 +196,11 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		Token:     tokenString,
 		IsNewUser: false,
 		NeedSetup: needSetup,
-		Username:  user.Username,
 		Email:     user.Email,
 	}
 
 	middleware.RespondWithJSON(w, http.StatusOK, response)
-	log.Printf("Réponse de vérification envoyée avec succès pour l'utilisateur: %s", user.Username)
+	log.Printf("Réponse de vérification envoyée avec succès pour l'utilisateur: %s", user.Email)
 }
 
 // RequestPasswordReset demande une réinitialisation de mot de passe
@@ -270,80 +262,4 @@ func ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	middleware.RespondWithJSON(w, http.StatusOK, map[string]bool{"success": true})
-}
-
-// SimpleAuth (ancienne fonction conservée pour compatibilité)
-func SimpleAuth(w http.ResponseWriter, r *http.Request) {
-	var request struct {
-		Username string `json:"username"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, "Pseudo requis", http.StatusBadRequest)
-		return
-	}
-
-	if request.Username == "" {
-		http.Error(w, "Pseudo ne peut pas être vide", http.StatusBadRequest)
-		return
-	}
-
-	// Avertissement de dépréciation (à enlever plus tard)
-	log.Printf("AVERTISSEMENT: Utilisation de SimpleAuth (déprécié) pour %s", request.Username)
-
-	// Trouver l'utilisateur ou en créer un nouveau
-	user, err := models.GetUserByUsername(request.Username)
-	isNewUser := false
-
-	if err == models.ErrUserNotFound {
-		// Créer un nouvel utilisateur temporaire (sera remplacé plus tard)
-		tempUser := &models.UserAuth{
-			Username: request.Username,
-			Email:    request.Username + "@temporary.com",
-			IsActive: true,
-			Level:    1,
-		}
-
-		// Enregistrer dans la base de données
-		query := `
-			INSERT INTO users (username, email, is_active, level, created_at)
-			VALUES ($1, $2, $3, $4, $5)
-			RETURNING id, created_at
-		`
-		now := time.Now()
-
-		err := db.DB.QueryRow(
-			query, tempUser.Username, tempUser.Email, tempUser.IsActive, tempUser.Level, now,
-		).Scan(&tempUser.ID, &tempUser.CreatedAt)
-
-		if err != nil {
-			http.Error(w, "Erreur lors de la création du compte", http.StatusInternalServerError)
-			return
-		}
-
-		user = tempUser
-		isNewUser = true
-	} else if err != nil {
-		http.Error(w, "Erreur lors de la vérification du compte", http.StatusInternalServerError)
-		return
-	}
-
-	// Générer un token JWT
-	tokenString, err := generateToken(user)
-	if err != nil {
-		http.Error(w, "Erreur de génération du token", http.StatusInternalServerError)
-		return
-	}
-
-	response := AuthResponse{
-		Token:     tokenString,
-		IsNewUser: isNewUser,
-		NeedSetup: user.HeroName == "",
-		Username:  user.Username,
-		Email:     user.Email,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
 }

@@ -26,7 +26,6 @@ type UserListResponse struct {
 // UserListItem représente un utilisateur dans la liste
 type UserListItem struct {
 	ID       int    `json:"id"`
-	Username string `json:"username"`
 	Email    string `json:"email"`
 	HeroName string `json:"heroName"`
 	Year     string `json:"year"`
@@ -38,7 +37,6 @@ type UserListItem struct {
 // UserDetailResponse représente les détails complets d'un utilisateur
 type UserDetailResponse struct {
 	ID        int          `json:"id"`
-	Username  string       `json:"username"`
 	Email     string       `json:"email"`
 	HeroName  string       `json:"heroName"`
 	Year      string       `json:"year"`
@@ -65,7 +63,6 @@ type UserStats struct {
 
 // AdminUserUpdateRequest représente une demande de mise à jour des données d'un utilisateur par un admin
 type AdminUserUpdateRequest struct {
-	Username string `json:"username"`
 	Email    string `json:"email"`
 	HeroName string `json:"heroName"`
 	Year     string `json:"year"`
@@ -134,7 +131,6 @@ func GetUsersList(w http.ResponseWriter, r *http.Request) {
 	for _, u := range users {
 		userItems = append(userItems, UserListItem{
 			ID:       u.ID,
-			Username: u.Username,
 			Email:    u.Email,
 			HeroName: u.HeroName,
 			Year:     u.Year,
@@ -231,7 +227,6 @@ func GetUserDetails(w http.ResponseWriter, r *http.Request) {
 	// Créer la réponse
 	response := UserDetailResponse{
 		ID:        user.ID,
-		Username:  user.Username,
 		Email:     user.Email,
 		HeroName:  user.HeroName,
 		Year:      user.Year,
@@ -285,12 +280,6 @@ func AdminUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Valider les données
-	if request.Username == "" {
-		middleware.RespondWithError(w, http.StatusBadRequest, "Le nom d'utilisateur ne peut pas être vide")
-		return
-	}
-
 	// Récupérer l'utilisateur existant
 	user, err := models.GetUserByID(userID)
 	if err != nil {
@@ -304,7 +293,6 @@ func AdminUpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Mettre à jour les champs
-	user.Username = request.Username
 	user.Email = request.Email
 	user.HeroName = request.HeroName
 	user.Year = request.Year

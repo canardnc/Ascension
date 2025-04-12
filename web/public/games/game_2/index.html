@@ -1,1643 +1,212 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grammaire en Folie</title>
-    <!-- Composant de fin de partie standard -->
-    <script src="/js/minigame-utils.js" defer></script>
+    <title>Bombe Grammaticale</title>
     <style>
-        :root {
-            --primary: #6542fe;
-            --secondary: #ff7e5f;
-            --correct: #4ae07c;
-            --wrong: #e04a4a;
-            --background: #f5f7ff;
-            --disabled: #cccccc;
-            
-            /* Couleurs des catégories grammaticales */
-            --color-verb: #e04a4a;      /* rouge */
-            --color-noun: #333333;      /* noir */
-            --color-determiner: #4aa7e0; /* bleu clair */
-            --color-adjective: #254e77;  /* bleu foncé */
-            --color-adverb: #ff9f43;    /* orange */
-        }
+        /* Styles spécifiques au mini-jeu */
 
-        @font-face {
-            font-family: 'Comic Neue';
-            src: url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
-        }
+        .phrase-container {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 0;
+    text-align: center;
+    min-height: 80px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    box-sizing: border-box;
 
-        body {
-            font-family: 'Comic Neue', 'Arial', sans-serif;
-            margin: 0;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
+    font-weight: bold;
+    color: white;
+    text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000;
+
+    font-size: clamp(1rem, 2.5vw, 2.5rem); /* s’adapte à la taille de l’écran */
+}
+
+        .bomb-container {
             position: relative;
-            overflow-x: hidden;
+            width: 80%;
+            max-height: 50vh; /* 50% de la hauteur de la fenêtre */
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* Arrière-plan selon la catégorie */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
+        .bomb-image {
             width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            filter: blur(3px) brightness(0.8);
-            z-index: -1;
-        }
-
-        body.strength::before {
-            background-image: url('/assets/images/background/training_force.jpeg');
-        }
-
-        body.endurance::before {
-            background-image: url('/assets/images/background/training_stamina.jpeg');
-        }
-
-        body.recovery::before {
-            background-image: url('/assets/images/background/training_recovery.jpeg');
-        }
-
-        body.agility::before {
-            background-image: url('/assets/images/background/training_agility.jpeg');
-        }
-
-        .container {
-            max-width: 800px;
-            width: 95%;
-            background-color: rgba(255, 255, 255, 0.92);
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            margin-bottom: 15px;
-            z-index: 1;
-        }
-
-        h1 {
-            color: var(--primary);
-            text-align: center;
-            font-size: 1.8rem;
-            margin-bottom: 5px;
-        }
-
-        .subtitle {
-            color: var(--secondary);
-            text-align: center;
-            font-size: 1rem;
-            margin-bottom: 15px;
-        }
-
-        /* Instructions et interface de jeu */
-        .instructions {
-            background-color: #f0f0ff;
-            padding: 10px 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border: 2px dashed var(--primary);
-            text-align: center;
-        }
-
-        .instructions p {
-            margin: 5px 0;
-            font-size: 1.1rem;
-        }
-
-        .highlight {
-            font-weight: bold;
-            color: var(--primary);
-            background-color: rgba(101, 66, 254, 0.15);
-            padding: 0 5px;
-            border-radius: 3px;
-        }
-
-        .sentence-container {
-            background-color: #fff;
-            border-radius: 10px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            min-height: 100px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .sentence-display {
-            font-size: 1.5rem;
-            line-height: 1.8;
-            margin: 10px 0;
-        }
-
-        /* Style pour les mots cliquables du niveau 1 et 2 */
-        .word {
-            display: inline-block;
-            margin: 0 3px;
-            padding: 3px 5px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-        }
-
-        .word:hover {
-            background-color: rgba(101, 66, 254, 0.15);
-        }
-
-        .word.selected {
-            background-color: var(--correct);
-            color: white;
-        }
-
-        .word.error {
-            background-color: var(--wrong);
-            color: white;
-        }
-
-        /* Style pour le niveau 3 (drag and drop) */
-        .word-container {
-            position: relative;
-            display: inline-block;
-            margin: 0 5px 25px 5px;
-        }
-
-        .drop-zone {
-            width: 44px;
-            height: 20px;
-            border: 2px dashed #aaa;
-            border-radius: 4px;
-            margin-top: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .category-options {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .category-block {
-            padding: 5px 10px;
-            border-radius: 5px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .category-block.verb {
-            background-color: var(--color-verb);
-        }
-
-        .category-block.noun {
-            background-color: var(--color-noun);
-        }
-
-        .category-block.determiner {
-            background-color: var(--color-determiner);
-        }
-
-        .category-block.adjective {
-            background-color: var(--color-adjective);
-        }
-
-        .category-block.adverb {
-            background-color: var(--color-adverb);
-        }
-
-        .solution-display {
-            font-size: 1rem;
-            text-align: center;
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #f0f0ff;
-            display: none;
-            border: 2px dashed var(--primary);
-        }
-        
-        .solution-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: var(--primary);
-        }
-        
-        .help-text {
-            font-size: 0.9rem;
-            color: #666;
-            text-align: center;
-            margin-top: 8px;
-        }
-
-        .correct-mark, .error-mark {
-            display: inline-block;
-            margin-left: 3px;
-            font-weight: bold;
-        }
-
-        .correct-mark {
-            color: var(--correct);
-        }
-
-        .error-mark {
-            color: var(--wrong);
-        }
-
-        .validation-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 20px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s;
-        }
-
-        .validation-btn:hover {
-            background-color: #5234d9;
-            transform: translateY(-2px);
-        }
-
-        .validation-btn:disabled {
-            background-color: var(--disabled);
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Stats and controls */
-        .stats-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
-            font-size: 1.2rem;
-            color: var(--primary);
+            max-height: 50vh;
+            object-fit: contain;
         }
 
         .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             font-weight: bold;
-            color: var(--secondary);
-        }
-
-        /* Boutons de navigation */
-        .navigation {
+            font-family: 'Courier New', monospace;
+            color: #ff0000;
+            height: 20%;
             display: flex;
-            justify-content: space-between;
-            margin-top: 15px;
+            align-items: center;
+            justify-content: center;
+            font-size: 5vw; /* Taille de base adaptative */
         }
 
-        .nav-button {
-            background-color: var(--primary);
+        .progress-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
             color: white;
-            border: none;
-            padding: 8px 15px;
+            padding: 5px 10px;
             border-radius: 5px;
-            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .word {
+            display: inline-block;
+            padding: 5px;
+            margin: 0 5px;
             cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .nav-button:hover {
-            transform: translateY(-2px);
-            background-color: #5234d9;
-        }
-
-        /* Progress bar */
-        .progress-container {
-            margin-top: 15px;
-            width: 100%;
-            height: 10px;
-            background-color: #e0e0e0;
+            position: relative;
             border-radius: 5px;
-            overflow: hidden;
         }
 
-        .progress-bar {
-            height: 100%;
-            background-color: var(--primary);
-            width: 0%;
-            transition: width 0.5s;
+        .word:hover {
+            background-color: rgba(173, 216, 230, 0.5);
         }
 
-        /* Modal d'énergie insuffisante */
-        .energy-modal {
-            display: none;
+        .word.selected {
+            background-color: rgba(173, 216, 230, 0.8);
+        }
+
+        .word-category {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .word-result {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 30px;
+            z-index: 3;
+            color: #4CAF50; /* Vert pour le succès */
+        }
+
+        .word-result.error {
+            color: #ff0000; /* Rouge pour l'erreur */
+        }
+
+        .categories-container {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 10px;
+        }
+
+        .category-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-item.active {
+            transform: translateY(-10px) scale(1.1);
+        }
+
+        .category-item.inactive {
+            transform: scale(0.9);
+            opacity: 0.7;
+        }
+
+        .category-image {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .category-label {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .explosion {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            z-index: 999;
+            background-color: #fff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            transition: opacity 0.1s ease;
+        }
+
+        #game-end-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-        }
-
-        .energy-modal-content {
-            background-color: white;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .energy-error-message {
-            color: var(--wrong);
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        .energy-back-button {
-            background-color: var(--secondary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-       
-.touch-device .category-block {
-    cursor: pointer;
-}
-
-.touch-device .selected-category {
-    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--primary);
-    transform: scale(1.1);
-}
-
-.touch-device .help-text {
-    font-size: 0.9rem;
-    color: #666;
-    text-align: center;
-    margin-top: 8px;
-    padding: 0 10px;
-}
-
-
-        /* Animation */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .pulse {
-            animation: pulse 1s infinite;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .sentence-display {
-                font-size: 1.3rem;
-            }
-            
-            .word-container {
-                margin: 0 3px 20px 3px;
-            }
-            
-            .drop-zone {
-                width: 36px;
-                height: 18px;
-            }
-            
-            .category-block {
-                font-size: 0.9rem;
-                padding: 4px 8px;
-            }
+            z-index: 2000;
         }
     </style>
 </head>
+<body>
+    <div>
+        <!-- Indicateur de progression -->
+        <div class="progress-display">Tour: <span id="progress-value">1</span>/10</div>
 
-<body class="strength">
-    <div class="container">
-        <h1>Grammaire en Folie</h1>
-        <p class="subtitle">Apprends la grammaire en t'amusant !</p>
-
-        <div class="instructions" id="instructions">
-            <p>Trouve le <span class="highlight">nom</span> dans la phrase.</p>
-        </div>
-
-        <div class="sentence-container">
-            <div class="sentence-display" id="sentence-display">
-                <!-- La phrase sera générée ici par JavaScript -->
-            </div>
+        <!-- Bombe et minuteur -->
+        <div class="bomb-container">
+            <!-- Phrase à analyser - maintenant à l'intérieur du conteneur de la bombe -->
+            <div class="phrase-container" id="phrase-display"></div>
             
-            <!-- Pour le niveau 3 : options de catégories -->
-            <div class="category-options" id="category-options" style="display: none;">
-                <div class="category-block verb" draggable="true" data-category="verb">Verbe</div>
-                <div class="category-block noun" draggable="true" data-category="noun">Nom</div>
-                <div class="category-block determiner" draggable="true" data-category="determiner">Déterminant</div>
-                <div class="category-block adjective" draggable="true" data-category="adjective">Adjectif</div>
-                <div class="category-block adverb" draggable="true" data-category="adverb">Adverbe</div>
-            </div>
-            
-            <!-- Bouton de validation pour le niveau 3 -->
-            <button id="validate-btn" class="validation-btn" style="display: none;">Valider</button>
-            
-            <!-- Affichage de la solution -->
-            <div class="solution-display" id="solution-display"></div>
+            <img src="" alt="Bombe" class="bomb-image" id="bomb-image">
+            <div class="timer-display" id="timer-value">30</div>
         </div>
 
-        <div class="progress-container">
-            <div class="progress-bar" id="progress-bar"></div>
-        </div>
+        <!-- Conteneur des catégories grammaticales -->
+        <div class="categories-container" id="categories-container"></div>
 
-        <div class="stats-container">
-            <div>Score: <span id="score">0</span></div>
-            <div>Temps: <span id="timer" class="timer-display">00:00</span></div>
-        </div>
-
-        <div class="navigation">
-            <button class="nav-button" id="back-button">Quitter</button>
-        </div>
+        <!-- Effet d'explosion -->
+        <div class="explosion" id="explosion-effect"></div>
     </div>
-
-    <!-- Modal d'énergie insuffisante -->
-    <div class="energy-modal" id="energy-modal">
-        <div class="energy-modal-content">
-            <h2>Énergie Insuffisante</h2>
-            <p class="energy-error-message">Tu n'as pas assez d'énergie pour jouer à ce mini-jeu.</p>
-            <button class="energy-back-button" id="energy-back-button">Retour à l'entraînement</button>
-        </div>
-    </div>
-
-    <script src="/js/auth-utils.js"></script>
-    <script>
-        // Configuration du jeu
-        const GAME_ID = 2; // ID du mini-jeu
-        const SENTENCES_PER_GAME = 10; // Nombre de phrases par partie
-        
-        // Variables de jeu
-        let difficultyLevel = 1;
-        let currentSentenceIndex = 0;
-        let sentences = [];
-        let currentSentence = null;
-        let score = 0;
-        let maxScore = 0;
-        let currentQuestionMaxScore = 0;
-
-        let waitingForNextQuestion = false;
-        let categoryToFind = '';
-        let droppedItems = {}; // Pour le niveau 3
-        
-        // Variables pour le suivi du temps
-        let gameStartTime;
-        let currentGameTime = 0;
-        let timeInterval;
-        
-        // Points par difficulté
-        const pointsPerLevel = {
-            1: 10,  // 10 points par bonne réponse au niveau 1
-            2: 10,  // 10 points par bonne réponse au niveau 2
-            3: 10   // 10 points par bonne réponse au niveau 3 (x nombre de mots)
-        };
-
-        // Base de données de phrases
-        const levelOneSentences = [
-            {
-                text: "Le chat dort.",
-                words: [
-                    { word: "Le", category: "determiner" },
-                    { word: "chat", category: "noun" },
-                    { word: "dort", category: "verb" }
-                ]
-            },
-            {
-                text: "Ma sœur chante.",
-                words: [
-                    { word: "Ma", category: "determiner" },
-                    { word: "sœur", category: "noun" },
-                    { word: "chante", category: "verb" }
-                ]
-            },
-            {
-                text: "Un oiseau vole.",
-                words: [
-                    { word: "Un", category: "determiner" },
-                    { word: "oiseau", category: "noun" },
-                    { word: "vole", category: "verb" }
-                ]
-            },
-            {
-                text: "Le chien aboie.",
-                words: [
-                    { word: "Le", category: "determiner" },
-                    { word: "chien", category: "noun" },
-                    { word: "aboie", category: "verb" }
-                ]
-            },
-            {
-                text: "La fleur pousse.",
-                words: [
-                    { word: "La", category: "determiner" },
-                    { word: "fleur", category: "noun" },
-                    { word: "pousse", category: "verb" }
-                ]
-            },
-            {
-                text: "Il court vite.",
-                words: [
-                    { word: "Il", category: "determiner" },
-                    { word: "court", category: "verb" },
-                    { word: "vite", category: "adverb" }
-                ]
-            },
-            {
-                text: "Elle danse bien.",
-                words: [
-                    { word: "Elle", category: "determiner" },
-                    { word: "danse", category: "verb" },
-                    { word: "bien", category: "adverb" }
-                ]
-            },
-            {
-                text: "Le grand arbre.",
-                words: [
-                    { word: "Le", category: "determiner" },
-                    { word: "grand", category: "adjective" },
-                    { word: "arbre", category: "noun" }
-                ]
-            },
-            {
-                text: "Une belle maison.",
-                words: [
-                    { word: "Une", category: "determiner" },
-                    { word: "belle", category: "adjective" },
-                    { word: "maison", category: "noun" }
-                ]
-            },
-            {
-                text: "Mon petit frère.",
-                words: [
-                    { word: "Mon", category: "determiner" },
-                    { word: "petit", category: "adjective" },
-                    { word: "frère", category: "noun" }
-                ]
-            },
-            {
-                text: "La voiture rouge.",
-                words: [
-                    { word: "La", category: "determiner" },
-                    { word: "voiture", category: "noun" },
-                    { word: "rouge", category: "adjective" }
-                ]
-            },
-            {
-                text: "Les chiens jouent.",
-                words: [
-                    { word: "Les", category: "determiner" },
-                    { word: "chiens", category: "noun" },
-                    { word: "jouent", category: "verb" }
-                ]
-            },
-            {
-                text: "Tu marches lentement.",
-                words: [
-                    { word: "Tu", category: "determiner" },
-                    { word: "marches", category: "verb" },
-                    { word: "lentement", category: "adverb" }
-                ]
-            },
-            {
-                text: "La souris mange.",
-                words: [
-                    { word: "La", category: "determiner" },
-                    { word: "souris", category: "noun" },
-                    { word: "mange", category: "verb" }
-                ]
-            },
-            {
-                text: "Un cheval galope.",
-                words: [
-                    { word: "Un", category: "determiner" },
-                    { word: "cheval", category: "noun" },
-                    { word: "galope", category: "verb" }
-                ]
-            },
-            {
-                text: "Les enfants rient.",
-                words: [
-                    { word: "Les", category: "determiner" },
-                    { word: "enfants", category: "noun" },
-                    { word: "rient", category: "verb" }
-                ]
-            },
-            {
-                text: "Cette fille dessine.",
-                words: [
-                    { word: "Cette", category: "determiner" },
-                    { word: "fille", category: "noun" },
-                    { word: "dessine", category: "verb" }
-                ]
-            },
-            {
-                text: "Mon stylo écrit.",
-                words: [
-                    { word: "Mon", category: "determiner" },
-                    { word: "stylo", category: "noun" },
-                    { word: "écrit", category: "verb" }
-                ]
-            },
-            {
-                text: "Le soleil brille.",
-                words: [
-                    { word: "Le", category: "determiner" },
-                    { word: "soleil", category: "noun" },
-                    { word: "brille", category: "verb" }
-                ]
-            },
-            {
-                text: "La pluie tombe.",
-                words: [
-                    { word: "La", category: "determiner" },
-                    { word: "pluie", category: "noun" },
-                    { word: "tombe", category: "verb" }
-                ]
-            }
-        ];
-
-        const levelTwoSentences = [
-            {
-                text: "Le petit chat noir dort sur le canapé.",
-                words: [
-                    { word: "Le", category: "determiner" },
-                    { word: "petit", category: "adjective" },
-                    { word: "chat", category: "noun" },
-                    { word: "noir", category: "adjective" },
-                    { word: "dort", category: "verb" },
-                    { word: "sur", category: "determiner" },
-                    { word: "le", category: "determiner" },
-                    { word: "canapé", category: "noun" }
-                ]
-            },
-            {
-                text: "Ma sœur chante une jolie chanson.",
-                words: [
-                    { word: "Ma", category: "determiner" },
-                    { word: "sœur", category: "noun" },
-                    { word: "chante", category: "verb" },
-                    { word: "une", category: "determiner" },
-                    { word: "jolie", category: "adjective" },
-                    { word: "chanson", category: "noun" }
-                ]
-            },
-            {
-                text: "Les oiseaux bleus volent dans le ciel clair.",
-                words: [
-                    { word: "Les", category: "determiner" },
-                    { word: "oiseaux", category: "noun" },
-                    { word: "bleus", category: "adjective" },
-                    { word: "volent", category: "verb" },
-                    { word: "dans", category: "determiner" },
-                    { word: "le", category: "determiner" },
-                    { word: "ciel", category: "noun" },
-                    { word: "clair", category: "adjective" }
-                ]
-            },
-            {
-                text: "Le chien de mon voisin aboie très fort.",
-                words: [
-                    { word: "Le", category: "determiner" },
-                    { word: "chien", category: "noun" },
-                    { word: "de", category: "determiner" },
-                    { word: "mon", category: "determiner" },
-                    { word: "voisin", category: "noun" },
-                    { word: "aboie", category: "verb" },
-                    { word: "très", category: "adverb" },
-                    { word: "fort", category: "adverb" }
-                ]
-            },
-            {
-                text: "Cette petite fille blonde dessine des fleurs rouges.",
-                words: [
-                    { word: "Cette", category: "determiner" },
-                    { word: "petite", category: "adjective" },
-                    { word: "fille", category: "noun" },
-                    { word: "blonde", category: "adjective" },
-                    { word: "dessine", category: "verb" },
-                    { word: "des", category: "determiner" },
-                    { word: "fleurs", category: "noun" },
-                    { word: "rouges", category: "adjective" }
-                ]
-            },
-            {
-                text: "Les enfants jouent joyeusement dans le grand parc.",
-                words: [
-                    { word: "Les", category: "determiner" },
-                    { word: "enfants", category: "noun" },
-                    { word: "jouent", category: "verb" },
-                    { word: "joyeusement", category: "adverb" },
-                    { word: "dans", category: "determiner" },
-                    { word: "le", category: "determiner" },
-                    { word: "grand", category: "adjective" },
-                    { word: "parc", category: "noun" }
-                ]
-            },
-            {
-                text: "Mon frère et ma sœur mangent des glaces délicieuses.",
-                words: [
-                    { word: "Mon", category: "determiner" },
-                    { word: "frère", category: "noun" },
-                    { word: "et", category: "determiner" },
-                    { word: "ma", category: "determiner" },
-                    { word: "sœur", category: "noun" },
-                    { word: "mangent", category: "verb" },
-                    { word: "des", category: "determiner" },
-                    { word: "glaces", category: "noun" },
-                    { word: "délicieuses", category: "adjective" }
-                ]
-            },
-            {
-                text: "La vieille voiture rouge roule lentement sur la route.",
-                words: [
-                    { word: "La", category: "determiner" },
-                    { word: "vieille", category: "adjective" },
-                    { word: "voiture", category: "noun" },
-                    { word: "rouge", category: "adjective" },
-                    { word: "roule", category: "verb" },
-                    { word: "lentement", category: "adverb" },
-                    { word: "sur", category: "determiner" },
-                    { word: "la", category: "determiner" },
-                    { word: "route", category: "noun" }
-                ]
-            },
-            {
-                text: "Ton ami a apporté un cadeau magnifique pour toi.",
-                words: [
-                    { word: "Ton", category: "determiner" },
-                    { word: "ami", category: "noun" },
-                    { word: "a", category: "verb" },
-                    { word: "apporté", category: "verb" },
-                    { word: "un", category: "determiner" },
-                    { word: "cadeau", category: "noun" },
-                    { word: "magnifique", category: "adjective" },
-                    { word: "pour", category: "determiner" },
-                    { word: "toi", category: "noun" }
-                ]
-            },
-            {
-                text: "Nous avons vu des étoiles brillantes dans le ciel nocturne.",
-                words: [
-                    { word: "Nous", category: "determiner" },
-                    { word: "avons", category: "verb" },
-                    { word: "vu", category: "verb" },
-                    { word: "des", category: "determiner" },
-                    { word: "étoiles", category: "noun" },
-                    { word: "brillantes", category: "adjective" },
-                    { word: "dans", category: "determiner" },
-                    { word: "le", category: "determiner" },
-                    { word: "ciel", category: "noun" },
-                    { word: "nocturne", category: "adjective" }
-                ]
-            }
-        ];
-
-        const levelThreeSentences = [
-            {
-                text: "Le petit chat noir dort.",
-                words: [
-                    { word: "Le", category: "determiner" },
-                    { word: "petit", category: "adjective" },
-                    { word: "chat", category: "noun" },
-                    { word: "noir", category: "adjective" },
-                    { word: "dort", category: "verb" }
-                ]
-            },
-            {
-                text: "Ma sœur chante doucement aujourd'hui.",
-                words: [
-                    { word: "Ma", category: "determiner" },
-                    { word: "sœur", category: "noun" },
-                    { word: "chante", category: "verb" },
-                    { word: "doucement", category: "adverb" },
-                    { word: "aujourd'hui", category: "adverb" }
-                ]
-            },
-            {
-                text: "Les oiseaux bleus volent rapidement.",
-                words: [
-                    { word: "Les", category: "determiner" },
-                    { word: "oiseaux", category: "noun" },
-                    { word: "bleus", category: "adjective" },
-                    { word: "volent", category: "verb" },
-                    { word: "rapidement", category: "adverb" }
-                ]
-            },
-            {
-                text: "Un enfant sage mange lentement.",
-                words: [
-                    { word: "Un", category: "determiner" },
-                    { word: "enfant", category: "noun" },
-                    { word: "sage", category: "adjective" },
-                    { word: "mange", category: "verb" },
-                    { word: "lentement", category: "adverb" }
-                ]
-            },
-            {
-                text: "Cette grande maison semble vraiment belle.",
-                words: [
-                    { word: "Cette", category: "determiner" },
-                    { word: "grande", category: "adjective" },
-                    { word: "maison", category: "noun" },
-                    { word: "semble", category: "verb" },
-                    { word: "vraiment", category: "adverb" },
-                    { word: "belle", category: "adjective" }
-                ]
-            },
-            {
-                text: "Nous parlons souvent trop fort.",
-                words: [
-                    { word: "Nous", category: "determiner" },
-                    { word: "parlons", category: "verb" },
-                    { word: "souvent", category: "adverb" },
-                    { word: "trop", category: "adverb" },
-                    { word: "fort", category: "adverb" }
-                ]
-            },
-            {
-                text: "Le vieux monsieur marche difficilement dehors.",
-                words: [
-                    { word: "Le", category: "determiner" },
-                    { word: "vieux", category: "adjective" },
-                    { word: "monsieur", category: "noun" },
-                    { word: "marche", category: "verb" },
-                    { word: "difficilement", category: "adverb" },
-                    { word: "dehors", category: "adverb" }
-                ]
-            },
-            {
-                text: "Un petit garçon joue joyeusement dehors.",
-                words: [
-                    { word: "Un", category: "determiner" },
-                    { word: "petit", category: "adjective" },
-                    { word: "garçon", category: "noun" },
-                    { word: "joue", category: "verb" },
-                    { word: "joyeusement", category: "adverb" },
-                    { word: "dehors", category: "adverb" }
-                ]
-            },
-            {
-                text: "La jolie fille dessine parfaitement bien.",
-                words: [
-                    { word: "La", category: "determiner" },
-                    { word: "jolie", category: "adjective" },
-                    { word: "fille", category: "noun" },
-                    { word: "dessine", category: "verb" },
-                    { word: "parfaitement", category: "adverb" },
-                    { word: "bien", category: "adverb" }
-                ]
-            },
-            {
-                text: "Ces beaux arbres poussent très lentement ici.",
-                words: [
-                    { word: "Ces", category: "determiner" },
-                    { word: "beaux", category: "adjective" },
-                    { word: "arbres", category: "noun" },
-                    { word: "poussent", category: "verb" },
-                    { word: "très", category: "adverb" },
-                    { word: "lentement", category: "adverb" },
-                    { word: "ici", category: "adverb" }
-                ]
-            }
-        ];
-
-        // Initialisation
-        init();
-
-        function init() {
-            // Récupérer le niveau de difficulté depuis l'URL
-            const urlParams = new URLSearchParams(window.location.search);
-            difficultyLevel = parseInt(urlParams.get('difficulty') || '1');
-            
-            // Définir le titre avec le niveau
-            document.querySelector('h1').textContent = `Grammaire en Folie - Niveau ${difficultyLevel}`;
-
-            // Mettre à jour la classe du corps selon la catégorie
-            const category = urlParams.get('category') || 'strength';
-            document.body.className = category;
-
-            // Configurer les événements
-            document.getElementById('back-button').addEventListener('click', exitGame);
-            document.getElementById('energy-back-button').addEventListener('click', exitGame);
-            
-            // Si niveau 3, configurer le drag and drop et le bouton de validation
-            if (difficultyLevel === 3) {
-                setupDragAndDrop();
-                document.getElementById('validate-btn').addEventListener('click', validateLevel3Answers);
-                document.getElementById('validate-btn').style.display = 'block';
-                document.getElementById('category-options').style.display = 'flex';
-            }
-
-            // Vérifier l'énergie et démarrer le jeu
-            checkEnergyAndStartGame();
-        }
-
-        function checkEnergyAndStartGame() {
-    // Vérifier l'authentification
-    if (!localStorage.getItem('token')) {
-        showEnergyError();
-        return;
-    }
-
-    // Récupérer les statistiques du joueur pour vérifier l'énergie
-    fetchWithAuth('/api/player/stats')
-        .then(data => {
-            // data est déjà un objet JSON avec fetchWithAuth
-            // Calculer le coût en énergie (nous utilisons 1 par défaut pour ce mini-jeu)
-            const energyCost = 1;
-            
-            if (data.currentEnergy < energyCost) {
-                showEnergyError();
-            } else {
-                // Déduire l'énergie (cette opération est gérée côté serveur)
-                // Nous lançons simplement le jeu
-                startGame();
-            }
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            showEnergyError();
-        });
-}
-
-        function showEnergyError() {
-            document.getElementById('energy-modal').style.display = 'flex';
-        }
-
-        function startGame() {
-    // Sélectionner les phrases en fonction du niveau de difficulté
-    switch (difficultyLevel) {
-        case 1:
-            sentences = shuffleArray([...levelOneSentences]).slice(0, SENTENCES_PER_GAME);
-            break;
-        case 2:
-            sentences = shuffleArray([...levelTwoSentences]).slice(0, SENTENCES_PER_GAME);
-            break;
-        case 3:
-            sentences = shuffleArray([...levelThreeSentences]).slice(0, SENTENCES_PER_GAME);
-            break;
-        default:
-            sentences = shuffleArray([...levelOneSentences]).slice(0, SENTENCES_PER_GAME);
-    }
-
-    // Initialiser les variables
-    currentSentenceIndex = 0;
-    score = 0;
-    
-    // Réinitialiser le score maximum
-    maxScore = 0;
-    
-    // Pour le niveau 1, le score max est fixe: 
-    // SENTENCES_PER_GAME phrases, un mot par phrase
-    if (difficultyLevel === 1) {
-        maxScore = SENTENCES_PER_GAME * pointsPerLevel[difficultyLevel];
-    }
-    // Pour les niveaux 2 et 3, le score max sera calculé au fil de l'eau
-    // dans displayLevel2Sentence() et displayLevel3Sentence()
-
-    document.getElementById('score').textContent = score;
-    updateProgressBar();
-
-    // Enregistrer l'heure de début et démarrer le chronomètre
-    gameStartTime = new Date();
-    currentGameTime = 0;
-    startTimer();
-
-    // Démarrer avec la première phrase
-    showNextSentence();
-}
-
-function getMaxPossibleScore() {
-    return maxScore;
-}
-
-        function startTimer() {
-            // Afficher le temps initial
-            updateTimerDisplay();
-            
-            // Démarrer le chronomètre
-            timeInterval = setInterval(() => {
-                currentGameTime++;
-                updateTimerDisplay();
-            }, 1000);
-        }
-
-        function updateTimerDisplay() {
-            const minutes = Math.floor(currentGameTime / 60);
-            const seconds = currentGameTime % 60;
-            document.getElementById('timer').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        function showNextSentence() {
-            // Réinitialiser l'état d'attente
-            waitingForNextQuestion = false;
-            
-            // Réinitialiser l'affichage des solutions
-            document.getElementById('solution-display').style.display = 'none';
-            
-            // Vérifier si toutes les phrases ont été traitées
-            if (currentSentenceIndex >= sentences.length) {
-                endGame();
-                return;
-            }
-            
-            // Récupérer la phrase actuelle
-            currentSentence = sentences[currentSentenceIndex];
-            
-            // Niveau 3: réinitialiser les objets déposés
-            if (difficultyLevel === 3) {
-                droppedItems = {};
-                document.getElementById('validate-btn').disabled = false;
-            }
-            
-            // Mettre à jour les instructions selon le niveau
-            updateInstructions();
-            
-            // Afficher la phrase selon le niveau de difficulté
-            switch (difficultyLevel) {
-                case 1:
-                    displayLevel1Sentence();
-                    break;
-                case 2:
-                    displayLevel2Sentence();
-                    break;
-                case 3:
-                    displayLevel3Sentence();
-                    break;
-                default:
-                    displayLevel1Sentence();
-            }
-            
-            // Mettre à jour la barre de progression
-            updateProgressBar();
-        }
-
-        function updateInstructions() {
-            const instructions = document.getElementById('instructions');
-            
-            switch (difficultyLevel) {
-                case 1:
-                    // Choisir aléatoirement une catégorie à trouver
-                    const categories = ['noun', 'verb', 'determiner', 'adjective', 'adverb'];
-                    // Filter pour ne garder que les catégories présentes dans la phrase
-                    const availableCategories = categories.filter(cat => 
-                        currentSentence.words.some(w => w.category === cat)
-                    );
-                    categoryToFind = availableCategories[Math.floor(Math.random() * availableCategories.length)];
-                    
-                    // Traduire la catégorie en français
-                    let categoryName = '';
-                    switch(categoryToFind) {
-                        case 'noun': categoryName = 'nom'; break;
-                        case 'verb': categoryName = 'verbe'; break;
-                        case 'determiner': categoryName = 'déterminant'; break;
-                        case 'adjective': categoryName = 'adjectif'; break;
-                        case 'adverb': categoryName = 'adverbe'; break;
-                        default: categoryName = 'mot';
-                    }
-                    
-                    instructions.innerHTML = `<p>Trouve le <span class="highlight">${categoryName}</span> dans la phrase.</p>`;
-                    break;
-                    
-                case 2:
-                    // Choisir aléatoirement une catégorie à trouver qui a au moins un élément
-                    const level2Categories = ['noun', 'verb', 'determiner', 'adjective', 'adverb'];
-                    const level2Available = level2Categories.filter(cat => 
-                        currentSentence.words.filter(w => w.category === cat).length > 0
-                    );
-                    categoryToFind = level2Available[Math.floor(Math.random() * level2Available.length)];
-                    
-                    // Traduire la catégorie en français
-                    let level2Name = '';
-                    switch(categoryToFind) {
-                        case 'noun': level2Name = 'noms'; break;
-                        case 'verb': level2Name = 'verbes'; break;
-                        case 'determiner': level2Name = 'déterminants'; break;
-                        case 'adjective': level2Name = 'adjectifs'; break;
-                        case 'adverb': level2Name = 'adverbes'; break;
-                        default: level2Name = 'mots';
-                    }
-                    
-                    instructions.innerHTML = `<p>Trouve tous les <span class="highlight">${level2Name}</span> dans la phrase.</p>`;
-                    break;
-                    
-                case 3:
-                    instructions.innerHTML = `
-                        <p>Identifie la nature de <span class="highlight">chaque mot</span> dans la phrase.</p>
-                        <p>Déplace les blocs de couleur sous les mots correspondants.</p>
-                    `;
-                    break;
-            }
-        }
-
-        function displayLevel1Sentence() {
-    const sentenceDisplay = document.getElementById('sentence-display');
-    // Vider complètement le contenu précédent
-    sentenceDisplay.innerHTML = '';
-    
-    // Créer les éléments de mot cliquables
-    currentSentence.words.forEach(wordObj => {
-        const wordSpan = document.createElement('span');
-        wordSpan.classList.add('word');
-        wordSpan.textContent = wordObj.word;
-        wordSpan.dataset.category = wordObj.category;
-        
-        // Ajouter le gestionnaire d'événement pour le clic
-        wordSpan.addEventListener('click', handleLevel1WordClick);
-        
-        sentenceDisplay.appendChild(wordSpan);
-        // Ajouter un espace après chaque mot sauf le dernier
-        sentenceDisplay.appendChild(document.createTextNode(' '));
-    });
-}
-
-function displayLevel2Sentence() {
-    const sentenceDisplay = document.getElementById('sentence-display');
-    // Vider complètement le contenu précédent
-    sentenceDisplay.innerHTML = '';
-    
-    // Variables pour suivre les mots de la catégorie cible
-    const targetWords = currentSentence.words.filter(w => w.category === categoryToFind);
-    let selectedCount = 0;
-    let firstError = false;
-    
-    // Mettre à jour le score maximum pour ce niveau
-    // Chaque mot correct vaut pointsPerLevel[2] points
-    const questionMaxScore = targetWords.length * pointsPerLevel[2];
-    currentQuestionMaxScore = questionMaxScore;
-    maxScore += questionMaxScore;
-    
-    // Créer les éléments de mot cliquables
-    currentSentence.words.forEach(wordObj => {
-        const wordSpan = document.createElement('span');
-        wordSpan.classList.add('word');
-        wordSpan.textContent = wordObj.word;
-        wordSpan.dataset.category = wordObj.category;
-        
-        // Ajouter le gestionnaire d'événement pour le clic
-        wordSpan.addEventListener('click', function() {
-            // Si on attend la prochaine question ou si une erreur a déjà été faite, ignorer
-            if (waitingForNextQuestion || firstError) return;
-            
-            if (wordObj.category === categoryToFind) {
-                // Bonne réponse
-                wordSpan.classList.add('selected');
-                
-                // Ajouter des points
-                score += pointsPerLevel[2];
-                document.getElementById('score').textContent = score;
-                
-                // Vérifier si tous les mots cibles ont été trouvés
-                selectedCount++;
-                if (selectedCount === targetWords.length) {
-                    waitingForNextQuestion = true;
-                    setTimeout(moveToNextQuestion, 3000);
-                }
-            } else {
-                // Erreur
-                wordSpan.classList.add('error');
-                firstError = true;
-                
-                // Montrer tous les mots corrects qui n'ont pas été sélectionnés
-                document.querySelectorAll('.word').forEach(span => {
-                    if (span.dataset.category === categoryToFind && !span.classList.contains('selected')) {
-                        span.classList.add('selected');
-                    }
-                });
-                
-                waitingForNextQuestion = true;
-                setTimeout(moveToNextQuestion, 3000);
-            }
-        });
-        
-        sentenceDisplay.appendChild(wordSpan);
-        // Ajouter un espace après chaque mot sauf le dernier
-        sentenceDisplay.appendChild(document.createTextNode(' '));
-    });
-}
-
-function displayLevel3Sentence() {
-    const sentenceDisplay = document.getElementById('sentence-display');
-    // Vider complètement le contenu précédent
-    sentenceDisplay.innerHTML = '';
-    
-    // Pour le niveau 3, mettre à jour le score maximum
-    // Chaque mot correctement classé vaut pointsPerLevel[3] points
-    const questionMaxScore = currentSentence.words.length * pointsPerLevel[3];
-    currentQuestionMaxScore = questionMaxScore;
-    maxScore += questionMaxScore;
-    
-    // Créer les conteneurs de mots avec zones de dépôt
-    currentSentence.words.forEach((wordObj, index) => {
-        const wordContainer = document.createElement('div');
-        wordContainer.classList.add('word-container');
-        wordContainer.dataset.index = index;
-        
-        // Le mot lui-même
-        const wordSpan = document.createElement('span');
-        wordSpan.classList.add('word');
-        wordSpan.textContent = wordObj.word;
-        
-        // La zone de dépôt
-        const dropZone = document.createElement('div');
-        dropZone.classList.add('drop-zone');
-        dropZone.dataset.index = index;
-        dropZone.dataset.word = wordObj.word;
-        
-        // Ajouter les éléments au conteneur
-        wordContainer.appendChild(wordSpan);
-        wordContainer.appendChild(dropZone);
-        
-        sentenceDisplay.appendChild(wordContainer);
-    });
-    
-    // Ajouter un texte d'aide
-    const helpText = document.createElement('div');
-    helpText.classList.add('help-text');
-    helpText.innerHTML = "Astuce: Tu peux faire <strong>glisser-déposer</strong> les blocs de couleur sous chaque mot " +
-                        "ou <strong>toucher</strong> un bloc de catégorie puis toucher la zone sous un mot. " +
-                        "Double-clique/double-tape pour supprimer.";
-    sentenceDisplay.appendChild(helpText);
-}
-
-function setupDragAndDrop() {
-    // Configurer le drag and drop
-    let draggedItem = null;
-    let selectedCategory = null;
-    
-    // Détection tactile
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    // Si c'est un appareil tactile, on adapte l'UI
-    if (isTouchDevice) {
-        // Ajouter une classe au corps pour les styles spécifiques aux appareils tactiles
-        document.body.classList.add('touch-device');
-        
-        // Pour les appareils tactiles, on gère le clic sur les catégories
-        document.querySelectorAll('.category-block').forEach(block => {
-            block.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Si une catégorie est déjà sélectionnée, la désélectionner
-                if (selectedCategory) {
-                    document.querySelectorAll('.category-block').forEach(b => {
-                        b.classList.remove('selected-category');
-                    });
-                }
-                
-                // Sélectionner/désélectionner cette catégorie
-                if (selectedCategory === this.dataset.category) {
-                    selectedCategory = null;
-                } else {
-                    this.classList.add('selected-category');
-                    selectedCategory = this.dataset.category;
-                }
-            });
-        });
-        
-        // Pour les appareils tactiles, on gère le clic sur les zones de dépôt
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('drop-zone') && selectedCategory) {
-                // Simuler un drop lorsqu'on a une catégorie sélectionnée
-                const dropZone = e.target;
-                const category = selectedCategory;
-                const wordIndex = dropZone.dataset.index;
-                
-                // Créer ou mettre à jour l'élément dans la zone
-                handleDropOperation(dropZone, category, wordIndex);
-                
-                // Réinitialiser la sélection
-                selectedCategory = null;
-                document.querySelectorAll('.category-block').forEach(b => {
-                    b.classList.remove('selected-category');
-                });
-            }
-        });
-        
-        // Double tap pour supprimer
-        let lastTap = 0;
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('category-block') && e.target.parentElement.classList.contains('drop-zone')) {
-                const currentTime = new Date().getTime();
-                const tapLength = currentTime - lastTap;
-                
-                if (tapLength < 500 && tapLength > 0) {
-                    // Double tap détecté
-                    const dropZone = e.target.parentElement;
-                    const wordIndex = dropZone.dataset.index;
-                    
-                    // Supprimer l'élément
-                    dropZone.innerHTML = '';
-                    delete droppedItems[wordIndex];
-                    
-                    e.preventDefault();
-                }
-                lastTap = currentTime;
-            }
-        });
-    } else {
-        // Gestionnaire pour les éléments traînables (ordinateur)
-        document.addEventListener('dragstart', function(e) {
-            if (e.target.classList.contains('category-block')) {
-                draggedItem = e.target;
-                e.dataTransfer.setData('text/plain', e.target.dataset.category);
-                setTimeout(() => {
-                    e.target.style.opacity = '0.5';
-                }, 0);
-            }
-        });
-        
-        document.addEventListener('dragend', function(e) {
-            if (e.target.classList.contains('category-block')) {
-                e.target.style.opacity = '1';
-            }
-        });
-        
-        // Gérer la zone de dépôt
-        document.addEventListener('dragover', function(e) {
-            if (e.target.classList.contains('drop-zone') || e.target.classList.contains('category-block')) {
-                e.preventDefault();
-                const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.parentElement;
-                dropZone.style.backgroundColor = 'rgba(101, 66, 254, 0.15)';
-            }
-        });
-        
-        document.addEventListener('dragleave', function(e) {
-            if (e.target.classList.contains('drop-zone') || e.target.classList.contains('category-block')) {
-                const dropZone = e.target.classList.contains('drop-zone') ? e.target : e.target.parentElement;
-                dropZone.style.backgroundColor = '';
-            }
-        });
-        
-        document.addEventListener('drop', function(e) {
-            let dropZone;
-            if (e.target.classList.contains('drop-zone')) {
-                dropZone = e.target;
-            } else if (e.target.classList.contains('category-block') && e.target.parentElement.classList.contains('drop-zone')) {
-                dropZone = e.target.parentElement;
-            } else {
-                return;
-            }
-            
-            e.preventDefault();
-            dropZone.style.backgroundColor = '';
-            
-            const category = e.dataTransfer.getData('text/plain');
-            const wordIndex = dropZone.dataset.index;
-            
-            // Utiliser la fonction commune pour gérer le drop
-            handleDropOperation(dropZone, category, wordIndex);
-        });
-    }
-
-    function handleDropOperation(dropZone, category, wordIndex) {
-        // Créer ou mettre à jour l'élément dans la zone
-        let categoryElement = dropZone.querySelector('.category-block');
-        
-        if (!categoryElement) {
-            categoryElement = document.createElement('div');
-            categoryElement.classList.add('category-block');
-            categoryElement.classList.add(category);
-            categoryElement.dataset.category = category;
-            categoryElement.draggable = true;
-            dropZone.appendChild(categoryElement);
-        } else {
-            // Remplacer la classe de catégorie
-            categoryElement.className = '';
-            categoryElement.classList.add('category-block');
-            categoryElement.classList.add(category);
-            categoryElement.dataset.category = category;
-            categoryElement.draggable = true;
-        }
-        
-        // Mettre à jour le texte selon la catégorie
-        switch(category) {
-            case 'verb': categoryElement.textContent = 'V'; break;
-            case 'noun': categoryElement.textContent = 'N'; break;
-            case 'determiner': categoryElement.textContent = 'D'; break;
-            case 'adjective': categoryElement.textContent = 'A'; break;
-            case 'adverb': categoryElement.textContent = 'Adv'; break;
-            default: categoryElement.textContent = '?';
-        }
-        
-        // Ajouter un gestionnaire de double-clic pour supprimer
-        categoryElement.addEventListener('dblclick', function(e) {
-            e.stopPropagation();
-            dropZone.removeChild(categoryElement);
-            delete droppedItems[wordIndex];
-        });
-        
-        // Enregistrer l'élément déposé
-        droppedItems[wordIndex] = category;
-    }
-}
-        function handleLevel1WordClick(event) {
-            // Ignorer si on attend déjà la prochaine question
-            if (waitingForNextQuestion) return;
-            
-            const clickedWord = event.target;
-            const category = clickedWord.dataset.category;
-            
-            if (category === categoryToFind) {
-                // Bonne réponse
-                clickedWord.classList.add('selected');
-                score += pointsPerLevel[1];
-                document.getElementById('score').textContent = score;
-            } else {
-                // Mauvaise réponse
-                clickedWord.classList.add('error');
-                
-                // Trouver le mot correct et le mettre en évidence
-                document.querySelectorAll('.word').forEach(word => {
-                    if (word.dataset.category === categoryToFind) {
-                        word.classList.add('selected');
-                    }
-                });
-            }
-            
-            // Attendre 5 secondes avant de passer à la phrase suivante
-            waitingForNextQuestion = true;
-            setTimeout(moveToNextQuestion, 5000);
-        }
-
-        function validateLevel3Answers() {
-            // Vérifier si toutes les zones ont un élément
-            const allZonesFilled = document.querySelectorAll('.drop-zone').length === 
-                                 Object.keys(droppedItems).length;
-            
-            if (!allZonesFilled) {
-                alert("Place tous les blocs avant de valider!");
-                return;
-            }
-            
-            // Désactiver le bouton de validation
-            document.getElementById('validate-btn').disabled = true;
-            
-            // Rendre les blocs non déplaçables
-            document.querySelectorAll('.drop-zone .category-block').forEach(block => {
-                block.draggable = false;
-                block.style.cursor = 'default';
-            });
-            
-            // Vérifier les réponses et calculer le score
-            let correctAnswers = 0;
-            let displaySolution = "<div class='solution-title'>Solution:</div>";
-            
-            currentSentence.words.forEach((wordObj, index) => {
-                const userCategory = droppedItems[index];
-                const correctCategory = wordObj.category;
-                
-                // Obtenir la zone de dépôt correspondante
-                const dropZone = document.querySelector(`.drop-zone[data-index="${index}"]`);
-                const categoryBlock = dropZone.querySelector('.category-block');
-                
-                // Vérifier si la réponse est correcte
-                if (userCategory === correctCategory) {
-                    correctAnswers++;
-                    if (categoryBlock) {
-                        categoryBlock.innerHTML += ' <span class="correct-mark">✓</span>';
-                    }
-                    
-                    displaySolution += `<span style="color: var(--color-${correctCategory}); font-weight: bold;">${wordObj.word}</span> <span class="correct-mark">✓</span> `;
-                } else {
-                    // Marquer la réponse comme incorrecte
-                    if (categoryBlock) {
-                        categoryBlock.innerHTML += ' <span class="error-mark">✗</span>';
-                        
-                        // Ajouter un indice visuel pour montrer la bonne réponse
-                        const correctIndicator = document.createElement('div');
-                        correctIndicator.classList.add('category-block', correctCategory);
-                        correctIndicator.style.position = 'absolute';
-                        correctIndicator.style.bottom = '-20px';
-                        correctIndicator.style.left = '0';
-                        correctIndicator.style.right = '0';
-                        correctIndicator.style.margin = 'auto';
-                        correctIndicator.style.fontSize = '10px';
-                        
-                        switch(correctCategory) {
-                            case 'verb': correctIndicator.textContent = 'Verbe'; break;
-                            case 'noun': correctIndicator.textContent = 'Nom'; break;
-                            case 'determiner': correctIndicator.textContent = 'Dét.'; break;
-                            case 'adjective': correctIndicator.textContent = 'Adj.'; break;
-                            case 'adverb': correctIndicator.textContent = 'Adv.'; break;
-                        }
-                        
-                        dropZone.parentElement.appendChild(correctIndicator);
-                    }
-                    
-                    displaySolution += `<span style="color: var(--color-${correctCategory}); font-weight: bold;">${wordObj.word}</span> <span class="error-mark">✗</span> `;
-                }
-            });
-            
-            // Calculer les points (10 points par bonne réponse, -10 par erreur, minimum 0)
-            const incorrectAnswers = currentSentence.words.length - correctAnswers;
-            const pointsEarned = Math.max(0, (correctAnswers - incorrectAnswers) * pointsPerLevel[3]);
-            score += pointsEarned;
-            document.getElementById('score').textContent = score;
-            
-            // Afficher la solution complète
-            const solutionDisplay = document.getElementById('solution-display');
-            solutionDisplay.innerHTML = displaySolution;
-            solutionDisplay.style.display = 'block';
-            
-            // Attendre 10 secondes avant de passer à la phrase suivante
-            waitingForNextQuestion = true;
-            setTimeout(moveToNextQuestion, 10000);
-        }
-
-        function moveToNextQuestion() {
-            currentSentenceIndex++;
-            showNextSentence();
-        }
-
-        function updateProgressBar() {
-            const progressBar = document.getElementById('progress-bar');
-            const progress = (currentSentenceIndex / SENTENCES_PER_GAME) * 100;
-            progressBar.style.width = `${progress}%`;
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        function getMaxPossibleScore() {
-            return maxScore;
-        }
-
-        function getGameDuration() {
-            return currentGameTime;
-        }
-
-        function resetGame() {
-            // Arrêter le timer
-            clearInterval(timeInterval);
-            
-            // Réinitialiser les variables
-            currentSentenceIndex = 0;
-            score = 0;
-            waitingForNextQuestion = false;
-            currentGameTime = 0;
-            
-            // Réinitialiser l'affichage
-            document.getElementById('score').textContent = score;
-            updateTimerDisplay();
-            document.getElementById('solution-display').style.display = 'none';
-            
-            // Si niveau 3, réinitialiser les objets déposés
-            if (difficultyLevel === 3) {
-                droppedItems = {};
-                document.getElementById('validate-btn').disabled = false;
-            }
-            
-            // Démarrer une nouvelle partie
-            startGame();
-        }
-
-        function endGame() {
-            // Arrêter le timer
-            clearInterval(timeInterval);
-            
-            // Appeler le composant standardisé de fin de partie
-            showEndgameScreen(
-                score,                  // Score obtenu
-                getMaxPossibleScore(),  // Score maximum possible
-                'strength',             // Catégorie du mini-jeu
-                resetGame,              // Fonction pour réinitialiser le jeu
-                {
-                    minigameId: GAME_ID,        // ID du mini-jeu
-                    difficultyLevel: difficultyLevel,
-                    timeSpent: getGameDuration() // Temps en secondes
-                }
-            );
-        }
-
-        function exitGame() {
-            window.location.href = `/training.html?type=strength`;
-        }
-    </script>
 </body>
-
 </html>

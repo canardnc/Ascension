@@ -427,8 +427,8 @@
                 <div class="form-container active" id="login-form">
                     <form id="login">
                         <div class="form-group">
-                            <label for="login-username" class="form-label">Nom d'utilisateur</label>
-                            <input type="text" id="login-username" class="form-input" placeholder="Entrez votre nom d'utilisateur" required>
+                            <label for="login-email" class="form-label">Adresse email</label>
+                            <input type="email" id="login-email" class="form-input" placeholder="Entrez votre adresse email" required>
                         </div>
                         
                         <div class="form-group">
@@ -455,11 +455,6 @@
                 <!-- Formulaire d'inscription -->
                 <div class="form-container" id="register-form">
                     <form id="register">
-                        <div class="form-group">
-                            <label for="register-username" class="form-label">Nom d'utilisateur</label>
-                            <input type="text" id="register-username" class="form-input" placeholder="Choisissez un nom d'utilisateur" required>
-                        </div>
-                        
                         <div class="form-group">
                             <label for="register-email" class="form-label">Email</label>
                             <input type="email" id="register-email" class="form-input" placeholder="Entrez votre adresse email" required>
@@ -642,109 +637,106 @@
         
         // Formulaire de connexion
         document.getElementById('login').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Masquer les erreurs précédentes
-            hideError('login-error');
-            
-            // Récupérer les valeurs
-            const username = document.getElementById('login-username').value.trim();
-            const password = document.getElementById('login-password').value;
-            
-            // Valider le formulaire
-            if (!username || !password) {
-                showError('login-error', 'Veuillez remplir tous les champs');
-                return;
-            }
-            
-            // Afficher le chargement
-            setButtonLoading('login-btn', true);
-            
-            try {
-                // Envoyer la requête de connexion
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Erreur de connexion');
-                }
-                
-                // Stocker le token
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('username', data.username);
-                
-                // Rediriger l'utilisateur
-                if (data.needSetup) {
-                    // Rediriger vers la page d'onboarding (configuration du profil)
-                    window.location.href = '/onboarding.html';
-                } else {
-                    // Rediriger vers la page d'accueil du jeu
-                    window.location.href = '/home.html';
-                }
-            } catch (error) {
-                console.error('Erreur:', error);
-                showError('login-error', error.message);
-                setButtonLoading('login-btn', false);
-            }
+    e.preventDefault();
+    
+    // Masquer les erreurs précédentes
+    hideError('login-error');
+    
+    // Récupérer les valeurs
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    
+    // Valider le formulaire
+    if (!email || !password) {
+        showError('login-error', 'Veuillez remplir tous les champs');
+        return;
+    }
+    
+    // Afficher le chargement
+    setButtonLoading('login-btn', true);
+    
+    try {
+        // Envoyer la requête de connexion
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
         });
         
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Erreur de connexion');
+        }
+        
+        // Stocker le token
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('email', data.email);
+        
+        // Rediriger l'utilisateur
+        if (data.needSetup) {
+            // Rediriger vers la page d'onboarding (configuration du profil)
+            window.location.href = '/onboarding.html';
+        } else {
+            // Rediriger vers la page d'accueil du jeu
+            window.location.href = '/home.html';
+        }
+    } catch (error) {
+        console.error('Erreur:', error);
+        showError('login-error', error.message);
+        setButtonLoading('login-btn', false);
+    }
+});
         // Formulaire d'inscription
         document.getElementById('register').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Masquer les erreurs précédentes
-            hideError('register-error');
-            
-            // Récupérer les valeurs
-            const username = document.getElementById('register-username').value.trim();
-            const email = document.getElementById('register-email').value.trim();
-            const password = document.getElementById('register-password').value;
-            const confirmPassword = document.getElementById('register-confirm').value;
-            
-            // Valider le formulaire
-            const formData = { username, email, password, confirmPassword };
-            const validationError = validateForm(formData, true);
-            
-            if (validationError) {
-                showError('register-error', validationError);
-                return;
-            }
-            
-            // Afficher le chargement
-            setButtonLoading('register-btn', true);
-            
-            try {
-                // Envoyer la requête d'inscription
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-                
-                const data = await response.json();
-                
-                if (!response.ok) {
-                    throw new Error(data.error || 'Erreur d\'inscription');
-                }
-                
-                // Stocker le token
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('username', data.username);
-                
-                // Rediriger vers la page d'onboarding
-                window.location.href = '/onboarding.html';
-            } catch (error) {
-                console.error('Erreur:', error);
-                showError('register-error', error.message);
-                setButtonLoading('register-btn', false);
-            }
+    e.preventDefault();
+    
+    // Masquer les erreurs précédentes
+    hideError('register-error');
+    
+    // Récupérer les valeurs
+    const email = document.getElementById('register-email').value.trim();
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm').value;
+    
+    // Valider le formulaire
+    const formData = { email, password, confirmPassword };
+    const validationError = validateForm(formData, true);
+    
+    if (validationError) {
+        showError('register-error', validationError);
+        return;
+    }
+    
+    // Afficher le chargement
+    setButtonLoading('register-btn', true);
+    
+    try {
+        // Envoyer la requête d'inscription
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
         });
         
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Erreur d\'inscription');
+        }
+        
+        // Stocker le token
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('email', data.email);
+        
+        // Rediriger vers la page d'onboarding
+        window.location.href = '/onboarding.html';
+    } catch (error) {
+        console.error('Erreur:', error);
+        showError('register-error', error.message);
+        setButtonLoading('register-btn', false);
+    }
+});
         // Formulaire de réinitialisation de mot de passe
         document.getElementById('reset').addEventListener('submit', async (e) => {
             e.preventDefault();

@@ -23,18 +23,15 @@ html
 *     <div class="votre-conteneur-principal">
 *         <!-- Structure de votre jeu -->
 *         <!-- Veillez à utiliser des ID uniques pour les éléments à manipuler -->
-*         
+*         NE PAS rajouter de fond, celui-ci est déjà géré dans le template.
+Ne PAS ajouter de score : il faut nécessairement appeler updatetopbar_score(score) à chaque changement de valeur.
+Ne PAS ajouter de tire, texte, explications, introduction etc car tout cela est déjà géré dans le template.
 *         <!-- Exemple d'éléments courants : -->
-*         <div id="game-title">Titre du jeu</div>
-*         <div id="game-instructions">Instructions...</div>
 *         <div id="game-content">
 *             <!-- Contenu principal du jeu -->
 *         </div>
 *         <div id="game-controls">
 *             <!-- Contrôles (boutons, etc.) -->
-*         </div>
-*         <div id="game-status">
-*             <!-- Zone pour afficher le statut (score, temps, etc.) -->
 *         </div>
 *     </div>
 * </body>
@@ -87,7 +84,7 @@ javascript
 // ...
 4. Intégration avec le système de fin de jeu
 Pour que l'écran de fin s'affiche correctement, assurez-vous de :
-1. Calculer un score valide (nombre entier, >= 0)
+1. Calculer un score valide (nombre entier, >= 0). A chaque changement, la fonction updatetopbar_score(score) doit être appelée
 2. Déterminer un score maximum possible
 3. Mesurer précisément le temps écoulé (en secondes)
 4. Utiliser correctement la fonction window.GameEnd.endGame()

@@ -14,12 +14,11 @@ import (
 // UserAuth représente les données d'authentification d'un utilisateur
 type UserAuth struct {
 	ID        int       `json:"id"`
-	Username  string    `json:"username"`
 	Email     string    `json:"email"`
-	Password  string    `json:"-"` // Le mot de passe n'est jamais renvoyé en JSON
-	Salt      string    `json:"-"` // Le sel n'est jamais renvoyé en JSON
+	Password  string    `json:"-"`
+	Salt      string    `json:"-"`
 	IsActive  bool      `json:"isActive"`
-	EmailCode string    `json:"-"` // Le code de vérification n'est jamais renvoyé en JSON
+	EmailCode string    `json:"-"`
 	HeroName  string    `json:"heroName,omitempty"`
 	Year      string    `json:"year,omitempty"`
 	Level     int       `json:"level"`
@@ -33,7 +32,6 @@ type UserAuth struct {
 // qui utiliserait encore l'ancienne structure
 type User struct {
 	ID        int       `json:"id"`
-	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	HeroName  string    `json:"heroName,omitempty"`
 	Year      string    `json:"year,omitempty"`
@@ -48,7 +46,6 @@ type User struct {
 func (u *User) ToUserAuth() *UserAuth {
 	return &UserAuth{
 		ID:        u.ID,
-		Username:  u.Username,
 		Email:     u.Email,
 		HeroName:  u.HeroName,
 		Year:      u.Year,
@@ -65,7 +62,6 @@ func (u *User) ToUserAuth() *UserAuth {
 func (u *UserAuth) ToUser() *User {
 	return &User{
 		ID:        u.ID,
-		Username:  u.Username,
 		Email:     u.Email,
 		HeroName:  u.HeroName,
 		Year:      u.Year,
@@ -81,7 +77,6 @@ func (u *UserAuth) ToUser() *User {
 
 // UserRegistration représente les données d'inscription d'un utilisateur
 type UserRegistration struct {
-	Username        string `json:"username"`
 	Email           string `json:"email"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirmPassword"`
@@ -89,7 +84,7 @@ type UserRegistration struct {
 
 // UserLogin représente les données de connexion d'un utilisateur
 type UserLogin struct {
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -119,26 +114,20 @@ var ErrUserNotActive = errors.New("compte non activé")
 // ErrEmailTaken est renvoyé lorsqu'un utilisateur tente de s'inscrire avec un email déjà utilisé
 var ErrEmailTaken = errors.New("cet email est déjà utilisé")
 
-// ErrUsernameTaken est renvoyé lorsqu'un utilisateur tente de s'inscrire avec un nom d'utilisateur déjà utilisé
-var ErrUsernameTaken = errors.New("ce nom d'utilisateur est déjà utilisé")
-
 // ----- MÉTHODES DE L'ENTITÉ USER -----
 
 // Create crée un nouvel utilisateur dans la base de données (compatibilité avec User)
 func (u *User) Create() error {
 	query := `
-		INSERT INTO users (username, email, hero_name, year, level, created_at, admin, teacher, parent, is_active)
+		INSERT INTO users (email, hero_name, year, level, created_at, admin, teacher, parent, is_active)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at
 	`
 	now := time.Now()
 	email := u.Email
-	if email == "" {
-		email = u.Username + "@gmail.com"
-	}
 
 	return db.DB.QueryRow(
-		query, u.Username, email, u.HeroName, u.Year, 1, now, u.Admin, u.Teacher, u.Parent, true,
+		query, email, u.HeroName, u.Year, 1, now, u.Admin, u.Teacher, u.Parent, true,
 	).Scan(&u.ID, &u.CreatedAt)
 }
 
@@ -159,14 +148,14 @@ func (u *User) Update() error {
 // Create crée un nouvel utilisateur dans la base de données
 func (u *UserAuth) Create() error {
 	query := `
-		INSERT INTO users (username, email, password, salt, is_active, email_code, hero_name, year, level, created_at, admin, teacher, parent)
+		INSERT INTO users (email, password, salt, is_active, email_code, hero_name, year, level, created_at, admin, teacher, parent)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING id, created_at
 	`
 	now := time.Now()
 
 	return db.DB.QueryRow(
-		query, u.Username, u.Email, u.Password, u.Salt, u.IsActive, u.EmailCode,
+		query, u.Email, u.Password, u.Salt, u.IsActive, u.EmailCode,
 		u.HeroName, u.Year, u.Level, now, u.Admin, u.Teacher, u.Parent,
 	).Scan(&u.ID, &u.CreatedAt)
 }
@@ -197,15 +186,6 @@ func RegisterUser(reg UserRegistration, emailService *email.Service) (*UserAuth,
 		return nil, ErrEmailTaken
 	}
 
-	// Vérifier si le nom d'utilisateur est déjà utilisé
-	err = db.DB.QueryRow("SELECT COUNT(*) FROM users WHERE username = $1", reg.Username).Scan(&count)
-	if err != nil {
-		return nil, err
-	}
-	if count > 0 {
-		return nil, ErrUsernameTaken
-	}
-
 	// Hasher le mot de passe
 	hashedPassword, salt, err := auth.HashPasswordWithDefaultParams(reg.Password)
 	if err != nil {
@@ -220,7 +200,6 @@ func RegisterUser(reg UserRegistration, emailService *email.Service) (*UserAuth,
 
 	// Créer l'utilisateur dans la base de données
 	user := &UserAuth{
-		Username:  reg.Username,
 		Email:     reg.Email,
 		Password:  hashedPassword,
 		Salt:      salt,
@@ -231,14 +210,14 @@ func RegisterUser(reg UserRegistration, emailService *email.Service) (*UserAuth,
 
 	// Insertion dans la base de données
 	query := `
-		INSERT INTO users (username, email, password, salt, is_active, email_code, level, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO users (email, password, salt, is_active, email_code, level, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at
 	`
 	now := time.Now()
 
 	err = db.DB.QueryRow(
-		query, user.Username, user.Email, user.Password, user.Salt, user.IsActive, user.EmailCode, user.Level, now,
+		query, user.Email, user.Password, user.Salt, user.IsActive, user.EmailCode, user.Level, now,
 	).Scan(&user.ID, &user.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -246,10 +225,9 @@ func RegisterUser(reg UserRegistration, emailService *email.Service) (*UserAuth,
 
 	// Envoyer l'email de vérification
 	if emailService != nil {
-		err = emailService.SendVerificationEmail(user.Email, user.Username, user.EmailCode)
+		err = emailService.SendVerificationEmail(user.Email, user.EmailCode)
 		if err != nil {
 			log.Printf("Erreur lors de l'envoi de l'email de vérification: %v", err)
-			// On n'empêche pas l'inscription si l'email ne peut pas être envoyé
 		}
 	}
 
@@ -267,7 +245,7 @@ func VerifyEmail(code string) (*UserAuth, error) {
 
 	// Utiliser des sql.NullString pour gérer les valeurs NULL
 	query := `
-        SELECT id, username, email, is_active, 
+        SELECT id, email, is_active, 
                hero_name, year, level, created_at,
                admin, teacher, parent
         FROM users
@@ -275,7 +253,7 @@ func VerifyEmail(code string) (*UserAuth, error) {
     `
 
 	err := db.DB.QueryRow(query, code).Scan(
-		&user.ID, &user.Username, &user.Email, &user.IsActive,
+		&user.ID, &user.Email, &user.IsActive,
 		&heroName, &year, &user.Level, &user.CreatedAt,
 		&user.Admin, &user.Teacher, &user.Parent,
 	)
@@ -302,11 +280,11 @@ func VerifyEmail(code string) (*UserAuth, error) {
 		user.Year = ""
 	}
 
-	log.Printf("Utilisateur trouvé: ID=%d, Username=%s, IsActive=%t", user.ID, user.Username, user.IsActive)
+	log.Printf("Utilisateur trouvé: ID=%d, Email=%s, IsActive=%t", user.ID, user.Email, user.IsActive)
 
 	// Si le compte est déjà actif, renvoyer l'utilisateur
 	if user.IsActive {
-		log.Printf("Le compte est déjà actif pour l'utilisateur: %s", user.Username)
+		log.Printf("Le compte est déjà actif pour l'utilisateur: %s", user.Email)
 		return &user, nil
 	}
 
@@ -328,18 +306,18 @@ func VerifyEmail(code string) (*UserAuth, error) {
 
 // LoginUser authentifie un utilisateur avec son nom d'utilisateur et son mot de passe
 func LoginUser(login UserLogin) (*UserAuth, error) {
-	// Rechercher l'utilisateur par nom d'utilisateur
+	// Rechercher l'utilisateur par email
 	var user UserAuth
 	query := `
-        SELECT id, username, email, password, is_active, 
+        SELECT id, email, password, is_active, 
                COALESCE(hero_name, ''), COALESCE(year, ''), level, created_at,
                admin, teacher, parent
         FROM users
-        WHERE username = $1
+        WHERE email = $1
     `
 
-	err := db.DB.QueryRow(query, login.Username).Scan(
-		&user.ID, &user.Username, &user.Email, &user.Password, &user.IsActive,
+	err := db.DB.QueryRow(query, login.Email).Scan(
+		&user.ID, &user.Email, &user.Password, &user.IsActive,
 		&user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
 		&user.Admin, &user.Teacher, &user.Parent,
 	)
@@ -373,9 +351,9 @@ func LoginUser(login UserLogin) (*UserAuth, error) {
 func RequestPasswordReset(reset UserPasswordReset, emailService *email.Service) error {
 	// Rechercher l'utilisateur par email
 	var user UserAuth
-	query := "SELECT id, username, email FROM users WHERE email = $1"
+	query := "SELECT id, email FROM users WHERE email = $1"
 
-	err := db.DB.QueryRow(query, reset.Email).Scan(&user.ID, &user.Username, &user.Email)
+	err := db.DB.QueryRow(query, reset.Email).Scan(&user.ID, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			// Ne pas révéler si l'email existe ou non (protection contre l'énumération)
@@ -398,7 +376,7 @@ func RequestPasswordReset(reset UserPasswordReset, emailService *email.Service) 
 
 	// Envoyer l'email de réinitialisation
 	if emailService != nil {
-		err = emailService.SendPasswordResetEmail(user.Email, user.Username, resetCode)
+		err = emailService.SendPasswordResetEmail(user.Email, resetCode)
 		if err != nil {
 			log.Printf("Erreur lors de l'envoi de l'email de réinitialisation: %v", err)
 			// On renvoie quand même une réponse positive pour ne pas révéler si l'email existe
@@ -441,12 +419,11 @@ func UpdatePassword(update UserPasswordUpdate) error {
 }
 
 // ----- FONCTIONS DE RÉCUPÉRATION D'UTILISATEURS -----
-
 // GetUserByID récupère un utilisateur par son ID
 func GetUserByID(id int) (*UserAuth, error) {
 	// Utiliser COALESCE pour convertir les valeurs NULL en chaînes vides
 	query := `
-        SELECT id, username, email, is_active, 
+        SELECT id, email, is_active, 
                COALESCE(hero_name, ''), COALESCE(year, ''), level, created_at, 
                admin, teacher, parent
         FROM users
@@ -455,7 +432,7 @@ func GetUserByID(id int) (*UserAuth, error) {
 
 	var user UserAuth
 	err := db.DB.QueryRow(query, id).Scan(
-		&user.ID, &user.Username, &user.Email, &user.IsActive,
+		&user.ID, &user.Email, &user.IsActive,
 		&user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
 		&user.Admin, &user.Teacher, &user.Parent,
 	)
@@ -469,20 +446,19 @@ func GetUserByID(id int) (*UserAuth, error) {
 	return &user, nil
 }
 
-// GetUserByUsername récupère un utilisateur par son nom d'utilisateur
-func GetUserByUsername(username string) (*UserAuth, error) {
-	// Utiliser COALESCE pour convertir les valeurs NULL en chaînes vides
+// GetUserByEmail récupère un utilisateur par son email
+func GetUserByEmail(email string) (*UserAuth, error) {
 	query := `
-        SELECT id, username, email, is_active, 
+        SELECT id, email, is_active, 
                COALESCE(hero_name, ''), COALESCE(year, ''), level, created_at,
                admin, teacher, parent
         FROM users
-        WHERE username = $1
+        WHERE email = $1
     `
 
 	var user UserAuth
-	err := db.DB.QueryRow(query, username).Scan(
-		&user.ID, &user.Username, &user.Email, &user.IsActive,
+	err := db.DB.QueryRow(query, email).Scan(
+		&user.ID, &user.Email, &user.IsActive,
 		&user.HeroName, &user.Year, &user.Level, &user.CreatedAt,
 		&user.Admin, &user.Teacher, &user.Parent,
 	)
@@ -490,7 +466,7 @@ func GetUserByUsername(username string) (*UserAuth, error) {
 		if err == sql.ErrNoRows {
 			return nil, ErrUserNotFound
 		}
-		log.Printf("GetUserByUsername, Erreur lors de la récupération de l'utilisateur : %v", err)
+		log.Printf("GetUserByEmail, Erreur lors de la récupération de l'utilisateur : %v", err)
 		return nil, err
 	}
 

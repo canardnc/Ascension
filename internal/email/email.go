@@ -42,11 +42,11 @@ func GenerateVerificationCode() (string, error) {
 }
 
 // SendVerificationEmail envoie un email de vérification à l'utilisateur
-func (s *Service) SendVerificationEmail(to, username, code string) error {
+func (s *Service) SendVerificationEmail(to, code string) error {
 	subject := "Vérification de votre compte Ascension"
 	verificationURL := fmt.Sprintf("%s/verify-email.html?code=%s", s.config.BaseURL, code)
 
-	body := fmt.Sprintf(`Bonjour %s,
+	body := fmt.Sprintf(`Bonjour,
 
 Merci de vous être inscrit sur Ascension ! Pour activer votre compte, veuillez cliquer sur le lien ci-dessous :
 
@@ -55,17 +55,17 @@ Merci de vous être inscrit sur Ascension ! Pour activer votre compte, veuillez 
 Si vous n'avez pas créé de compte sur Ascension, veuillez ignorer cet email.
 
 L'équipe Ascension
-`, username, verificationURL)
+`, verificationURL)
 
 	return s.sendEmail(to, subject, body)
 }
 
 // SendPasswordResetEmail envoie un email de réinitialisation de mot de passe
-func (s *Service) SendPasswordResetEmail(to, username, code string) error {
+func (s *Service) SendPasswordResetEmail(to, code string) error {
 	subject := "Réinitialisation de votre mot de passe Ascension"
 	resetURL := fmt.Sprintf("%s/reset-password.html?code=%s", s.config.BaseURL, code)
 
-	body := fmt.Sprintf(`Bonjour %s,
+	body := fmt.Sprintf(`Bonjour,
 
 Vous avez demandé une réinitialisation de votre mot de passe. Veuillez cliquer sur le lien ci-dessous pour définir un nouveau mot de passe :
 
@@ -74,7 +74,7 @@ Vous avez demandé une réinitialisation de votre mot de passe. Veuillez cliquer
 Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email.
 
 L'équipe Ascension
-`, username, resetURL)
+`, resetURL)
 
 	return s.sendEmail(to, subject, body)
 }

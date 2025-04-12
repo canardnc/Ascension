@@ -68,15 +68,6 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
-	// Route d'authentification simplifiée (pour compatibilité)
-	mux.HandleFunc("/api/auth/simple", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			handlers.SimpleAuth(w, r)
-		} else {
-			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
-		}
-	})
-
 	// ===== ROUTES STATIQUES =====
 
 	// Routes pour les fichiers statiques - doivent être définies avant les routes spécifiques
