@@ -7,12 +7,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/canardnc/Ascension/internal/config"
 	"github.com/canardnc/Ascension/internal/db/models"
 	"github.com/golang-jwt/jwt"
 )
-
-// Configuration JWT (devrait être dans un fichier de configuration)
-const jwtSecret = "ascension_secret_key" // À REMPLACER par une valeur sécurisée en production!
 
 // JWTAuth est un middleware pour valider les tokens JWT avec vérification d'activation
 func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
@@ -26,8 +24,8 @@ func JWTAuth(next http.HandlerFunc) http.HandlerFunc {
 
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			// Utiliser la même clé secrète que celle utilisée pour générer le token
-			return []byte(jwtSecret), nil
+			// Utiliser la clé secrète depuis la configuration
+			return config.GetJWTSecret(), nil
 		})
 
 		if err != nil || !token.Valid {
@@ -98,7 +96,7 @@ func RequireTeacher(next http.HandlerFunc) http.HandlerFunc {
 	return JWTAuth(func(w http.ResponseWriter, r *http.Request) {
 		isTeacher, ok := r.Context().Value("isTeacher").(bool)
 		isAdmin, _ := r.Context().Value("isAdmin").(bool)
-		
+
 		if !ok || (!isTeacher && !isAdmin) {
 			RespondWithError(w, http.StatusForbidden, "Accès réservé aux enseignants")
 			return
@@ -112,7 +110,7 @@ func RequireParent(next http.HandlerFunc) http.HandlerFunc {
 	return JWTAuth(func(w http.ResponseWriter, r *http.Request) {
 		isParent, ok := r.Context().Value("isParent").(bool)
 		isAdmin, _ := r.Context().Value("isAdmin").(bool)
-		
+
 		if !ok || (!isParent && !isAdmin) {
 			RespondWithError(w, http.StatusForbidden, "Accès réservé aux parents")
 			return

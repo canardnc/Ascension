@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/canardnc/Ascension/internal/api/middleware"
+	"github.com/canardnc/Ascension/internal/config"
 	"github.com/canardnc/Ascension/internal/db"
 	"github.com/canardnc/Ascension/internal/db/models"
 	"github.com/canardnc/Ascension/internal/email"
@@ -15,8 +16,7 @@ import (
 
 // Configuration du JWT (à stocker dans un fichier de configuration)
 const (
-	jwtSecret     = "ascension_secret_key" // À REMPLACER par une valeur sécurisée en production!
-	tokenDuration = 72 * time.Hour         // 3 jours
+	tokenDuration = 72 * time.Hour // 3 jours
 )
 
 // emailService est le service d'envoi d'email global
@@ -48,7 +48,7 @@ func generateToken(user *models.UserAuth) (string, error) {
 		"exp":      time.Now().Add(tokenDuration).Unix(),
 	})
 
-	return token.SignedString([]byte(jwtSecret))
+	return token.SignedString(config.GetJWTSecret())
 }
 
 // Register inscrit un nouvel utilisateur

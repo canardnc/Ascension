@@ -27,6 +27,7 @@ const GameState = {
     available: false,
     cost: 0,
     currentEnergy: 0,
+    sessionId: null, // Nouvel attribut pour stocker l'ID de session
     
     // État de l'interface
     dialogueIndex: 0,
@@ -39,7 +40,7 @@ const GameState = {
         return `${TemplateConfig.baseUrl}game_${this.gameId}/`;
     },
     
-    // NOUVEAU: Chemin spécifique à la difficulté
+    // Chemin spécifique à la difficulté
     get difficultyPath() {
         return `${this.gamePath}difficulty_${this.difficulty}/`;
     }
@@ -570,32 +571,42 @@ async function loadMinigame() {
     try {
         console.log('Chargement du mini-jeu...');
         
-        // Essayer d'abord de charger le mini-jeu depuis le répertoire de difficulté
-        let response;
-        let html;
-        let fromDifficultyFolder = false;
-        
-        try {
-            response = await fetch(`${GameState.difficultyPath}index.html`);
-            if (response.ok) {
-                html = await response.text();
-                fromDifficultyFolder = true;
-                console.log(`Mini-jeu chargé depuis le répertoire de difficulté: ${GameState.difficultyPath}index.html`);
-            }
-        } catch (error) {
-            console.log('Mini-jeu non trouvé dans le répertoire de difficulté, tentative dans le répertoire de base...');
-        }
-        
-        // Si pas trouvé dans le répertoire de difficulté, essayer le répertoire de base
-        if (!fromDifficultyFolder) {
-            response = await fetch(`${GameState.gamePath}index.html`);
-            html = await response.text();
-            console.log(`Mini-jeu chargé depuis le répertoire de base: ${GameState.gamePath}index.html`);
-        }
+        // Charger le contenu HTML du mini-jeu
+        const response = await fetch(`${GameState.gamePath}index.html`);
+        const html = await response.text();
         
         // Injecter le HTML dans le conteneur
         DOM.minigameContainer.innerHTML = html;
         DOM.minigameContainer.style.display = 'block';
+        
+        // Charger dynamiquement le script du jeu
+        console.log(`Chargement du script: ${GameState.gamePath}script.js`);
+        
+        // Créer un élément script et le configurer
+        const script = document.createElement('script');
+        script.src = `${GameState.gamePath}script.js`;
+        
+        // Définir le callback onload
+        script.onload = () => {
+            console.log('Script chargé avec succès');
+            
+            // Appeler la fonction d'initialisation du jeu si elle existe
+            if (typeof initGame === 'function') {
+                console.log('Initialisation du jeu...');
+                initGame();
+            } else {
+                console.error("Fonction initGame non trouvée dans le script du jeu");
+            }
+        };
+        
+        // Gérer les erreurs de chargement
+        script.onerror = (error) => {
+            console.error('Erreur lors du chargement du script:', error);
+            showError('Erreur', 'Impossible de charger le script du mini-jeu');
+        };
+        
+        // Ajouter le script au document
+        document.body.appendChild(script);
         
         // Déduire l'énergie (cette opération est simulée ici, normalement gérée par le serveur)
         console.log(`Déduction de ${GameState.cost} points d'énergie`);
@@ -605,12 +616,38 @@ async function loadMinigame() {
         
         console.log('Mini-jeu chargé avec succès');
         
-        // Charger le script JavaScript approprié
-        await loadGameScript(fromDifficultyFolder);
-        
+        startGameSession()
     } catch (error) {
         console.error('Erreur lors du chargement du mini-jeu:', error);
         showError('Erreur', 'Impossible de charger le contenu du mini-jeu');
+    }
+}
+//Enregistre une ligne dans les logs des parties
+async function startGameSession() {
+    try {
+        const response = await fetchWithAuth(`${TemplateConfig.apiUrl}minigame/start-session`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                minigameId: GameState.gameId,
+                difficultyLevel: GameState.difficulty
+            })
+        });
+        
+        if (response && response.success) {
+            // Stocker l'ID de session pour la fin du jeu
+            GameState.sessionId = response.sessionId;
+            console.log(`Session de jeu démarrée avec ID: ${GameState.sessionId}`);
+            
+            // Mettre à jour les données du jeu dans le template
+            updateGameData();
+        } else {
+            console.error('Erreur lors du démarrage de la session:', response);
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'appel à start-session:', error);
     }
 }
 
@@ -709,11 +746,11 @@ function updateGameData() {
         available: GameState.available,
         cost: GameState.cost,
         currentEnergy: GameState.currentEnergy,
-        categoryType: 'strength' // ← AJOUT IMPORTANT
-
+        categoryType: 'strength',
+        sessionId: GameState.sessionId || null // Ajouter l'ID de session
     };
 
-    // Si l’élément existe déjà, on le met à jour
+    // Si l'élément existe déjà, on le met à jour
     if (DOM.gameData) {
         DOM.gameData.textContent = JSON.stringify(gameDataJson, null, 2);
     } else {

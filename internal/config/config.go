@@ -51,12 +51,6 @@ func LoadConfig(filePath string) (*Config, error) {
 		config.Security.JWTSecret = jwtSecret
 	}
 
-	// Valeur par défaut si aucune clé n'est spécifiée (éviter les clés vides)
-	if config.Security.JWTSecret == "" {
-		// En développement uniquement - à éviter en production
-		config.Security.JWTSecret = "ascension_default_dev_key_CHANGEME"
-	}
-
 	return &config, nil
 }
 

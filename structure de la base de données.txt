@@ -69,10 +69,15 @@ CREATE TABLE public.users (
 	"admin" bool DEFAULT false NULL,
 	teacher bool DEFAULT false NULL,
 	parent bool DEFAULT false NULL,
+	is_active bool DEFAULT false NULL,
+	salt varchar(64) NULL,
+	"password" varchar(255) NULL,
+	email_code varchar(64) NULL,
 	CONSTRAINT users_email_key UNIQUE (email),
 	CONSTRAINT users_pkey PRIMARY KEY (id),
 	CONSTRAINT users_username_key UNIQUE (username)
 );
+CREATE INDEX idx_users_email_code ON public.users USING btree (email_code);
 
 
 -- public.game_scores definition
@@ -148,6 +153,28 @@ CREATE TABLE public.minigames (
 );
 CREATE INDEX idx_minigames_category_id ON public.minigames USING btree (category_id);
 CREATE INDEX idx_minigames_difficulty_level ON public.minigames USING btree (difficulty_level);
+
+
+-- public.minigames_history definition
+
+-- Drop table
+
+-- DROP TABLE public.minigames_history;
+
+CREATE TABLE public.minigames_history (
+	id serial4 NOT NULL,
+	user_id int4 NOT NULL,
+	minigame_id int4 NOT NULL,
+	difficulty_level int4 NOT NULL,
+	start_date timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	end_date timestamp NULL,
+	score int4 NULL,
+	duration int4 NULL,
+	CONSTRAINT minigames_history_pkey PRIMARY KEY (id),
+	CONSTRAINT minigames_history_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE INDEX idx_minigames_history_minigame_id ON public.minigames_history USING btree (minigame_id);
+CREATE INDEX idx_minigames_history_user_id ON public.minigames_history USING btree (user_id);
 
 
 -- public.minigames_progress definition

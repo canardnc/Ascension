@@ -172,6 +172,31 @@ func SetupRoutes(mux *http.ServeMux) {
 		}
 	})
 
+	// Routes pour l'historique des mini-jeux
+	mux.HandleFunc("/api/minigame/start-session", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			middleware.JWTAuth(handlers.StartMinigameSession)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/minigame/end-session", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			middleware.JWTAuth(handlers.EndMinigameSession)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/minigame/history", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			middleware.JWTAuth(handlers.GetMinigameHistory)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
 	// Routes authentifiées pour les utilisateurs
 	mux.HandleFunc("/api/user", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

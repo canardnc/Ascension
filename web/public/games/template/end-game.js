@@ -4,6 +4,45 @@
  */
 
 /**
+ * Enregistre la fin d'une session de jeu
+ * @param {number} sessionId - ID de la session à terminer
+ * @param {number} score - Score final obtenu
+ * @param {number} timeSpent - Temps passé en secondes
+ * @returns {Promise} Promise résolue si l'opération réussit
+ */
+async function endGameSession(sessionId, score, timeSpent) {
+    if (!sessionId) {
+        console.warn('Aucun ID de session disponible pour la fin du jeu');
+        return Promise.resolve();
+    }
+    
+    try {
+        const response = await fetchWithAuth('/api/minigame/end-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sessionId: sessionId,
+                score: score,
+                duration: timeSpent
+            })
+        });
+        
+        if (response && response.success) {
+            console.log(`Session de jeu ${sessionId} terminée avec succès`);
+            return Promise.resolve();
+        } else {
+            console.error('Erreur lors de la fin de la session:', response);
+            return Promise.reject(new Error('Erreur lors de la fin de la session'));
+        }
+    } catch (error) {
+        console.error('Erreur lors de l\'appel à end-session:', error);
+        return Promise.reject(error);
+    }
+}
+
+/**
  * Termine le mini-jeu et envoie les résultats au serveur
  * @param {Object} gameData - Données du jeu à envoyer
  * @param {number} gameData.score - Score obtenu dans le jeu
@@ -38,7 +77,8 @@ function endGame(gameData, resetGameFunction) {
         minigameId: templateData.gameId,
         difficultyLevel: templateData.difficulty,
         score: gameData.score || 0,
-        timeSpent: gameData.timeSpent || 0
+        timeSpent: gameData.timeSpent || 0,
+        sessionId: templateData.sessionId || null
     };
     
     // Valider les données
@@ -52,14 +92,40 @@ function endGame(gameData, resetGameFunction) {
         completeGameData.timeSpent = 10;
     }
     
-    // Appeler la fonction standard de fin de jeu du minigame-utils.js
-    showEndgameScreen(
-        completeGameData.score,              // Score obtenu
-        gameData.maxScore || 100,            // Score maximum possible
-        categoryType,                        // Catégorie du mini-jeu
-        resetGameFunction || defaultReset,   // Fonction pour réinitialiser le jeu
-        completeGameData                     // Données complètes à envoyer
-    );
+    // Enregistrer la fin de la session si un ID est disponible
+    if (completeGameData.sessionId) {
+        endGameSession(completeGameData.sessionId, completeGameData.score, completeGameData.timeSpent)
+            .then(() => {
+                // Appeler la fonction standard de fin de jeu du minigame-utils.js
+                showEndgameScreen(
+                    completeGameData.score,              // Score obtenu
+                    gameData.maxScore || 100,            // Score maximum possible
+                    categoryType,                        // Catégorie du mini-jeu
+                    resetGameFunction || defaultReset,   // Fonction pour réinitialiser le jeu
+                    completeGameData                     // Données complètes à envoyer
+                );
+            })
+            .catch(error => {
+                console.error('Erreur lors de la fin de session:', error);
+                // Continuer quand même avec l'écran de fin
+                showEndgameScreen(
+                    completeGameData.score,
+                    gameData.maxScore || 100,
+                    categoryType,
+                    resetGameFunction || defaultReset,
+                    completeGameData
+                );
+            });
+    } else {
+        // Pas d'ID de session, afficher directement l'écran de fin
+        showEndgameScreen(
+            completeGameData.score,
+            gameData.maxScore || 100,
+            categoryType,
+            resetGameFunction || defaultReset,
+            completeGameData
+        );
+    }
     
     console.log('Jeu terminé avec les données:', completeGameData);
 }
@@ -110,60 +176,6 @@ function calculatePercentage(score, maxScore) {
 
 
 
-async function loadMinigame() {
-    try {
-        console.log('Chargement du mini-jeu...');
-        
-        // Charger le contenu HTML du mini-jeu
-        const response = await fetch(`${GameState.gamePath}index.html`);
-        const html = await response.text();
-        
-        // Injecter le HTML dans le conteneur
-        DOM.minigameContainer.innerHTML = html;
-        DOM.minigameContainer.style.display = 'block';
-        
-        // Charger dynamiquement le script du jeu
-        console.log(`Chargement du script: ${GameState.gamePath}script.js`);
-        
-        // Créer un élément script et le configurer
-        const script = document.createElement('script');
-        script.src = `${GameState.gamePath}script.js`;
-        
-        // Définir le callback onload
-        script.onload = () => {
-            console.log('Script chargé avec succès');
-            
-            // Appeler la fonction d'initialisation du jeu si elle existe
-            if (typeof initGame === 'function') {
-                console.log('Initialisation du jeu...');
-                initGame();
-            } else {
-                console.error("Fonction initGame non trouvée dans le script du jeu");
-            }
-        };
-        
-        // Gérer les erreurs de chargement
-        script.onerror = (error) => {
-            console.error('Erreur lors du chargement du script:', error);
-            showError('Erreur', 'Impossible de charger le script du mini-jeu');
-        };
-        
-        // Ajouter le script au document
-        document.body.appendChild(script);
-        
-        // Déduire l'énergie (cette opération est simulée ici, normalement gérée par le serveur)
-        console.log(`Déduction de ${GameState.cost} points d'énergie`);
-        
-        // Marquer le jeu comme chargé
-        GameState.isGameLoaded = true;
-        
-        console.log('Mini-jeu chargé avec succès');
-        
-    } catch (error) {
-        console.error('Erreur lors du chargement du mini-jeu:', error);
-        showError('Erreur', 'Impossible de charger le contenu du mini-jeu');
-    }
-}
 
 function calculateStars(percentage) {
     if (percentage >= 95) return 3;
