@@ -13,6 +13,9 @@ import (
 	"github.com/canardnc/Ascension/internal/db"
 )
 
+// Rendre la configuration accessible globalement
+var appConfig *config.Config
+
 func main() {
 	// logs
 	logFile, err := os.OpenFile("application.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -25,21 +28,53 @@ func main() {
 	// Pour avoir les logs à la fois dans un fichier et sur la console:
 	log.SetOutput(io.MultiWriter(logFile, os.Stdout))
 
+	// Définir le chemin du fichier de configuration
+	configPath := "configs/server.yaml"
+	if os.Getenv("CONFIG_PATH") != "" {
+		configPath = os.Getenv("CONFIG_PATH")
+	}
+
 	// Charger la configuration
-	cfg, err := config.LoadConfig("configs/server.yaml")
-	if err != nil {
-		log.Fatalf("Erreur lors du chargement de la configuration: %v", err)
+	var configErr error
+	appConfig, configErr = config.LoadConfig(configPath)
+	if configErr != nil {
+		log.Printf("Avertissement: Impossible de charger le fichier de configuration: %v", configErr)
+		log.Printf("Tentative d'utilisation des variables d'environnement")
+
+		// Créer une configuration minimale à partir des variables d'environnement
+		appConfig = &config.Config{
+			Database: config.DatabaseConfig{
+				Host:     getEnvOrDefault("DB_HOST", "localhost"),
+				Port:     getEnvAsIntOrDefault("DB_PORT", 5432),
+				Name:     getEnvOrDefault("DB_NAME", "ascension_db"),
+				User:     getEnvOrDefault("DB_USER", "postgres"),
+				Password: getEnvOrDefault("DB_PASSWORD", ""),
+			},
+			Server: config.ServerConfig{
+				Port:        getEnvAsIntOrDefault("SERVER_PORT", 8080),
+				Environment: getEnvOrDefault("ENVIRONMENT", "development"),
+			},
+			Security: config.SecurityConfig{
+				JWTSecret: getEnvOrDefault("JWT_SECRET", ""),
+			},
+		}
+	}
+
+	// Vérifier que la clé JWT est définie
+	if appConfig.Security.JWTSecret == "" {
+		log.Println("AVERTISSEMENT: Aucune clé JWT définie. Utilisation d'une clé par défaut pour le développement.")
+		log.Println("Ne PAS utiliser cette configuration en production!")
 	}
 
 	// Initialiser la connexion à la base de données
-	if err := db.Initialize(cfg.Database); err != nil {
+	if err := db.Initialize(appConfig.Database); err != nil {
 		log.Fatalf("Erreur lors de l'initialisation de la base de données: %v", err)
 	}
 	defer db.Close()
 
 	// Après l'initialisation de la base de données
 	log.Printf("Tentative de connexion à la BD: %s@%s:%d/%s",
-		cfg.Database.User, cfg.Database.Host, cfg.Database.Port, cfg.Database.Name)
+		appConfig.Database.User, appConfig.Database.Host, appConfig.Database.Port, appConfig.Database.Name)
 
 	// Effectuer un ping pour vérifier la connexion
 	if err := db.DB.Ping(); err != nil {
@@ -58,7 +93,7 @@ func main() {
 	handler := requestLogger(mux)
 
 	// Démarrer le serveur
-	port := cfg.Server.Port
+	port := appConfig.Server.Port
 	fmt.Printf("Serveur Ascension démarré sur http://localhost:%d\n", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), handler))
 }
@@ -70,4 +105,30 @@ func requestLogger(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 		log.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
 	})
+}
+
+// Fonction utilitaire pour récupérer une variable d'environnement avec valeur par défaut
+func getEnvOrDefault(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
+// Fonction utilitaire pour récupérer une variable d'environnement entière avec valeur par défaut
+func getEnvAsIntOrDefault(key string, defaultValue int) int {
+	valueStr := os.Getenv(key)
+	if valueStr == "" {
+		return defaultValue
+	}
+
+	value := 0
+	_, err := fmt.Sscanf(valueStr, "%d", &value)
+	if err != nil {
+		log.Printf("Erreur lors de la conversion de %s en entier: %v. Utilisation de la valeur par défaut %d", key, err, defaultValue)
+		return defaultValue
+	}
+
+	return value
 }

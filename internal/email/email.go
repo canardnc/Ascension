@@ -44,8 +44,8 @@ func GenerateVerificationCode() (string, error) {
 // SendVerificationEmail envoie un email de vérification à l'utilisateur
 func (s *Service) SendVerificationEmail(to, username, code string) error {
 	subject := "Vérification de votre compte Ascension"
-	verificationURL := fmt.Sprintf("%s/verify-email?code=%s", s.config.BaseURL, code)
-	
+	verificationURL := fmt.Sprintf("%s/verify-email.html?code=%s", s.config.BaseURL, code)
+
 	body := fmt.Sprintf(`Bonjour %s,
 
 Merci de vous être inscrit sur Ascension ! Pour activer votre compte, veuillez cliquer sur le lien ci-dessous :
@@ -63,8 +63,8 @@ L'équipe Ascension
 // SendPasswordResetEmail envoie un email de réinitialisation de mot de passe
 func (s *Service) SendPasswordResetEmail(to, username, code string) error {
 	subject := "Réinitialisation de votre mot de passe Ascension"
-	resetURL := fmt.Sprintf("%s/reset-password?code=%s", s.config.BaseURL, code)
-	
+	resetURL := fmt.Sprintf("%s/reset-password.html?code=%s", s.config.BaseURL, code)
+
 	body := fmt.Sprintf(`Bonjour %s,
 
 Vous avez demandé une réinitialisation de votre mot de passe. Veuillez cliquer sur le lien ci-dessous pour définir un nouveau mot de passe :
@@ -139,12 +139,12 @@ func getEnvAsInt(key string, defaultValue int) int {
 	if value == "" {
 		return defaultValue
 	}
-	
+
 	var intValue int
 	_, err := fmt.Sscanf(value, "%d", &intValue)
 	if err != nil {
 		return defaultValue
 	}
-	
+
 	return intValue
 }
