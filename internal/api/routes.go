@@ -113,11 +113,11 @@ func SetupRoutes(mux *http.ServeMux) {
 	})
 
 	// Pages d'authentification et de vérification
-	mux.HandleFunc("/verify-email", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/verify-email.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/public/verify-email.html")
 	})
 
-	mux.HandleFunc("/reset-password", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/reset-password.html", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./web/public/reset-password.html")
 	})
 
