@@ -1,417 +1,380 @@
 // Variables du jeu
-const GAME_ID = 3; // ID du mini-jeu
-const QUESTIONS_PER_GAME = 10; // Nombre de questions par partie
-const DOORS_COUNT = 5; // Nombre de portes à afficher
-
-// Chemins des images
-const CLOSED_DOOR_PATH = '/assets/images/closed_door.webp';
-const GOOD_DOOR_PATH = '/assets/images/good_door.webp';
-const BAD_DOOR_PATH = '/assets/images/bad_door.webp';
-
-// Variables globales
-let difficultyLevel = 1;
-let currentQuestionIndex = 0;
-let iconsCollection = [];
-let currentIcon = null;
+let currentRound = 0;
+let totalRounds = 10;
 let score = 0;
-let waitingForNextQuestion = false;
+let vocabularyData = [];
+let currentWord = null;
+let selectedWords = [];
+let correctImageIndex = -1;
+let canClick = true;
+let difficultyLevel = 1;
+let pointsPerCorrectAnswer = 10;
 let gameStartTime;
-let currentGameTime = 0;
-let timeInterval;
-let speechSynthesis = window.speechSynthesis;
-let speechUtterance = null;
 
 // Éléments DOM
-let doorsContainer;
-let currentWordElement;
-let scoreDisplay;
-let timerDisplay;
-let progressBar;
-let nextQuestionBtn;
-
-// Points par difficulté
-const pointsPerCorrectAnswer = {
-    1: 10,  // 10 points par bonne réponse au niveau 1
-    2: 20,  // 20 points par bonne réponse au niveau 2
-    3: 30   // 30 points par bonne réponse au niveau 3
-};
-
-// Pénalité par mauvaise réponse
-const WRONG_ANSWER_PENALTY = 5;
+let englishWordElement;
+let speakerButton;
+let optionsContainer;
+let skullOverlay;
 
 // Fonction d'initialisation (OBLIGATOIRE)
 function initGame() {
-    console.log('Initialisation du mini-jeu Word Doors');
+    console.log('Initialisation du mini-jeu de vocabulaire');
     
     // 1. Récupérer les références aux éléments DOM
-    doorsContainer = document.getElementById('doors-container');
-    currentWordElement = document.getElementById('current-word');
-    scoreDisplay = document.getElementById('score-display');
-    timerDisplay = document.getElementById('timer-display');
-    progressBar = document.getElementById('progress-bar');
-    nextQuestionBtn = document.getElementById('next-question-btn');
+    englishWordElement = document.getElementById('englishWord');
+    speakerButton = document.getElementById('speakerButton');
+    optionsContainer = document.getElementById('optionsContainer');
+    skullOverlay = document.getElementById('skullOverlay');
     
     // 2. Configurer l'état initial du jeu
-    // Récupérer le niveau de difficulté depuis l'état du jeu
-    difficultyLevel = window.GameTemplate?.gameState?.difficulty || 1;
+    // Récupérer le niveau de difficulté depuis GameTemplate
+    if (window.GameTemplate && window.GameTemplate.gameState) {
+        difficultyLevel = window.GameTemplate.gameState.difficultyLevel || 1;
+    }
     
-    // 3. Ajouter les écouteurs d'événements
-    nextQuestionBtn.addEventListener('click', nextQuestion);
+    // Définir les points par bonne réponse selon la difficulté
+    switch (difficultyLevel) {
+        case 1:
+            pointsPerCorrectAnswer = 10;
+            break;
+        case 2:
+            pointsPerCorrectAnswer = 20;
+            break;
+        case 3:
+            pointsPerCorrectAnswer = 30;
+            break;
+        default:
+            pointsPerCorrectAnswer = 10;
+    }
     
-    // 4. Charger les données du jeu
-    loadIcons();
+    // 3. Initialiser la synthèse vocale
+    initVoices();
+    
+    // 4. Ajouter les écouteurs d'événements
+    speakerButton.addEventListener('click', () => {
+        if (currentWord) {
+            speakWord(currentWord.description_en);
+        }
+    });
+    
+    // 5. Charger les données de vocabulaire et démarrer le jeu
+    loadVocabularyData();
 }
 
-// Fonction pour charger les icônes/mots du jeu
-function loadIcons() {
-    console.log('Chargement des icônes...');
-    
-    // Utiliser la fonction fetchWithAuth du template si disponible
-    const fetchFunc = window.fetchWithAuth || fetch;
-    
-    // Nombre d'icônes à charger (plus que nécessaire pour avoir des options diverses)
-    const iconsToLoad = QUESTIONS_PER_GAME * 5;
-    
-    // Récupérer les icônes aléatoires de la base de données
-    fetchFunc(`/api/icons/random?count=${iconsToLoad}&difficulty=${difficultyLevel}`)
-        .then(res => {
-            if (!res.ok) throw new Error('Erreur lors du chargement des icônes');
-            return res.json();
-        })
-        .then(icons => {
-            if (!icons || icons.length < QUESTIONS_PER_GAME) {
-                throw new Error('Pas assez d\'icônes disponibles');
-            }
-            
-            // Traiter les icônes reçues
-            iconsCollection = icons.map(icon => {
-                // Déterminer le mot anglais
-                const englishWord = icon.englishWord || icon.EnglishWord || icon.description_en || 
-                                  icon.filename.split('.')[0].replace(/_/g, ' ');
-                
-                return {
-                    id: icon.id,
-                    filename: icon.filename,
-                    type: icon.type,
-                    description: icon.description,
-                    englishWord: englishWord,
-                    // Le chemin d'accès à l'image
-                    imagePath: `/assets/images/icons/${icon.filename}`
-                };
+// Initialisation de la synthèse vocale
+let voicesLoaded = false;
+
+// Fonction pour initialiser les voix
+function initVoices() {
+    if ('speechSynthesis' in window) {
+        // Certains navigateurs chargent les voix de manière asynchrone
+        if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.addEventListener('voiceschanged', () => {
+                voicesLoaded = true;
             });
-            
-            // Démarrer le jeu
-            startGame();
-        })
-        .catch(error => {
-            console.error('Erreur:', error);
-            currentWordElement.textContent = "Erreur de chargement";
-            
-            // Si les données sont manquantes, utiliser des données factices pour les tests
-            if (window.GameTemplate?.isPreview) {
-                console.log("Mode prévisualisation: utilisation de données de test");
-                createTestData();
-                startGame();
-            }
-        });
+        } else {
+            voicesLoaded = true;
+        }
+    }
 }
 
-// Créer des données de test pour le mode prévisualisation
-function createTestData() {
-    iconsCollection = [
-        { id: 1, englishWord: "apple", description: "pomme" },
-        { id: 2, englishWord: "house", description: "maison" },
-        { id: 3, englishWord: "car", description: "voiture" },
-        { id: 4, englishWord: "tree", description: "arbre" },
-        { id: 5, englishWord: "book", description: "livre" },
-        { id: 6, englishWord: "dog", description: "chien" },
-        { id: 7, englishWord: "cat", description: "chat" },
-        { id: 8, englishWord: "sun", description: "soleil" },
-        { id: 9, englishWord: "moon", description: "lune" },
-        { id: 10, englishWord: "star", description: "étoile" },
-        { id: 11, englishWord: "flower", description: "fleur" },
-        { id: 12, englishWord: "bird", description: "oiseau" }
+// Fonction pour charger les données de vocabulaire depuis l'API
+async function loadVocabularyData() {
+    try {
+        console.log('Tentative de récupération des données...');
+        
+        // Vérifier si les fonctions et variables du template sont disponibles
+        if (typeof fetchWithAuth === 'undefined') {
+            console.error('Les fonctions du template ne sont pas disponibles');
+            throw new Error('Template API unavailable');
+        }
+        
+        // Utiliser fetchWithAuth qui gère automatiquement le token
+        const apiUrl = '/api/vocabulary?difficulty=' + difficultyLevel;
+        console.log('Calling API with URL:', apiUrl);
+        
+        // fetchWithAuth renvoie directement les données JSON
+        vocabularyData = await fetchWithAuth(apiUrl);
+        console.log('Données reçues:', vocabularyData);
+        
+        if (!Array.isArray(vocabularyData) || vocabularyData.length < 5) {
+            console.error('Pas assez de données de vocabulaire disponibles');
+            useTestData();
+            return;
+        }
+        
+        startGame();
+    } catch (error) {
+        console.error('Erreur lors de la récupération des données:', error);
+        // En cas d'erreur, utiliser les données de test
+        useTestData();
+    }
+}
+
+// Fonction pour utiliser des données de test
+function useTestData() {
+    // Simulation de données pour tests - à remplacer par les vraies données
+    vocabularyData = [
+        { id: 1, filename: "apple.png", type: "noun", description: "pomme", description_en: "apple", difficulty: difficultyLevel },
+        { id: 2, filename: "banana.png", type: "noun", description: "banane", description_en: "banana", difficulty: difficultyLevel },
+        { id: 3, filename: "cat.png", type: "noun", description: "chat", description_en: "cat", difficulty: difficultyLevel },
+        { id: 4, filename: "dog.png", type: "noun", description: "chien", description_en: "dog", difficulty: difficultyLevel },
+        { id: 5, filename: "elephant.png", type: "noun", description: "éléphant", description_en: "elephant", difficulty: difficultyLevel },
+        { id: 6, filename: "fish.png", type: "noun", description: "poisson", description_en: "fish", difficulty: difficultyLevel },
+        { id: 7, filename: "giraffe.png", type: "noun", description: "girafe", description_en: "giraffe", difficulty: difficultyLevel },
+        { id: 8, filename: "house.png", type: "noun", description: "maison", description_en: "house", difficulty: difficultyLevel },
+        { id: 9, filename: "ice_cream.png", type: "noun", description: "glace", description_en: "ice cream", difficulty: difficultyLevel },
+        { id: 10, filename: "jacket.png", type: "noun", description: "veste", description_en: "jacket", difficulty: difficultyLevel },
+        { id: 11, filename: "kite.png", type: "noun", description: "cerf-volant", description_en: "kite", difficulty: difficultyLevel },
+        { id: 12, filename: "lion.png", type: "noun", description: "lion", description_en: "lion", difficulty: difficultyLevel },
+        { id: 13, filename: "monkey.png", type: "noun", description: "singe", description_en: "monkey", difficulty: difficultyLevel },
+        { id: 14, filename: "nest.png", type: "noun", description: "nid", description_en: "nest", difficulty: difficultyLevel },
+        { id: 15, filename: "orange.png", type: "noun", description: "orange", description_en: "orange", difficulty: difficultyLevel }
     ];
+    
+    startGame();
 }
 
 // Fonction de démarrage du jeu
 function startGame() {
-    console.log('Démarrage du jeu...');
-    
-    // Mélanger les icônes et prendre le nombre nécessaire pour le jeu
-    const shuffledIcons = shuffleArray(iconsCollection);
-    iconsCollection = shuffledIcons.slice(0, QUESTIONS_PER_GAME * 3); // Conserver plus d'icônes que nécessaire
-    
-    // Initialiser les variables
-    currentQuestionIndex = 0;
+    // Réinitialiser le jeu
+    currentRound = 0;
     score = 0;
-    waitingForNextQuestion = false;
-    
-    // Mettre à jour l'affichage du score
-    scoreDisplay.textContent = score;
-    
-    // Mettre à jour la barre de progression
-    updateProgressBar();
-    
-    // Enregistrer l'heure de début et démarrer le chronomètre
-    gameStartTime = Date.now();
-    currentGameTime = 0;
-    startTimer();
-    
-    // Démarrer avec la première question
-    showNextQuestion();
-}
-
-// Fonction pour démarrer le chronomètre
-function startTimer() {
-    // Afficher le temps initial
-    updateTimerDisplay();
+    selectedWords = [];
     
     // Démarrer le chronomètre
-    timeInterval = setInterval(() => {
-        currentGameTime++;
-        updateTimerDisplay();
-    }, 1000);
+    gameStartTime = Date.now();
+    
+    // Mettre à jour le score initial
+    updatetopbar_score(score);
+    
+    // Démarrer le premier tour
+    nextRound();
 }
 
-// Mettre à jour l'affichage du chronomètre
-function updateTimerDisplay() {
-    const minutes = Math.floor(currentGameTime / 60);
-    const seconds = currentGameTime % 60;
-    timerDisplay.textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
-
-// Afficher la prochaine question
-function showNextQuestion() {
-    // Vérifier si toutes les questions ont été posées
-    if (currentQuestionIndex >= QUESTIONS_PER_GAME) {
+// Fonction pour passer au tour suivant
+function nextRound() {
+    // Vérifier si on a atteint la fin du jeu
+    if (currentRound >= totalRounds) {
         endGameWithResults();
         return;
     }
     
-    // Cacher le bouton "Question suivante"
-    nextQuestionBtn.style.display = 'none';
+    currentRound++;
+    canClick = true;
     
-    // Sélectionner une icône aléatoire parmi la collection
-    const availableIcons = iconsCollection.filter(icon => 
-        !icon.used || icon.used === false
-    );
+    // Réinitialiser l'affichage
+    skullOverlay.style.backgroundSize = '0%';
     
-    if (availableIcons.length === 0) {
-        endGameWithResults();
-        return;
+    // Sélectionner un mot au hasard qui n'a pas encore été utilisé
+    let availableWords = vocabularyData.filter(word => !selectedWords.includes(word.id));
+    
+    // Si on a épuisé tous les mots, on réinitialise la liste
+    if (availableWords.length === 0) {
+        selectedWords = [];
+        availableWords = vocabularyData;
     }
     
-    // Sélectionner une icône aléatoire
-    const randomIndex = Math.floor(Math.random() * availableIcons.length);
-    currentIcon = availableIcons[randomIndex];
+    // Choisir un mot aléatoire
+    const randomIndex = Math.floor(Math.random() * availableWords.length);
+    currentWord = availableWords[randomIndex];
+    selectedWords.push(currentWord.id);
     
-    // Marquer l'icône comme utilisée
-    currentIcon.used = true;
+    // Afficher le mot en anglais
+    englishWordElement.textContent = currentWord.description_en;
     
-    // Mettre à jour le mot affiché sur le parchemin
-    currentWordElement.textContent = currentIcon.englishWord;
+    // Lire le mot automatiquement
+    speakWord(currentWord.description_en);
     
-    // Prononcer le mot automatiquement
-    playCurrentWordSound();
-    
-    // Créer les portes
-    createDoors();
-    
-    // Mettre à jour la barre de progression
-    updateProgressBar();
-    
-    // Incrémentation du compteur de questions
-    currentQuestionIndex++;
+    // Générer les options
+    generateOptions();
 }
 
-// Créer l'affichage des portes
-function createDoors() {
-    // Vider le conteneur des portes
-    doorsContainer.innerHTML = '';
+// Fonction pour générer les options d'images
+function generateOptions() {
+    // Vider le conteneur d'options
+    optionsContainer.innerHTML = '';
     
-    // Déterminer aléatoirement quelle porte contient la bonne réponse
-    const correctDoorIndex = Math.floor(Math.random() * DOORS_COUNT);
+    // Créer un tableau avec l'image correcte et 4 images incorrectes
+    const correctImage = currentWord;
+    let incorrectImages = vocabularyData
+        .filter(item => item.id !== currentWord.id)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 4);
     
-    // Créer les portes
-    for (let i = 0; i < DOORS_COUNT; i++) {
-        const doorElement = document.createElement('img');
-        doorElement.src = CLOSED_DOOR_PATH;
-        doorElement.alt = 'Porte fermée';
-        doorElement.className = 'door';
-        doorElement.dataset.index = i;
-        doorElement.dataset.isCorrect = (i === correctDoorIndex).toString();
+    let allOptions = [correctImage, ...incorrectImages];
+    
+    // Mélanger les options
+    allOptions = shuffleArray(allOptions);
+    
+    // Trouver l'index de la bonne réponse
+    correctImageIndex = allOptions.findIndex(item => item.id === currentWord.id);
+    
+    // Créer les éléments d'option
+    allOptions.forEach((option, index) => {
+        // Créer l'élément d'option
+        const optionElement = document.createElement('div');
+        optionElement.className = 'option';
+        optionElement.dataset.index = index;
         
-        // Ajouter un gestionnaire d'événement pour le clic
-        doorElement.addEventListener('click', handleDoorClick);
+        // Choisir une fiole aléatoire comme fond
+        const flaskNumber = Math.floor(Math.random() * 10) + 1;
         
-        // Ajouter la porte au conteneur
-        doorsContainer.appendChild(doorElement);
-    }
+        // Créer l'image de la fiole
+        const flaskImage = document.createElement('img');
+        flaskImage.src = `/assets/images/flask_${flaskNumber}.webp`;
+        flaskImage.alt = 'Flask';
+        flaskImage.className = 'flask-image';
+        
+        // Créer l'image du vocabulaire
+        const vocabImage = document.createElement('img');
+        vocabImage.src = `/assets/images/vocabulary/${option.filename}`;
+        vocabImage.alt = option.description;
+        vocabImage.className = 'vocabulary-image';
+        
+        // Créer l'icône de feedback (check ou crâne)
+        const feedbackIcon = document.createElement('img');
+        feedbackIcon.className = 'feedback-icon';
+        
+        // Ajouter les images à l'option
+        optionElement.appendChild(flaskImage);
+        optionElement.appendChild(vocabImage);
+        optionElement.appendChild(feedbackIcon);
+        
+        // Ajouter l'événement de clic
+        optionElement.addEventListener('click', () => handleOptionClick(index));
+        
+        // Ajouter l'option au conteneur
+        optionsContainer.appendChild(optionElement);
+    });
 }
 
-// Gérer le clic sur une porte
-function handleDoorClick(event) {
-    // Si on attend déjà la prochaine question, ignorer
-    if (waitingForNextQuestion) return;
+// Fonction pour gérer le clic sur une option
+function handleOptionClick(index) {
+    // Vérifier si le joueur peut cliquer
+    if (!canClick) return;
     
-    // Récupérer l'élément porte cliqué
-    const doorElement = event.currentTarget;
-    const isCorrect = doorElement.dataset.isCorrect === 'true';
+    // Désactiver les clics pendant l'animation
+    canClick = false;
     
-    // Remplacer l'image de la porte en fonction de la réponse
-    doorElement.src = isCorrect ? GOOD_DOOR_PATH : BAD_DOOR_PATH;
+    // Vérifier si la réponse est correcte
+    const isCorrect = index === correctImageIndex;
     
     if (isCorrect) {
-        // Bonne réponse - ajouter des points selon le niveau
-        score += pointsPerCorrectAnswer[difficultyLevel];
-        playCorrectSound();
+        // Bonne réponse
+        score += pointsPerCorrectAnswer;
+        updatetopbar_score(score);
+        
+        // Afficher le check vert
+        const feedbackIcon = optionsContainer.children[index].querySelector('.feedback-icon');
+        feedbackIcon.src = '/assets/images/check.webp';
+        feedbackIcon.style.opacity = '1';
+        
+        // Passer au tour suivant après un délai
+        setTimeout(() => {
+            nextRound();
+        }, 1000);
     } else {
-        // Mauvaise réponse - retirer des points (sans aller en dessous de 0)
-        score = Math.max(0, score - WRONG_ANSWER_PENALTY);
-        playWrongSound();
+        // Mauvaise réponse
+        score = Math.max(0, score - 5); // Éviter un score négatif
+        updatetopbar_score(score);
         
-        // Révéler la bonne porte
-        const doors = doorsContainer.querySelectorAll('.door');
-        doors.forEach(door => {
-            if (door.dataset.isCorrect === 'true') {
-                door.src = GOOD_DOOR_PATH;
+        // Récupérer l'élément sélectionné et l'icône de feedback
+        const selectedOption = optionsContainer.children[index];
+        const feedbackIcon = selectedOption.querySelector('.feedback-icon');
+        
+        // Afficher et animer le crâne directement sur l'option incorrecte
+        feedbackIcon.src = '/assets/images/skull.webp';
+        feedbackIcon.style.opacity = '1';
+        feedbackIcon.style.transition = 'opacity 0.3s, transform 0.5s';
+        feedbackIcon.style.transform = 'scale(2)';
+        
+        // Afficher le check sur la bonne réponse
+        const correctOption = optionsContainer.children[correctImageIndex];
+        const correctFeedback = correctOption.querySelector('.feedback-icon');
+        correctFeedback.src = '/assets/images/check.webp';
+        correctFeedback.style.opacity = '1';
+        
+        // Passer au tour suivant après l'animation
+        setTimeout(() => {
+            // Réinitialiser les styles avant de passer au tour suivant
+            feedbackIcon.style.transform = 'scale(1)';
+            nextRound();
+        }, 1500);
+    }
+}
+
+// Fonction pour lire un mot en anglais
+function speakWord(word) {
+    // Vérifier si la synthèse vocale est supportée
+    if ('speechSynthesis' in window) {
+        // Arrêter toute lecture en cours
+        window.speechSynthesis.cancel();
+        
+        // Ajouter un délai de 1,5 secondes avant de lire le mot
+        setTimeout(() => {
+            // Créer un nouvel objet de parole
+            const utterance = new SpeechSynthesisUtterance(word);
+            
+            // Configurer la langue et la voix
+            utterance.lang = 'en-US';
+            
+            // Essayer de trouver une voix anglaise
+            if (voicesLoaded) {
+                const voices = window.speechSynthesis.getVoices();
+                const englishVoice = voices.find(voice => voice.lang.includes('en-'));
+                if (englishVoice) {
+                    utterance.voice = englishVoice;
+                }
             }
-        });
-    }
-    
-    // Mettre à jour l'affichage du score
-    scoreDisplay.textContent = score;
-    
-    // Désactiver toutes les portes
-    const doors = doorsContainer.querySelectorAll('.door');
-    doors.forEach(door => {
-        door.removeEventListener('click', handleDoorClick);
-        door.style.cursor = 'default';
-        
-        // Si ce n'est pas la porte cliquée et ce n'est pas la bonne porte
-        if (door !== doorElement && door.dataset.isCorrect !== 'true') {
-            door.style.opacity = '0.5';
-        }
-    });
-    
-    // Attendre avant d'afficher le bouton pour la question suivante
-    waitingForNextQuestion = true;
-    setTimeout(() => {
-        nextQuestionBtn.style.display = 'block';
-    }, 1500);
-}
-
-// Fonction pour passer à la question suivante
-function nextQuestion() {
-    waitingForNextQuestion = false;
-    showNextQuestion();
-}
-
-// Fonction pour jouer le son du mot actuel
-function playCurrentWordSound() {
-    // Arrêter toute prononciation en cours
-    if (speechSynthesis.speaking) {
-        speechSynthesis.cancel();
-    }
-    
-    // S'assurer qu'il y a un mot à prononcer
-    if (!currentIcon || !currentIcon.englishWord) {
-        return;
-    }
-    
-    // Créer un nouvel objet de prononciation
-    speechUtterance = new SpeechSynthesisUtterance(currentIcon.englishWord);
-    speechUtterance.lang = 'en-US';
-    speechUtterance.rate = 0.8; // Ralentir légèrement pour plus de clarté
-    
-    // Prononcer le mot
-    speechSynthesis.speak(speechUtterance);
-}
-
-// Jouer un son pour une réponse correcte
-function playCorrectSound() {
-    // Utiliser l'API Audio si disponible dans le navigateur
-    if (typeof Audio !== 'undefined') {
-        const sound = new Audio('/assets/sounds/correct.mp3');
-        sound.play().catch(e => console.log('Impossible de jouer le son:', e));
+            
+            // Lire le mot
+            window.speechSynthesis.speak(utterance);
+        }, 1500); // Délai de 1,5 secondes
     }
 }
 
-// Jouer un son pour une réponse incorrecte
-function playWrongSound() {
-    if (typeof Audio !== 'undefined') {
-        const sound = new Audio('/assets/sounds/wrong.mp3');
-        sound.play().catch(e => console.log('Impossible de jouer le son:', e));
-    }
-}
-
-// Mettre à jour la barre de progression
-function updateProgressBar() {
-    const progress = (currentQuestionIndex / QUESTIONS_PER_GAME) * 100;
-    progressBar.style.width = `${progress}%`;
-}
-
-// Mélanger un tableau (algorithme de Fisher-Yates)
+// Fonction pour mélanger un tableau (algorithme de Fisher-Yates)
 function shuffleArray(array) {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    let currentIndex = array.length, randomIndex;
+    
+    // Tant qu'il reste des éléments à mélanger
+    while (currentIndex !== 0) {
+        // Choisir un élément restant
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        
+        // Et l'échanger avec l'élément actuel
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
     }
-    return newArray;
+    
+    return array;
 }
 
-// Obtenir le score maximum possible
-function getMaxPossibleScore() {
-    return QUESTIONS_PER_GAME * pointsPerCorrectAnswer[difficultyLevel];
-}
-
-// Fonction pour terminer le jeu avec résultats (OBLIGATOIRE)
+// Fonction pour terminer le jeu (OBLIGATOIRE)
 function endGameWithResults() {
-    // 1. Arrêter les timers ou animations en cours
-    clearInterval(timeInterval);
+    // Calculer le temps écoulé
+    const timeSpent = Math.ceil((Date.now() - gameStartTime) / 1000);
     
-    // 2. Calculer le score final et le temps écoulé
-    const finalScore = score;
-    const maxScore = getMaxPossibleScore();
-    const tempsEcoule = Math.ceil((Date.now() - gameStartTime) / 1000);
-    
-    // 3. Appeler la fonction endGame du template
+    // Appeler la fonction endGame du template
     window.GameEnd.endGame({
-        score: finalScore,         // Score obtenu
-        maxScore: maxScore,        // Score maximum possible
-        timeSpent: tempsEcoule     // Temps écoulé en secondes
+        score: score,
+        maxScore: totalRounds * pointsPerCorrectAnswer,
+        timeSpent: timeSpent
     }, resetGame);
 }
 
 // Fonction de réinitialisation du jeu (OBLIGATOIRE)
 function resetGame() {
     // Réinitialiser les variables
-    currentQuestionIndex = 0;
+    currentRound = 0;
     score = 0;
-    waitingForNextQuestion = false;
-    currentGameTime = 0;
+    selectedWords = [];
     
-    // Réinitialiser les icônes utilisées
-    iconsCollection.forEach(icon => {
-        icon.used = false;
-    });
+    // Réinitialiser l'affichage
+    skullOverlay.style.backgroundSize = '0%';
     
-    // Mettre à jour l'affichage
-    scoreDisplay.textContent = score;
-    updateTimerDisplay();
-    nextQuestionBtn.style.display = 'none';
-    
-    // Vider le conteneur des portes
-    doorsContainer.innerHTML = '';
-    
-    // Démarrer une nouvelle partie
-    gameStartTime = Date.now();
-    startTimer();
-    showNextQuestion();
+    // Recommencer le jeu
+    startGame();
 }
-
-// Initialiser le jeu lorsque la page est chargée
-document.addEventListener('DOMContentLoaded', initGame);

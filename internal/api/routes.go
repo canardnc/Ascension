@@ -74,6 +74,9 @@ func SetupRoutes(mux *http.ServeMux) {
 	assetsDir := http.FileServer(http.Dir("./web/public/assets"))
 	mux.Handle("/assets/", http.StripPrefix("/assets/", assetsDir))
 
+	assetsVocabulary := http.FileServer(http.Dir("./web/public/assets/images/vocabulary"))
+	mux.Handle("/vocabulary/", http.StripPrefix("/vocabulary/", assetsVocabulary))
+
 	adminDir := http.FileServer(http.Dir("./web/public/admin"))
 	mux.Handle("/admin/", http.StripPrefix("/admin/", adminDir))
 
@@ -158,6 +161,15 @@ func SetupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/minigame/metadata", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			middleware.JWTAuth(handlers.GetMinigameMetadata)(w, r)
+		} else {
+			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Route pour le vocabulaire
+	mux.HandleFunc("/api/vocabulary", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			middleware.JWTAuth(handlers.GetVocabularyByDifficulty)(w, r)
 		} else {
 			http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
 		}

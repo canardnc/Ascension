@@ -3,121 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Doors - Apprends l'Anglais</title>
+    <title>Vocabulary Quest</title>
     <style>
-        /* Styles spécifiques à votre mini-jeu */
-        .word-doors-game {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-        }
+        .vocabulary-game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    padding-top: 40px; /* Augmenté de 20px à 40px pour plus de marge en haut */
+}
 
-        /* Zone du parchemin avec le mot */
-        .parchment-area {
-            background-image: url('/assets/images/parchment.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            width: 300px;
-            height: 150px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 20px 0;
-        }
+.word-container {
+    position: relative;
+    text-align: center;
+    margin-bottom: 15px; /* Réduit de 30px à 15px */
+    width: 360px; /* Augmenté de 300px à 360px (20% de plus) */
+    height: 180px; /* Augmenté de 150px à 180px (20% de plus) */
+}
 
-        .english-word {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #5a3921;
-            text-transform: capitalize;
-        }
+.scroll-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
 
-        /* Zone pour les portes */
-        .doors-container {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin: 30px 0;
-        }
+.english-word {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.8);
+}
 
-        .door {
-            width: 120px;
-            height: 180px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+.speaker-icon {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    background-color: rgba(255,255,255,0.7);
+    border-radius: 50%;
+    padding: 5px;
+}
 
-        .door:hover {
-            transform: scale(1.05);
-        }
+.options-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0;
+    max-width: 100%;
+    margin-top: 2%; /* Réduit de 10% à 2% */
+}
 
-        /* Zone d'informations */
-        .game-info {
-            display: flex;
-            justify-content: space-between;
-            width: 80%;
-            max-width: 600px;
-            margin-top: 20px;
-        }
+.option {
+    position: relative;
+    width: 30%; /* Taille de base pour garantir 3 options par ligne */
+    max-width: 200px; /* Limite la taille maximale */
+    height: auto; /* Hauteur auto pour maintenir les proportions */
+    aspect-ratio: 1/1.6; /* Maintient un ratio constant hauteur/largeur */
+    cursor: pointer;
+    transition: transform 0.2s;
+    margin: 0;
+    padding: 0;
+}
 
-        /* Zone de progression */
-        .progress-container {
-            width: 80%;
-            max-width: 600px;
-            height: 10px;
-            background-color: #e0e0e0;
-            border-radius: 5px;
-            overflow: hidden;
-            margin: 20px 0;
-        }
+@media (max-width: 768px) {
+    .option {
+        width: 30%; /* Sur petits écrans, garder 3 options par ligne */
+    }
+}
 
-        .progress-bar {
-            height: 100%;
-            background-color: #4a6ee0;
-            width: 0%;
-            transition: width 0.5s;
-        }
+@media (min-width: 769px) and (max-width: 1024px) {
+    .option {
+        width: 30%; /* Sur écrans moyens, garder 3 options par ligne */
+    }
+}
 
-        /* Zone pour le bouton suivant */
-        .next-button-container {
-            margin: 20px 0;
-        }
+@media (min-width: 1025px) {
+    .option {
+        width: 30%; /* Sur grands écrans, garder 3 options par ligne */
+    }
+}
+
+.option:hover {
+    transform: scale(1.05);
+}
+
+.flask-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.vocabulary-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 33%; /* Réduit à 33% (divisé par 3) */
+    height: 33%; /* Réduit à 33% (divisé par 3) */
+    object-fit: contain;
+    margin: 0;
+    padding: 0;
+}
+
+.feedback-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.5s;
+}
+
+.skull-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/assets/images/skull.webp');
+    background-size: 0%;
+    background-position: var(--click-position, center center);
+    background-repeat: no-repeat;
+    z-index: 100;
+    pointer-events: none;
+    transition: background-size 0.5s ease-out;
+}
     </style>
 </head>
-
 <body>
-    <div id="game-content" class="word-doors-game">
-        <!-- Zone du parchemin avec le mot anglais -->
-        <div class="parchment-area">
-            <div id="current-word" class="english-word">Loading...</div>
+    <div class="vocabulary-game-container">
+        <div class="word-container">
+            <img src="/assets/images/scroll.webp" alt="Scroll" class="scroll-image">
+            <div class="english-word" id="englishWord">Word</div>
+            <svg class="speaker-icon" id="speakerButton" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="11" fill="rgba(255,255,255,0.7)"/>
+                <path d="M8,16 L5,16 C4.448,16 4,15.552 4,15 L4,9 C4,8.448 4.448,8 5,8 L8,8 L14,4 L14,20 L8,16 Z" fill="#333"/>
+                <path d="M16,8 C17.326,9.327 18,11.115 18,13 C18,14.885 17.326,16.673 16,18" stroke="#333" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                <path d="M17,5 C19.209,7.209 20.5,10 20.5,13 C20.5,16 19.209,18.791 17,21" stroke="#333" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            </svg>
         </div>
-
-        <!-- Zone pour les portes -->
-        <div id="doors-container" class="doors-container">
-            <!-- Les portes seront ajoutées dynamiquement -->
+        
+        <div class="options-container" id="optionsContainer">
+            <!-- Options will be generated dynamically -->
         </div>
-
-        <!-- Bouton pour passer à la question suivante -->
-        <div class="next-button-container">
-            <button id="next-question-btn" style="display: none;">Question suivante</button>
-        </div>
-
-        <!-- Barre de progression -->
-        <div class="progress-container">
-            <div id="progress-bar" class="progress-bar"></div>
-        </div>
-
-        <!-- Informations du jeu -->
-        <div class="game-info">
-            <div>Score: <span id="score-display">0</span></div>
-            <div>Temps: <span id="timer-display">00:00</span></div>
-        </div>
+        
+        <div class="skull-overlay" id="skullOverlay"></div>
     </div>
-
-    <script src="script.js"></script>
 </body>
 </html>
