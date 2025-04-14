@@ -10,6 +10,7 @@ let canClick = true;
 let difficultyLevel = 1;
 let pointsPerCorrectAnswer = 10;
 let gameStartTime;
+let audioPlayer;
 
 // Éléments DOM
 let englishWordElement;
@@ -48,13 +49,13 @@ function initGame() {
             pointsPerCorrectAnswer = 10;
     }
     
-    // 3. Initialiser la synthèse vocale
-    initVoices();
+    // 3. Initialiser le lecteur audio
+    initAudioPlayer();
     
     // 4. Ajouter les écouteurs d'événements
     speakerButton.addEventListener('click', () => {
         if (currentWord) {
-            speakWord(currentWord.description_en);
+            playWordAudio(currentWord.id);
         }
     });
     
@@ -62,21 +63,10 @@ function initGame() {
     loadVocabularyData();
 }
 
-// Initialisation de la synthèse vocale
-let voicesLoaded = false;
-
-// Fonction pour initialiser les voix
-function initVoices() {
-    if ('speechSynthesis' in window) {
-        // Certains navigateurs chargent les voix de manière asynchrone
-        if (window.speechSynthesis.getVoices().length === 0) {
-            window.speechSynthesis.addEventListener('voiceschanged', () => {
-                voicesLoaded = true;
-            });
-        } else {
-            voicesLoaded = true;
-        }
-    }
+// Initialisation du lecteur audio
+function initAudioPlayer() {
+    // Créer un élément audio qui sera réutilisé pour jouer tous les sons
+    audioPlayer = new Audio();
 }
 
 // Fonction pour charger les données de vocabulaire depuis l'API
@@ -185,10 +175,35 @@ function nextRound() {
     englishWordElement.textContent = currentWord.description_en;
     
     // Lire le mot automatiquement
-    speakWord(currentWord.description_en);
+    setTimeout(() => {
+        playWordAudio(currentWord.id);
+    }, 1500); // Délai de 1,5 secondes comme dans la version originale
     
     // Générer les options
     generateOptions();
+}
+
+// Fonction pour jouer l'audio d'un mot basé sur son ID
+function playWordAudio(wordId) {
+    // Arrêter toute lecture en cours
+    audioPlayer.pause();
+    audioPlayer.currentTime = 0;
+    
+    // Construire le chemin du fichier audio
+    const audioPath = `/assets/images/vocabulary/english_${wordId}.mp3`;
+    
+    // Définir la source du lecteur audio
+    audioPlayer.src = audioPath;
+    
+    // Gérer les erreurs de chargement
+    audioPlayer.onerror = function() {
+        console.error('Erreur lors du chargement du fichier audio:', audioPath);
+    };
+    
+    // Jouer l'audio
+    audioPlayer.play().catch(error => {
+        console.error('Erreur lors de la lecture du fichier audio:', error);
+    });
 }
 
 // Fonction pour générer les options d'images
@@ -302,36 +317,6 @@ function handleOptionClick(index) {
             feedbackIcon.style.transform = 'scale(1)';
             nextRound();
         }, 1500);
-    }
-}
-
-// Fonction pour lire un mot en anglais
-function speakWord(word) {
-    // Vérifier si la synthèse vocale est supportée
-    if ('speechSynthesis' in window) {
-        // Arrêter toute lecture en cours
-        window.speechSynthesis.cancel();
-        
-        // Ajouter un délai de 1,5 secondes avant de lire le mot
-        setTimeout(() => {
-            // Créer un nouvel objet de parole
-            const utterance = new SpeechSynthesisUtterance(word);
-            
-            // Configurer la langue et la voix
-            utterance.lang = 'en-US';
-            
-            // Essayer de trouver une voix anglaise
-            if (voicesLoaded) {
-                const voices = window.speechSynthesis.getVoices();
-                const englishVoice = voices.find(voice => voice.lang.includes('en-'));
-                if (englishVoice) {
-                    utterance.voice = englishVoice;
-                }
-            }
-            
-            // Lire le mot
-            window.speechSynthesis.speak(utterance);
-        }, 1500); // Délai de 1,5 secondes
     }
 }
 
