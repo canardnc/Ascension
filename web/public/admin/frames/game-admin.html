@@ -787,7 +787,6 @@ function loadMonstersForLevelForm() {
             option.textContent = `${monster.monster_name}`;
             selectElement.appendChild(option);
         });
-        console.log(`${monsters.length} monstres chargés dans le formulaire`);
     } else {
         // Ajouter une option par défaut si pas de monstres
         const option = document.createElement('option');
@@ -950,8 +949,8 @@ function loadMonstersForLevelForm() {
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="new-level-monster-level">Niveau du monstre</label>
-                        <input type="number" id="new-level-monster-level" min="1" step="1" value="1">
+                        <label for="new-level-monster-level-input">Niveau du monstre</label>
+                        <input type="number" id="new-level-monster-level-input" min="1" step="1" value="1">
                     </div>
                     <div class="form-group">
                         <label for="new-level-monster-amount">Quantité</label>
@@ -1204,7 +1203,7 @@ function loadMonstersForLevelForm() {
             document.getElementById('monster-points').value = monster.points || 0;
             
             // Update preview image
-            const imageUrl = `/assets/images/monsters/${monster.design || 'default'}.png`;
+            const imageUrl = `/assets/images/monsters/${monster.design || 'default.png'}`;
             document.getElementById('monster-image-preview').src = imageUrl;
             document.getElementById('monster-image-preview').onerror = function() {
                 this.src = '/assets/images/monsters/default.png';
@@ -1552,7 +1551,7 @@ function loadMonstersForLevelForm() {
                     <tr>
                         <td>${monsterName}</td>
                         <td>
-                            <img src="/assets/images/monsters/${monsterDesign}.png" 
+                            <img src="/assets/images/monsters/${monsterDesign}" 
                                  alt="${monsterName}" 
                                  class="monster-image" 
                                  onerror="this.src='/assets/images/monsters/default.png'">
@@ -1677,7 +1676,7 @@ function loadMonstersForLevelForm() {
             const newLevelMonster = {
                 level: selectedLevelId,
                 monster_id: monsterId,
-                monster_level: parseInt(document.getElementById('new-level-monster-level').value),
+                monster_level: parseInt(document.getElementById('new-level-monster-level-input').value),
                 amount: parseInt(document.getElementById('new-level-monster-amount').value),
                 coords_x: parseInt(document.getElementById('new-level-monster-x').value),
                 coords_y: parseInt(document.getElementById('new-level-monster-y').value),

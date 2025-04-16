@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -293,6 +294,7 @@ func AddMonsterToLevel(w http.ResponseWriter, r *http.Request) {
 		RETURNING id
 	`
 
+	fmt.Printf("INSERTION monstre : %v\nNiveau monstre: %v", query, request.MonsterLevel)
 	var entryID int
 	err = db.DB.QueryRow(
 		query,
