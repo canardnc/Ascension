@@ -397,6 +397,36 @@
       }
     }
     
+    // Fonction pour générer un petit déplacement aléatoire pour débloquer un monstre
+function generateRandomStep(monster) {
+    // Générer une direction aléatoire (8 directions possibles)
+    const directions = [
+        { x: 1, y: 0 },    // Droite
+        { x: 1, y: 1 },    // Diagonale bas-droite
+        { x: 0, y: 1 },    // Bas
+        { x: -1, y: 1 },   // Diagonale bas-gauche
+        { x: -1, y: 0 },   // Gauche
+        { x: -1, y: -1 },  // Diagonale haut-gauche
+        { x: 0, y: -1 },   // Haut
+        { x: 1, y: -1 }    // Diagonale haut-droite
+    ];
+    
+    // Générer un indice aléatoire
+    const randomIndex = Math.floor(Math.random() * directions.length);
+    const direction = directions[randomIndex];
+    
+    // Calculer la nouvelle position
+    const newX = monster.x + direction.x * 0.5; // Demi-pas pour éviter de trop s'éloigner
+    const newY = monster.y + direction.y * 0.5;
+    
+    // Vérifier si la nouvelle position est valide
+    if (!isBlocked(Math.floor(newX), Math.floor(newY))) {
+        return { x: newX, y: newY };
+    }
+    
+    // Si bloqué, essayer une autre direction (simple récursion)
+    return generateRandomStep(monster);
+}
     function spawnMonsters() {
       monsters = [];
       
@@ -422,6 +452,7 @@
           return path && path.length > 0;
       }
       
+
       // Fonction pour trouver une position valide pour un monstre
       function findValidMonsterPosition() {
           let attempts = 0;
@@ -467,22 +498,26 @@
               const position = findValidMonsterPosition();
               
               monsters.push({
-                  x: position.x,
-                  y: position.y,
-                  hp: 50,
-                  damage: 5,
-                  range: 10,
-                  attackSpeed: 1,
-                  moveSpeed: 8,
-                  size: 30,
-                  attackTimer: 0,
-                  lastPathTime: 0,
-                  path: [],
-                  name: "Monstre inconnu",
-                  design: "default",
-                  points: 10,
-                  level : 1
-              });
+        x: position.x,
+        y: position.y,
+        hp: monster.health * (1+monsterLevel*0.2)|| 50,
+        damage: monster.damage* (1+monsterLevel*0.2) || 5,
+        range: monster.range || 5,
+        attackSpeed: monster.attackSpeed || 1,
+        moveSpeed: monster.speed|| 6,
+        size: monster.size || 30, 
+        attackTimer: 0,
+        lastPathTime: 0,
+        path: [],
+        name: monster.name || "Monstre inconnu",
+        design: monster.design || "default",
+        points: monster.points || 10,
+        // Ajout de ces nouvelles propriétés
+        previousX: position.x,
+        previousY: position.y,
+        stuckCounter: 0,
+        isMoving: false
+    });
           }
           return;
       }
@@ -498,62 +533,77 @@ const monsterLevel = monster.monsterLevel || 1;
               // Utiliser les coordonnées spécifiées si elles sont valides
               if (isValidMonsterPosition(monster.x, monster.y)) {
                 monsters.push({
-                    x: monster.x,
-                    y: monster.y,
-                    hp: monster.health * (1+monsterLevel*0.2)|| 50,
-                    damage: monster.damage* (1+monsterLevel*0.2) || 5,
-                    range: monster.range || 5,
-                    attackSpeed: monster.attackSpeed || 1,
-                    moveSpeed: monster.speed|| 6,
-                    size: monster.size || 30, 
-                    attackTimer: 0,
-                    lastPathTime: 0,
-                    path: [],
-                    name: monster.name || "Monstre inconnu",
-                    design: monster.design || "default",
-                    points: monster.points || 10
-                });
+        x: position.x,
+        y: position.y,
+        hp: monster.health * (1+monsterLevel*0.2)|| 50,
+        damage: monster.damage* (1+monsterLevel*0.2) || 5,
+        range: monster.range || 5,
+        attackSpeed: monster.attackSpeed || 1,
+        moveSpeed: monster.speed|| 6,
+        size: monster.size || 30, 
+        attackTimer: 0,
+        lastPathTime: 0,
+        path: [],
+        name: monster.name || "Monstre inconnu",
+        design: monster.design || "default",
+        points: monster.points || 10,
+        // Ajout de ces nouvelles propriétés
+        previousX: position.x,
+        previousY: position.y,
+        stuckCounter: 0,
+        isMoving: false
+    });
               } else {
                   // Si les coordonnées spécifiées ne sont pas valides, trouver une position valide
                   const position = findValidMonsterPosition();
                   
                   monsters.push({
-                      x: position.x,
-                      y: position.y,
-                      hp: monster.health * (1+monsterLevel*0.2)|| 50,
-                      damage: monster.damage * (1+monsterLevel*0.2)|| 5,
-                      range: monster.range || 5,
-                      attackSpeed: monster.attackSpeed || 1,
-                      moveSpeed: monster.speed || 6,
-                      size: monster.size || 30, 
-                      attackTimer: 0,
-                      lastPathTime: 0,
-                      path: [],
-                      name: monster.name || "Monstre inconnu",
-                      design: monster.design || "default",
-                      points: monster.points || 10
-                  });
+        x: position.x,
+        y: position.y,
+        hp: monster.health * (1+monsterLevel*0.2)|| 50,
+        damage: monster.damage* (1+monsterLevel*0.2) || 5,
+        range: monster.range || 5,
+        attackSpeed: monster.attackSpeed || 1,
+        moveSpeed: monster.speed|| 6,
+        size: monster.size || 30, 
+        attackTimer: 0,
+        lastPathTime: 0,
+        path: [],
+        name: monster.name || "Monstre inconnu",
+        design: monster.design || "default",
+        points: monster.points || 10,
+        // Ajout de ces nouvelles propriétés
+        previousX: position.x,
+        previousY: position.y,
+        stuckCounter: 0,
+        isMoving: false
+    });
               }
           } else {
               // Si x et y ne sont pas spécifiés, trouver une position valide
               const position = findValidMonsterPosition();
               
               monsters.push({
-                  x: position.x,
-                  y: position.y,
-                  hp: monster.health* (1+monsterLevel*0.2) || 50,
-                  damage: monster.damage * (1+monsterLevel*0.2)|| 5,
-                  range: monster.range || 5,
-                  attackSpeed: monster.attackSpeed || 1,
-                  moveSpeed: monster.speed || 6,
-                  size: monster.size || 30, 
-                  attackTimer: 0,
-                  lastPathTime: 0,
-                  path: [],
-                  name: monster.name || "Monstre inconnu",
-                  design: monster.design || "default",
-                  points: monster.points || 10
-              });
+        x: position.x,
+        y: position.y,
+        hp: monster.health * (1+monsterLevel*0.2)|| 50,
+        damage: monster.damage* (1+monsterLevel*0.2) || 5,
+        range: monster.range || 5,
+        attackSpeed: monster.attackSpeed || 1,
+        moveSpeed: monster.speed|| 6,
+        size: monster.size || 30, 
+        attackTimer: 0,
+        lastPathTime: 0,
+        path: [],
+        name: monster.name || "Monstre inconnu",
+        design: monster.design || "default",
+        points: monster.points || 10,
+        // Ajout de ces nouvelles propriétés
+        previousX: position.x,
+        previousY: position.y,
+        stuckCounter: 0,
+        isMoving: false
+    });
           }
       });
       
@@ -802,43 +852,82 @@ const monsterLevel = monster.monsterLevel || 1;
       
       // --- Comportement des monstres avec pathfinding amélioré ---
       monsters.forEach(m => {
-        let dx = hero.x - m.x;
-        let dy = hero.y - m.y;
-        let d = Math.hypot(dx, dy);
-        if (d > m.range) {
-          let currentTime = performance.now();
-          if (!m.path || m.path.length === 0 || currentTime - m.lastPathTime > 500) {
+    // Sauvegarder la position actuelle pour détecter les blocages
+    const currentX = m.x;
+    const currentY = m.y;
+    
+    let dx = hero.x - m.x;
+    let dy = hero.y - m.y;
+    let d = Math.hypot(dx, dy);
+    
+    // Déterminer si le monstre est en mode "poursuite"
+    const isInPursuit = d > m.range;
+    m.isMoving = isInPursuit; // Marquer comme en mouvement seulement s'il poursuit
+    
+    if (isInPursuit) {
+        let currentTime = performance.now();
+        if (!m.path || m.path.length === 0 || currentTime - m.lastPathTime > 500) {
             m.lastPathTime = currentTime;
             let start = { x: Math.floor(m.x), y: Math.floor(m.y) };
             let goal = { x: Math.floor(hero.x), y: Math.floor(hero.y) };
             m.path = findPath(start, goal);
-          }
-          if (m.path && m.path.length > 0) {
+        }
+        
+        if (m.path && m.path.length > 0) {
             let nextTile = m.path[0];
             let targetX = nextTile.x + 0.5;
             let targetY = nextTile.y + 0.5;
             let vx = targetX - m.x;
             let vy = targetY - m.y;
             let distToTile = Math.hypot(vx, vy);
+            
             if (distToTile > 0.1) {
-              vx /= distToTile;
-              vy /= distToTile;
-              let newX = m.x + vx * m.moveSpeed * dt;
-              let newY = m.y + vy * m.moveSpeed * dt;
-              if (!isBlocked(Math.floor(newX), Math.floor(newY))) {
-                m.x = newX;
-                m.y = newY;
-              }
+                vx /= distToTile;
+                vy /= distToTile;
+                let newX = m.x + vx * m.moveSpeed * dt;
+                let newY = m.y + vy * m.moveSpeed * dt;
+                
+                // Vérifier si le mouvement est possible
+                if (!isBlocked(Math.floor(newX), Math.floor(newY))) {
+                    m.x = newX;
+                    m.y = newY;
+                }
             }
-            if (distToTile < 0.2) { m.path.shift(); }
-          }
+            
+            if (distToTile < 0.2) {
+                m.path.shift();
+            }
         }
-        m.attackTimer += dt;
-        if (d <= m.range && m.attackTimer >= 1 / m.attackSpeed) {
-          spawnProjectile(m, { x: hero.x, y: hero.y, entity: hero }, "monster");
-          m.attackTimer = 0;
+    }
+    
+    // Vérifier si le monstre est coincé (s'il est en mouvement mais n'a pas changé de position)
+    if (m.isMoving && Math.abs(m.x - m.previousX) < 0.01 && Math.abs(m.y - m.previousY) < 0.01) {
+        m.stuckCounter++;
+        
+        // Si coincé pendant 3 frames consécutives, essayer un mouvement aléatoire
+        if (m.stuckCounter >= 3) {
+            console.log("Monstre coincé, tentative de déblocage");
+            const randomPos = generateRandomStep(m);
+            m.x = randomPos.x;
+            m.y = randomPos.y;
+            m.stuckCounter = 0; // Réinitialiser le compteur
+            m.path = []; // Vider le chemin pour en recalculer un nouveau
         }
-      });
+    } else {
+        m.stuckCounter = 0; // Réinitialiser le compteur si le monstre a bougé
+    }
+    
+    // Mettre à jour la position précédente
+    m.previousX = currentX;
+    m.previousY = currentY;
+    
+    // Gestion des attaques
+    m.attackTimer += dt;
+    if (d <= m.range && m.attackTimer >= 1 / m.attackSpeed) {
+        spawnProjectile(m, { x: hero.x, y: hero.y, entity: hero }, "monster");
+        m.attackTimer = 0;
+    }
+});
       
       updateProjectiles(dt);
       monsters = monsters.filter(m => m.hp > 0);
