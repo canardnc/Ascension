@@ -23,6 +23,97 @@
             position: relative;
         }
         
+
+        /* Miniature des monstres*/
+        .monsters-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 15px;
+    max-width: 70%;
+    overflow-x: auto;
+    padding: 5px;
+    z-index: 5;
+}
+
+.monster-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 5px;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.monster-circle {
+    width: 65px;
+    height: 65px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    border: 2px solid #6542fe;
+    box-shadow: 0 0 10px rgba(101, 66, 254, 0.5);
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.monster-image {
+    width: 85px;
+    height: 85px;
+    object-fit: cover;
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+}
+
+.monster-level {
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #6542fe;
+    color: white;
+    border-radius: 10px;
+    padding: 3px 8px;
+    font-size: 13px;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    z-index: 10;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+/* Pour le défilement horizontal */
+.monsters-container {
+    display: flex;
+    overflow-x: auto;
+    padding: 5px 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #6542fe rgba(255, 255, 255, 0.2);
+}
+
+.monsters-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.monsters-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.monsters-container::-webkit-scrollbar-thumb {
+    background-color: #6542fe;
+    border-radius: 3px;
+}
+
         /* Image de fond similaire à index.html */
         .background {
             position: absolute;
@@ -270,6 +361,13 @@
                     <h2 class="level-name" id="level-name">Chargement...</h2>
                     <p class="level-description" id="level-description">Chargement de la description...</p>
                 </div>
+                
+                <!-- Nouvel encart des monstres -->
+                <div class="monsters-overlay" id="monsters-overlay">
+                    <div class="monsters-container" id="monsters-container">
+                        <!-- Les monstres seront ajoutés ici dynamiquement -->
+                    </div>
+                </div>
             </div>
             
             <button class="start-button" id="start-button">
@@ -369,7 +467,90 @@
             }
         }
         
-        // Fonction pour charger les données du joueur
+        // Fonction pour afficher les monstres dans l'encart
+        function displayMonstersPreview(levelDetails) {
+    const monstersContainer = document.getElementById('monsters-container');
+    
+    // Vider le conteneur
+    monstersContainer.innerHTML = '';
+    
+    // Si pas de monstres, afficher un message
+    if (!levelDetails || !levelDetails.monsters || levelDetails.monsters.length === 0) {
+        monstersContainer.innerHTML = '<span style="color: white; padding: 0 10px;">Aucun monstre trouvé</span>';
+        return;
+    }
+    
+    // Créer un objet pour compter les monstres par type et niveau
+    const monsterCounts = {};
+    
+    levelDetails.monsters.forEach(monster => {
+        const key = `${monster.design}-${monster.monsterLevel}`;
+        if (!monsterCounts[key]) {
+            monsterCounts[key] = {
+                count: 0,
+                name: monster.name || "Monstre inconnu",
+                design: monster.design || "default",
+                level: monster.monsterLevel || 1
+            };
+        }
+        monsterCounts[key].count++;
+    });
+    
+    // Afficher chaque type de monstre une seule fois avec son niveau et compteur
+    Object.values(monsterCounts).forEach(monster => {
+        const monsterElement = document.createElement('div');
+        monsterElement.className = 'monster-item';
+        
+        // Créer le cercle d'arrière-plan
+        const monsterCircle = document.createElement('div');
+        monsterCircle.className = 'monster-circle';
+        
+        // Créer l'image qui va déborder du cercle
+        const monsterImg = document.createElement('img');
+        monsterImg.className = 'monster-image';
+        monsterImg.src = `/assets/images/monsters/${monster.design}`;
+        monsterImg.alt = monster.name;
+        // Gestion d'erreur si l'image n'existe pas
+        monsterImg.onerror = function() {
+            this.src = '/assets/images/monsters/default.png';
+        };
+        
+        // Créer l'indicateur de niveau
+        const monsterLevel = document.createElement('span');
+        monsterLevel.className = 'monster-level';
+        monsterLevel.textContent = `Nv.${monster.level}`;
+        
+        // Ajouter le compteur si plus d'un monstre du même type
+        if (monster.count > 1) {
+            const countBadge = document.createElement('span');
+            countBadge.style.position = 'absolute';
+            countBadge.style.top = '-5px';
+            countBadge.style.right = '5px';
+            countBadge.style.backgroundColor = '#ff5252';
+            countBadge.style.color = 'white';
+            countBadge.style.borderRadius = '50%';
+            countBadge.style.width = '22px';
+            countBadge.style.height = '22px';
+            countBadge.style.display = 'flex';
+            countBadge.style.justifyContent = 'center';
+            countBadge.style.alignItems = 'center';
+            countBadge.style.fontSize = '12px';
+            countBadge.style.fontWeight = 'bold';
+            countBadge.style.zIndex = '15';
+            countBadge.style.boxShadow = '0 0 5px rgba(0, 0, 0, 0.5)';
+            countBadge.textContent = monster.count;
+            monsterElement.appendChild(countBadge);
+        }
+        
+        // Ajouter les éléments dans le bon ordre pour le z-index
+        monsterElement.appendChild(monsterCircle);
+        monsterElement.appendChild(monsterImg);
+        monsterElement.appendChild(monsterLevel);
+        
+        monstersContainer.appendChild(monsterElement);
+    });
+}
+// Fonction pour charger les données du joueur
         async function loadPlayerData() {
             try {
                 const data = await fetchWithAuth('/api/player/stats');
@@ -414,60 +595,68 @@
         }
         
         // Fonction pour mettre à jour l'affichage du niveau et charger ses détails
-        async function updateLevelDisplay() {
-            if (levels.length === 0) {
-                console.error('Aucun niveau chargé');
-                return;
-            }
+        function updateLevelDisplay() {
+    if (levels.length === 0) {
+        console.error('Aucun niveau chargé');
+        return;
+    }
+    
+    const level = levels[currentLevelIndex];
+    
+    // Mettre à jour le texte et l'image
+    currentLevelElement.textContent = level.id;
+    levelNameElement.textContent = level.name;
+    levelDescriptionElement.textContent = level.description;
+    energyCostElement.textContent = level.energyCost;
+    
+    // Mettre à jour l'image avec fallback
+    levelImageElement.src = level.image;
+    levelImageElement.onerror = function() {
+        this.src = '/icons/icon-512.png';
+    };
+    
+    // Mise à jour des boutons de navigation
+    prevLevelButton.disabled = currentLevelIndex <= 0;
+    prevLevelButton.style.opacity = currentLevelIndex <= 0 ? '0.3' : '1';
+    
+    const isAtMaxLevel = currentLevelIndex >= levels.length - 1 || 
+                       (currentLevelIndex + 1 < levels.length && levels[currentLevelIndex + 1].id > maxUnlockedLevel);
+    nextLevelButton.disabled = isAtMaxLevel;
+    nextLevelButton.style.opacity = isAtMaxLevel ? '0.3' : '1';
+    
+    // Mettre à jour le bouton de démarrage (désactivé si pas assez d'énergie)
+    const hasEnoughEnergy = playerEnergy.current >= level.energyCost;
+    startButton.disabled = !hasEnoughEnergy;
+    startButton.style.opacity = hasEnoughEnergy ? '1' : '0.5';
+    
+    // Feedback visuel si pas assez d'énergie
+    if (!hasEnoughEnergy) {
+        energyCostElement.innerHTML = `<span style="color: #e74c3c;">${level.energyCost}</span>`;
+    } else {
+        energyCostElement.innerHTML = level.energyCost;
+    }
+    
+    // Charger les détails du niveau depuis la base de données
+    toggleLoading(true);
+    try {
+        loadLevelDetails(level.id).then(details => {
+            currentLevelDetails = details;
+            console.log("Détails du niveau chargés et mis à jour" + ":", currentLevelDetails);
             
-            const level = levels[currentLevelIndex];
+            // Afficher les monstres du niveau
+            displayMonstersPreview(currentLevelDetails);
             
-            // Mettre à jour le texte et l'image
-            currentLevelElement.textContent = level.id;
-            levelNameElement.textContent = level.name;
-            levelDescriptionElement.textContent = level.description;
-            energyCostElement.textContent = level.energyCost;
-            
-            // Mettre à jour l'image avec fallback
-            levelImageElement.src = level.image;
-            levelImageElement.onerror = function() {
-                this.src = '/icons/icon-512.png';
-            };
-            
-            // Mise à jour des boutons de navigation
-            prevLevelButton.disabled = currentLevelIndex <= 0;
-            prevLevelButton.style.opacity = currentLevelIndex <= 0 ? '0.3' : '1';
-            
-            const isAtMaxLevel = currentLevelIndex >= levels.length - 1 || 
-                               (currentLevelIndex + 1 < levels.length && levels[currentLevelIndex + 1].id > maxUnlockedLevel);
-            nextLevelButton.disabled = isAtMaxLevel;
-            nextLevelButton.style.opacity = isAtMaxLevel ? '0.3' : '1';
-            
-            // Mettre à jour le bouton de démarrage (désactivé si pas assez d'énergie)
-            const hasEnoughEnergy = playerEnergy.current >= level.energyCost;
-            startButton.disabled = !hasEnoughEnergy;
-            startButton.style.opacity = hasEnoughEnergy ? '1' : '0.5';
-            
-            // Feedback visuel si pas assez d'énergie
-            if (!hasEnoughEnergy) {
-                energyCostElement.innerHTML = `<span style="color: #e74c3c;">${level.energyCost}</span>`;
-            } else {
-                energyCostElement.innerHTML = level.energyCost;
-            }
-            
-            // Charger les détails du niveau depuis la base de données
-            toggleLoading(true);
-            try {
-                currentLevelDetails = await loadLevelDetails(level.id);
-                console.log("Détails du niveau chargés et mis à jour" + ":", currentLevelDetails);
-                toggleLoading(false);
-            } catch (error) {
-                console.error("Erreur lors du chargement des détails du niveau:", error);
-                toggleLoading(false);
-            }
-        }
-        
-        // Fonction pour changer de niveau
+            toggleLoading(false);
+        }).catch(error => {
+            console.error("Erreur lors du chargement des détails du niveau:", error);
+            toggleLoading(false);
+        });
+    } catch (error) {
+        console.error("Erreur lors du chargement des détails du niveau:", error);
+        toggleLoading(false);
+    }
+}
+// Fonction pour changer de niveau
         function changeLevel(direction) {
             const newIndex = currentLevelIndex + direction;
             

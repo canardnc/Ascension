@@ -35,6 +35,8 @@
     let score = 0;
     let gameCompleted = false;
     let scoreSubmitted = false;
+    const zoomFactor = 4; // Facteur de zoom pour agrandir le rendu
+
     
     // ===== Paramètres du terrain et des tuiles =====
     const gridWidth = 80;
@@ -129,24 +131,27 @@
     
     // ===== Caméra centrée sur le héros =====
     function getCameraOffset() {
-      // Calcul classique pour centrer le héros
-      const heroWorld = gridToWorld(hero.x, hero.y);
-      let offset = {
-        x: canvas.width / 2 - heroWorld.x - tileWidth / 2,
-        y: canvas.height / 2 - heroWorld.y - tileHeight / 2
-      };
-      // Calculer la position de l'image de fond (centrée sur la grille)
-      let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
-      let bgX = gridCenter.x - backgroundImage.width / 2;
-      let bgY = gridCenter.y - backgroundImage.height / 2;
-      
-      // Clamp de l'offset pour que le canvas reste dans l'image de fond
-      offset.x = clamp(offset.x, canvas.width - backgroundImage.width - bgX, -bgX);
-      offset.y = clamp(offset.y, canvas.height - backgroundImage.height - bgY, -bgY);
-      
-      return offset;
-    }
-
+  // Calcul pour centrer le héros
+  const heroWorld = gridToWorld(hero.x, hero.y);
+  
+  // Calculer l'offset en tenant compte du zoom
+  let offset = {
+    x: canvas.width / (2 * zoomFactor) - heroWorld.x - tileWidth / 2,
+    y: canvas.height / (2 * zoomFactor) - heroWorld.y - tileHeight / 2
+  };
+  
+  // Calculer la position de l'image de fond (centrée sur la grille)
+  let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
+  let bgX = gridCenter.x - backgroundImage.width / 2;
+  let bgY = gridCenter.y - backgroundImage.height / 2;
+  
+  // Clamp de l'offset pour que le canvas reste dans l'image de fond
+  // Ajuster les limites pour tenir compte du zoom
+  offset.x = clamp(offset.x, canvas.width / zoomFactor - backgroundImage.width - bgX, -bgX);
+  offset.y = clamp(offset.y, canvas.height / zoomFactor - backgroundImage.height - bgY, -bgY);
+  
+  return offset;
+}
     function preloadMonsterImages() {
       // Fonction pour charger une image avec gestion d'erreur
       function loadImage(design) {
@@ -1156,115 +1161,127 @@ function showBattleEndScreen(success, nextLevelUnlocked) {
     
     // ===== Affichage (draw) =====
     function drawGame() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      let cameraOffset = getCameraOffset();
-      
-      // --- Dessiner le fond centré sur la grille ---
-      let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
-      let bgX = gridCenter.x - backgroundImage.width / 2;
-      let bgY = gridCenter.y - backgroundImage.height / 2;
-      ctx.drawImage(backgroundImage, bgX + cameraOffset.x, bgY + cameraOffset.y);
-      
-      // --- Dessiner les projectiles ---
-      drawProjectiles(cameraOffset);
-      
-      // --- Dessiner le héros avec transparence si sur tuile élevée ---
-      let heroTileKey = Math.floor(hero.x) + "," + Math.floor(hero.y);
-      let heroOnElevated = (heightMap[heroTileKey] >= 2);
-      let heroScreen = gridToScreen(hero.x, hero.y, cameraOffset);
-      let heroCenterX = heroScreen.x + tileWidth/2;
-      let heroCenterY = heroScreen.y + tileHeight/2;
-      
-      if (heroOnElevated) {
-        ctx.save();
-        ctx.globalAlpha = 0.25;
-      }
-      
-      // Dessiner l'image du héros au lieu d'un cercle
-      const heroHeight = 40; // Hauteur fixe
-      const heroWidth = (heroImage.width / heroImage.height) * heroHeight;
-      ctx.drawImage(
-        heroImage, 
-        heroCenterX - heroWidth/2, 
-        heroCenterY - heroHeight/2, 
-        heroWidth, 
-        heroHeight
-      );
-      
-      // Afficher la vie du héros au-dessus
-      ctx.fillStyle = "white";
-      ctx.font = "10px Arial";
-      ctx.textAlign = "center";
-      ctx.fillText(Math.floor(hero.hp), heroCenterX, heroCenterY - 25);
-      
-      if (heroOnElevated) { ctx.restore(); }
-      
-      // --- Dessiner les monstres avec transparence si sur tuile élevée ---
-      monsters.forEach(m => {
-        let mTileKey = Math.floor(m.x) + "," + Math.floor(m.y);
-        let mOnElevated = (heightMap[mTileKey] >= 2);
-        let mScreen = gridToScreen(m.x, m.y, cameraOffset);
-        let mCenterX = mScreen.x + tileWidth/2;
-        let mCenterY = mScreen.y + tileHeight/2;
-        
-        if (mOnElevated) { ctx.save(); ctx.globalAlpha = 0.25; }
-        
-        // Utiliser directement la taille du monstre depuis les données
-        let monsterSize = m.size || 30;
-        
-        // Vérifier si l'image du monstre est disponible
-        if (m.design && monsterImages[m.design]) {
-            // Dessiner l'image du monstre
-            const img = monsterImages[m.design];
-            const monsterHeight = m.size || 30;
-            const monsterWidth = (img.width / img.height) * monsterHeight;
+  // Effacer le canvas entier
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Calculer l'offset de la caméra (sans ajustement de zoom ici)
+  let cameraOffset = getCameraOffset();
+  
+  // Sauvegarder le contexte avant transformation
+  ctx.save();
+  
+  // Appliquer le zoom
+  ctx.scale(zoomFactor, zoomFactor);
+  
+  // --- Dessiner le fond centré sur la grille ---
+  let gridCenter = gridToWorld(gridWidth / 2, gridHeight / 2);
+  let bgX = gridCenter.x - backgroundImage.width / 2;
+  let bgY = gridCenter.y - backgroundImage.height / 2;
+  ctx.drawImage(backgroundImage, bgX + cameraOffset.x, bgY + cameraOffset.y);
+  
+  // --- Dessiner les projectiles ---
+  drawProjectiles(cameraOffset);
+  
+  // --- Dessiner le héros avec transparence si sur tuile élevée ---
+  let heroTileKey = Math.floor(hero.x) + "," + Math.floor(hero.y);
+  let heroOnElevated = (heightMap[heroTileKey] >= 2);
+  let heroScreen = gridToScreen(hero.x, hero.y, cameraOffset);
+  let heroCenterX = heroScreen.x + tileWidth/2;
+  let heroCenterY = heroScreen.y + tileHeight/2;
+  
+  if (heroOnElevated) {
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+  }
+  
+  // Dessiner l'image du héros au lieu d'un cercle
+  const heroHeight = 40; // Hauteur fixe
+  const heroWidth = (heroImage.width / heroImage.height) * heroHeight;
+  ctx.drawImage(
+    heroImage, 
+    heroCenterX - heroWidth/2, 
+    heroCenterY - heroHeight/2, 
+    heroWidth, 
+    heroHeight
+  );
+  
+  // Afficher la vie du héros au-dessus
+  ctx.fillStyle = "white";
+  ctx.font = "10px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(Math.floor(hero.hp), heroCenterX, heroCenterY - 25);
+  
+  if (heroOnElevated) { ctx.restore(); }
+  
+  // --- Dessiner les monstres avec transparence si sur tuile élevée ---
+  monsters.forEach(m => {
+    let mTileKey = Math.floor(m.x) + "," + Math.floor(m.y);
+    let mOnElevated = (heightMap[mTileKey] >= 2);
+    let mScreen = gridToScreen(m.x, m.y, cameraOffset);
+    let mCenterX = mScreen.x + tileWidth/2;
+    let mCenterY = mScreen.y + tileHeight/2;
+    
+    if (mOnElevated) { ctx.save(); ctx.globalAlpha = 0.25; }
+    
+    // Utiliser directement la taille du monstre depuis les données
+    let monsterSize = m.size || 30;
+    
+    // Vérifier si l'image du monstre est disponible
+    if (m.design && monsterImages[m.design]) {
+        // Dessiner l'image du monstre
+        const img = monsterImages[m.design];
+        const monsterHeight = m.size || 30;
+        const monsterWidth = (img.width / img.height) * monsterHeight;
 
-            // Dessiner avec le centre de l'image à la position du monstre
-            ctx.drawImage(
-                img, 
-                mCenterX - monsterWidth / 2, 
-                mCenterY - monsterHeight / 2,
-                monsterWidth,
-                monsterHeight
-            );
-        } else {
-            // Solution de repli : dessiner un cercle rouge
-            ctx.beginPath();
-            ctx.arc(mCenterX, mCenterY, monsterSize / 3, 0, Math.PI * 2);
-            ctx.fillStyle = "red";
-            ctx.fill();
-        }
-        
-        // Ajouter les points de vie au-dessus du monstre
-        ctx.fillStyle = "white";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 2;
-        ctx.font = "10px Arial";
-        ctx.textAlign = "center";
-        
-        // Dessiner le texte avec contour pour meilleure visibilité
-        ctx.strokeText(Math.floor(m.hp), mCenterX, mCenterY - monsterSize / 2 - 5);
-        ctx.fillText(Math.floor(m.hp), mCenterX, mCenterY - monsterSize / 2 - 5);
-        
-        if (mOnElevated) { ctx.restore(); }
-      });
-      
-      // Afficher le score et autres informations
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 16px Arial';
-      ctx.textAlign = 'left';
-      ctx.fillText(`Score: ${score}`, 20, 30);
-      ctx.fillText(`PV: ${Math.floor(hero.hp)} / ${hero.maxHp}`, 20, 60);
-      ctx.fillText(`Monstres: ${monsters.length}`, 20, 90);
-      
-      // Afficher le chronomètre
-      const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
-      const minutes = Math.floor(elapsed / 60);
-      const seconds = elapsed % 60;
-      ctx.textAlign = 'right';
-      ctx.fillText(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, canvas.width - 20, 30);
+        // Dessiner avec le centre de l'image à la position du monstre
+        ctx.drawImage(
+            img, 
+            mCenterX - monsterWidth / 2, 
+            mCenterY - monsterHeight / 2,
+            monsterWidth,
+            monsterHeight
+        );
+    } else {
+        // Solution de repli : dessiner un cercle rouge
+        ctx.beginPath();
+        ctx.arc(mCenterX, mCenterY, monsterSize / 3, 0, Math.PI * 2);
+        ctx.fillStyle = "red";
+        ctx.fill();
     }
-    // ===== Mouseover pour mettre à jour hoveredTile (sans affichage) =====
+    
+    // Ajouter les points de vie au-dessus du monstre
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.font = "10px Arial";
+    ctx.textAlign = "center";
+    
+    // Dessiner le texte avec contour pour meilleure visibilité
+    ctx.strokeText(Math.floor(m.hp), mCenterX, mCenterY - monsterSize / 2 - 5);
+    ctx.fillText(Math.floor(m.hp), mCenterX, mCenterY - monsterSize / 2 - 5);
+    
+    if (mOnElevated) { ctx.restore(); }
+  });
+  
+  // Restaurer le contexte pour éviter que le zoom affecte l'interface utilisateur
+  ctx.restore();
+  
+  // Afficher le score et autres informations en dehors de la transformation (non zoomées)
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText(`Score: ${score}`, 20, 30);
+  ctx.fillText(`PV: ${Math.floor(hero.hp)} / ${hero.maxHp}`, 20, 60);
+  ctx.fillText(`Monstres: ${monsters.length}`, 20, 90);
+  
+  // Afficher le chronomètre
+  const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  ctx.textAlign = 'right';
+  ctx.fillText(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`, canvas.width - 20, 30);
+}
+// ===== Mouseover pour mettre à jour hoveredTile (sans affichage) =====
     let hoveredTile = null;
     canvas.addEventListener("mousemove", function(e) {
       const rect = canvas.getBoundingClientRect();
