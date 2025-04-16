@@ -32,6 +32,7 @@ type UserListItem struct {
 	Admin    bool   `json:"admin"`
 	Teacher  bool   `json:"teacher"`
 	Parent   bool   `json:"parent"`
+	IsActive bool   `json:"isActive"` // Ajout du nouveau champ
 }
 
 // UserDetailResponse représente les détails complets d'un utilisateur
@@ -45,6 +46,8 @@ type UserDetailResponse struct {
 	Admin     bool         `json:"admin"`
 	Teacher   bool         `json:"teacher"`
 	Parent    bool         `json:"parent"`
+	IsActive  bool         `json:"isActive"`            // Ajout du nouveau champ
+	EmailCode string       `json:"emailCode,omitempty"` // Ajout du nouveau champ, omitempty car sensible
 	Energy    EnergyStatus `json:"energy"`
 	Stats     UserStats    `json:"stats"`
 }
@@ -66,13 +69,15 @@ type AdminUserUpdateRequest struct {
 	Email    string `json:"email"`
 	HeroName string `json:"heroName"`
 	Year     string `json:"year"`
+	IsActive bool   `json:"isActive"` // Ajout du nouveau champ
 }
 
 // UserPermissionsRequest représente une demande de mise à jour des permissions d'un utilisateur
 type UserPermissionsRequest struct {
-	Admin   *bool `json:"admin,omitempty"`
-	Teacher *bool `json:"teacher,omitempty"`
-	Parent  *bool `json:"parent,omitempty"`
+	Admin    *bool `json:"admin,omitempty"`
+	Teacher  *bool `json:"teacher,omitempty"`
+	Parent   *bool `json:"parent,omitempty"`
+	IsActive *bool `json:"isActive,omitempty"`
 }
 
 // GetUsersList récupère la liste paginée des utilisateurs
@@ -137,6 +142,7 @@ func GetUsersList(w http.ResponseWriter, r *http.Request) {
 			Admin:    u.Admin,
 			Teacher:  u.Teacher,
 			Parent:   u.Parent,
+			IsActive: u.IsActive, // Ajout du nouveau champ
 		})
 	}
 
@@ -235,6 +241,8 @@ func GetUserDetails(w http.ResponseWriter, r *http.Request) {
 		Admin:     user.Admin,
 		Teacher:   user.Teacher,
 		Parent:    user.Parent,
+		IsActive:  user.IsActive,  // Ajout du nouveau champ
+		EmailCode: user.EmailCode, // Ajout du nouveau champ
 		Energy: EnergyStatus{
 			Current: energy.CurrentEnergy,
 			Max:     energy.MaxEnergy,
@@ -296,6 +304,7 @@ func AdminUpdateUser(w http.ResponseWriter, r *http.Request) {
 	user.Email = request.Email
 	user.HeroName = request.HeroName
 	user.Year = request.Year
+	user.IsActive = request.IsActive
 
 	// Enregistrer les modifications
 	if err := user.Update(); err != nil {

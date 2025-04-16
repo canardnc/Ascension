@@ -499,9 +499,9 @@
                     <thead>
                         <tr>
                             <th>ID</th>
-                            <th>Pseudo</th>
                             <th>Email</th>
-                            <th>Héros</th>
+                            <th>Pseudo</th>
+                            <th>Statut</th>
                             <th>Droits</th>
                             <th>Actions</th>
                         </tr>
@@ -526,15 +526,15 @@
         <!-- Détails de l'utilisateur -->
         <div class="content-section user-detail-section" id="user-detail-section">
             <div class="section-header">
-                <h2 class="section-title">Détails de l'utilisateur: <span id="detail-username">-</span></h2>
+                <h2 class="section-title">Détails de l'utilisateur: <span id="detail-hero-name">-</span></h2>
             </div>
             
             <div class="user-detail-grid">
                 <div class="detail-card">
                     <h3>Informations personnelles</h3>
                     <div class="form-group">
-                        <label for="detail-pseudo">Pseudo</label>
-                        <input type="text" id="detail-pseudo" placeholder="Pseudo">
+                        <label for="detail-hero-name">Nom du héros</label>
+                        <input type="text" id="detail-hero-name" placeholder="Nom du héros">
                     </div>
                     <div class="form-group">
                         <label for="detail-email">Email</label>
@@ -555,6 +555,14 @@
                             <option value="CM2">CM2</option>
                             <option value="DYS">DYS</option>
                         </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="detail-active">Compte actif</label>
+                        <input type="checkbox" id="detail-active">
+                    </div>
+                    <div class="form-group">
+                        <label for="detail-email-code">Code de vérification</label>
+                        <input type="text" id="detail-email-code" placeholder="Code de vérification" readonly>
                     </div>
                     
                     <div class="form-actions">
@@ -661,11 +669,12 @@
         const notification = document.getElementById('notification');
         
         // Détails utilisateur
-        const detailUsername = document.getElementById('detail-username');
         const detailPseudo = document.getElementById('detail-pseudo');
         const detailEmail = document.getElementById('detail-email');
         const detailHeroName = document.getElementById('detail-hero-name');
         const detailYear = document.getElementById('detail-year');
+        const detailActive = document.getElementById('detail-active');
+        const detailEmailCode = document.getElementById('detail-email-code');
         const cancelEditButton = document.getElementById('cancel-edit-button');
         const saveUserButton = document.getElementById('save-user-button');
         const saveButtonText = document.getElementById('save-button-text');
@@ -704,9 +713,10 @@
                         ...options.headers
                     }
                 };
-                
+                console.log("Requete : %v",url );
                 const response = await fetch(url, mergedOptions);
-                
+                console.log("retour : %v",response );
+
                 if (response.status === 401 || response.status === 403) {
                     throw new Error('Non autorisé');
                 }
@@ -806,43 +816,55 @@
         
         // Mettre à jour le tableau des utilisateurs
         function updateUsersTable(users) {
-            if (!users || users.length === 0) {
-                usersListBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center;">Aucun utilisateur trouvé</td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            let html = '';
-            users.forEach(user => {
-                const isSelected = user.id === selectedUserId ? 'selected' : '';
-                html += `
-    <tr class="${isSelected}" data-id="${user.id}" onclick="selectUser(${user.id})">
-        <td>${user.id}</td>
-        <td>${user.username}</td>
-        <td>${user.email || '-'}</td>
-        <td>${user.heroName || '-'}</td>
-        <td>
-            <div class="user-permissions">
-                <!-- Permissions existantes -->
+    if (!users || users.length === 0) {
+        usersListBody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center;">Aucun utilisateur trouvé</td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    users.forEach(user => {
+        const isSelected = user.id === selectedUserId ? 'selected' : '';
+        html += `
+<tr class="${isSelected}" data-id="${user.id}" onclick="selectUser(${user.id})">
+    <td>${user.id}</td>
+    <td>${user.email}</td>
+    <td>${user.heroName || '-'}</td>
+    <td>${user.isActive ? '<span style="color: #4ae07c;">Actif</span>' : '<span style="color: #e04a4a;">Inactif</span>'}</td>
+    <td>
+        <div class="user-permissions">
+            <div class="permission-checkbox">
+                <input type="checkbox" id="admin-${user.id}" ${user.admin ? 'checked' : ''} 
+                       onclick="event.stopPropagation(); togglePermission(${user.id}, 'admin')">
+                <label for="admin-${user.id}">Admin</label>
             </div>
-        </td>
-        <td>
-            <div class="user-actions">
-                <button class="action-button energy" title="Recharger l'énergie" onclick="event.stopPropagation(); quickRechargeEnergy(${user.id})">⚡</button>
-                <button class="action-button" style="background-color: rgba(255, 165, 0, 0.2); color: #FFA500;" title="Réinitialiser l'utilisateur" onclick="event.stopPropagation(); confirmResetUser(${user.id})">🔄</button>
-                <button class="action-button" style="background-color: rgba(255, 0, 0, 0.2); color: #FF0000;" title="Supprimer l'utilisateur" onclick="event.stopPropagation(); confirmDeleteUser(${user.id})">❌</button>
+            <div class="permission-checkbox">
+                <input type="checkbox" id="teacher-${user.id}" ${user.teacher ? 'checked' : ''} 
+                       onclick="event.stopPropagation(); togglePermission(${user.id}, 'teacher')">
+                <label for="teacher-${user.id}">Enseignant</label>
             </div>
-        </td>
-    </tr>
-`;
-            });
-            
-            usersListBody.innerHTML = html;
-        }
-        
+            <div class="permission-checkbox">
+                <input type="checkbox" id="parent-${user.id}" ${user.parent ? 'checked' : ''} 
+                       onclick="event.stopPropagation(); togglePermission(${user.id}, 'parent')">
+                <label for="parent-${user.id}">Parent</label>
+            </div>
+        </div>
+    </td>
+    <td>
+        <div class="user-actions">
+            <button class="action-button energy" title="Recharger l'énergie" onclick="event.stopPropagation(); quickRechargeEnergy(${user.id})">⚡</button>
+            <button class="action-button" style="background-color: rgba(255, 165, 0, 0.2); color: #FFA500;" title="Réinitialiser l'utilisateur" onclick="event.stopPropagation(); confirmResetUser(${user.id})">🔄</button>
+            <button class="action-button" style="background-color: rgba(255, 0, 0, 0.2); color: #FF0000;" title="Supprimer l'utilisateur" onclick="event.stopPropagation(); confirmDeleteUser(${user.id})">❌</button>
+        </div>
+    </td>
+</tr>`;
+    });
+    
+    usersListBody.innerHTML = html;
+}
         // Confirmation de suppression d'utilisateur
 function confirmDeleteUser(userId) {
     pendingAction = {
@@ -939,11 +961,12 @@ function confirmResetUser(userId) {
                 noUserSelectedSection.style.display = 'none';
                 
                 // Réinitialiser les champs pendant le chargement
-                detailUsername.textContent = 'Chargement...';
-                detailPseudo.value = '';
+                //detailUsername.textContent = 'Chargement...';
+                detailHeroName.value = 'Chargement...';
                 detailEmail.value = '';
-                detailHeroName.value = '';
                 detailYear.value = '';
+                detailActive.checked = false;
+                detailEmailCode.value = '';
                 statLevel.textContent = '-';
                 statMaxLevel.textContent = '-';
                 statTotalScore.textContent = '-';
@@ -954,11 +977,12 @@ function confirmResetUser(userId) {
                 const user = await fetchWithAuth(`/api/users/${userId}`);
                 
                 // Mettre à jour les champs de détails
-                detailUsername.textContent = user.username;
-                detailPseudo.value = user.username;
+                //detailPseudo.value = user.username;
                 detailEmail.value = user.email || '';
                 detailHeroName.value = user.heroName || '';
                 detailYear.value = user.year || '';
+                detailActive.checked = user.isActive || false;
+                detailEmailCode.value = user.emailCode || '';
                 
                 // Mettre à jour les statistiques
                 statLevel.textContent = user.level;
@@ -1087,11 +1111,11 @@ function confirmResetUser(userId) {
                 
                 // Préparer les données
                 const userData = {
-                    username: detailPseudo.value,
-                    email: detailEmail.value,
-                    heroName: detailHeroName.value,
-                    year: detailYear.value
-                };
+    email: detailEmail.value,
+    heroName: detailHeroName.value,
+    year: detailYear.value,
+    isActive: detailActive.checked
+};
                 
                 // Envoyer la requête API
                 await fetchWithAuth(`/api/users/${selectedUserId}`, {
@@ -1100,7 +1124,7 @@ function confirmResetUser(userId) {
                 });
                 
                 // Mettre à jour le nom affiché
-                detailUsername.textContent = userData.username;
+                detailHeroName.textContent = userData.heroName;
                 
                 // Mettre à jour la liste (pour refléter les changements)
                 fetchUsers();

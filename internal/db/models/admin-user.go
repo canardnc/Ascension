@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -36,9 +37,9 @@ func GetUsersPaginated(searchQuery string, page, perPage int) ([]*User, error) {
 
 	// Construire la requête SQL de base
 	query := `
-		SELECT id, username, email, hero_name, year, level, created_at, admin, teacher, parent
-		FROM users
-	`
+        SELECT id, email, hero_name, year, level, created_at, admin, teacher, parent, is_active, email_code
+        FROM users
+    `
 	params := []interface{}{}
 	paramIndex := 1
 
@@ -66,13 +67,35 @@ func GetUsersPaginated(searchQuery string, page, perPage int) ([]*User, error) {
 	var users []*User
 	for rows.Next() {
 		var user User
+		var heroName, year, emailCode sql.NullString
+		var isActive sql.NullBool
+
 		if err := rows.Scan(
-			&user.ID, &user.Email, &user.HeroName, &user.Year,
+			&user.ID, &user.Email, &heroName, &year,
 			&user.Level, &user.CreatedAt, &user.Admin, &user.Teacher, &user.Parent,
+			&isActive, &emailCode,
 		); err != nil {
 			log.Printf("Erreur lors de la lecture des données utilisateurs: %v", err)
 			return nil, err
 		}
+
+		// Convertir les valeurs nullable en valeurs normales
+		if heroName.Valid {
+			user.HeroName = heroName.String
+		}
+		if year.Valid {
+			user.Year = year.String
+		}
+		if isActive.Valid {
+			user.IsActive = isActive.Bool
+		} else {
+			// Par défaut, considérer l'utilisateur comme inactif s'il n'y a pas de valeur
+			user.IsActive = false
+		}
+		if emailCode.Valid {
+			user.EmailCode = emailCode.String
+		}
+
 		users = append(users, &user)
 	}
 

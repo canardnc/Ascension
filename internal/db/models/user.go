@@ -18,7 +18,7 @@ type UserAuth struct {
 	Password  string    `json:"-"`
 	Salt      string    `json:"-"`
 	IsActive  bool      `json:"isActive"`
-	EmailCode string    `json:"-"`
+	EmailCode string    `json:"emailCode"`
 	HeroName  string    `json:"heroName,omitempty"`
 	Year      string    `json:"year,omitempty"`
 	Level     int       `json:"level"`
@@ -40,6 +40,8 @@ type User struct {
 	Admin     bool      `json:"admin"`
 	Teacher   bool      `json:"teacher"`
 	Parent    bool      `json:"parent"`
+	IsActive  bool      `json:"isActive"`
+	EmailCode string    `json:"emailCode"`
 }
 
 // ToUserAuth convertit un User en UserAuth
@@ -51,7 +53,7 @@ func (u *User) ToUserAuth() *UserAuth {
 		Year:      u.Year,
 		Level:     u.Level,
 		CreatedAt: u.CreatedAt,
-		IsActive:  true, // On suppose que les anciens utilisateurs sont actifs
+		IsActive:  u.IsActive,
 		Admin:     u.Admin,
 		Teacher:   u.Teacher,
 		Parent:    u.Parent,
@@ -70,6 +72,7 @@ func (u *UserAuth) ToUser() *User {
 		Admin:     u.Admin,
 		Teacher:   u.Teacher,
 		Parent:    u.Parent,
+		IsActive:  u.IsActive,
 	}
 }
 
@@ -127,19 +130,19 @@ func (u *User) Create() error {
 	email := u.Email
 
 	return db.DB.QueryRow(
-		query, email, u.HeroName, u.Year, 1, now, u.Admin, u.Teacher, u.Parent, true,
+		query, email, u.HeroName, u.Year, 1, now, u.Admin, u.Teacher, u.Parent, u.IsActive,
 	).Scan(&u.ID, &u.CreatedAt)
 }
 
 // Update met à jour les informations de l'utilisateur (compatibilité avec User)
 func (u *User) Update() error {
 	query := `
-		UPDATE users
-		SET hero_name = $1, year = $2, level = $3, admin = $4, teacher = $5, parent = $6
-		WHERE id = $7
-	`
+        UPDATE users
+        SET email = $1, hero_name = $2, year = $3, level = $4, admin = $5, teacher = $6, parent = $7, is_active = $8
+        WHERE id = $9
+    `
 
-	_, err := db.DB.Exec(query, u.HeroName, u.Year, u.Level, u.Admin, u.Teacher, u.Parent, u.ID)
+	_, err := db.DB.Exec(query, u.Email, u.HeroName, u.Year, u.Level, u.Admin, u.Teacher, u.Parent, u.IsActive, u.ID)
 	return err
 }
 
@@ -163,12 +166,12 @@ func (u *UserAuth) Create() error {
 // Update met à jour les informations de l'utilisateur
 func (u *UserAuth) Update() error {
 	query := `
-		UPDATE users
-		SET hero_name = $1, year = $2, level = $3, admin = $4, teacher = $5, parent = $6
-		WHERE id = $7
-	`
+        UPDATE users
+        SET email = $1, hero_name = $2, year = $3, level = $4, admin = $5, teacher = $6, parent = $7, is_active = $8
+        WHERE id = $9
+    `
 
-	_, err := db.DB.Exec(query, u.HeroName, u.Year, u.Level, u.Admin, u.Teacher, u.Parent, u.ID)
+	_, err := db.DB.Exec(query, u.Email, u.HeroName, u.Year, u.Level, u.Admin, u.Teacher, u.Parent, u.IsActive, u.ID)
 	return err
 }
 

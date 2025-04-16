@@ -633,11 +633,11 @@
         function updateUserInfo(userData) {
             // Mettre à jour l'avatar avec l'initiale du nom d'utilisateur
             const avatar = document.getElementById('user-avatar');
-            avatar.textContent = userData.username ? userData.username.charAt(0).toUpperCase() : 'U';
+            avatar.textContent = userData.email ? userData.email.charAt(0).toUpperCase() : 'U';
             
             // Mettre à jour le nom d'utilisateur
             const userName = document.getElementById('user-name');
-            userName.textContent = userData.username || 'Utilisateur';
+            userName.textContent = userData.heroName || userData.email || 'Utilisateur';
             
             // Déterminer et afficher le rôle principal de l'utilisateur
             let role = 'Utilisateur';
