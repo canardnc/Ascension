@@ -15,16 +15,19 @@ import (
 
 // GameMonster représente un monstre dans la base de données
 type GameMonster struct {
-	MonsterID   int     `json:"monster_id"`
-	MonsterName string  `json:"monster_name"`
-	HP          int     `json:"hp"`
-	Damage      int     `json:"damage"`
-	Range       float64 `json:"range"`
-	AttackSpeed float64 `json:"attack_speed"`
-	MoveSpeed   float64 `json:"move_speed"`
-	Size        float64 `json:"size"`
-	Design      string  `json:"design"`
-	Points      int     `json:"points"`
+	MonsterID       int     `json:"monster_id"`
+	MonsterName     string  `json:"monster_name"`
+	HP              int     `json:"hp"`
+	Damage          int     `json:"damage"`
+	Range           float64 `json:"range"`
+	AttackSpeed     float64 `json:"attack_speed"`
+	MoveSpeed       float64 `json:"move_speed"`
+	Size            float64 `json:"size"`
+	Design          string  `json:"design"`
+	Points          int     `json:"points"`
+	Projectile      string  `json:"projectile"`
+	ProjectileSize  int     `json:"projectile_size"`
+	ProjectileSpeed int     `json:"projectile_speed"`
 }
 
 // MonstersResponse représente la réponse de l'API pour la liste des monstres
@@ -44,7 +47,7 @@ func GetMonsters(w http.ResponseWriter, r *http.Request) {
 
 	// Récupérer les monstres depuis la base de données
 	query := `
-		SELECT monster_id, monster_name, hp, damage, range, attack_speed, move_speed, size, design, points
+		SELECT monster_id, monster_name, hp, damage, range, attack_speed, move_speed, size, design, points, projectile, projectile_size, projectile_speed
 		FROM monsters
 		ORDER BY monster_id
 	`
@@ -60,16 +63,34 @@ func GetMonsters(w http.ResponseWriter, r *http.Request) {
 	// Parcourir les résultats
 	var monsters []GameMonster
 	for rows.Next() {
-		var monster GameMonster
+		var (
+			projectile      sql.NullString
+			projectileSize  sql.NullInt64
+			projectileSpeed sql.NullInt64
+			monster         GameMonster
+		)
+
 		if err := rows.Scan(
 			&monster.MonsterID, &monster.MonsterName, &monster.HP, &monster.Damage,
 			&monster.Range, &monster.AttackSpeed, &monster.MoveSpeed,
 			&monster.Size, &monster.Design, &monster.Points,
+			&projectile, &projectileSize, &projectileSpeed,
 		); err != nil {
 			log.Printf("Erreur lors de la lecture d'un monstre: %v", err)
 			middleware.RespondWithError(w, http.StatusInternalServerError, "Erreur lors de la lecture des données des monstres")
 			return
 		}
+
+		if projectile.Valid {
+			monster.Projectile = projectile.String
+		}
+		if projectileSize.Valid {
+			monster.ProjectileSize = int(projectileSize.Int64)
+		}
+		if projectileSpeed.Valid {
+			monster.ProjectileSpeed = int(projectileSpeed.Int64)
+		}
+
 		monsters = append(monsters, monster)
 	}
 
@@ -115,7 +136,7 @@ func GetMonsterByID(w http.ResponseWriter, r *http.Request) {
 
 	// Récupérer le monstre depuis la base de données
 	query := `
-		SELECT monster_id, monster_name, hp, damage, range, attack_speed, move_speed, size, design, points
+		SELECT monster_id, monster_name, hp, damage, range, attack_speed, move_speed, size, design, points, projectile, projectile_size, projectile_speed
 		FROM monsters
 		WHERE monster_id = $1
 	`
@@ -124,7 +145,7 @@ func GetMonsterByID(w http.ResponseWriter, r *http.Request) {
 	err = db.DB.QueryRow(query, monsterID).Scan(
 		&monster.MonsterID, &monster.MonsterName, &monster.HP, &monster.Damage,
 		&monster.Range, &monster.AttackSpeed, &monster.MoveSpeed,
-		&monster.Size, &monster.Design, &monster.Points,
+		&monster.Size, &monster.Design, &monster.Points, &monster.Projectile, &monster.ProjectileSize, &monster.ProjectileSpeed,
 	)
 
 	if err != nil {
@@ -166,15 +187,15 @@ func CreateMonster(w http.ResponseWriter, r *http.Request) {
 
 	// Insérer le monstre dans la base de données
 	query := `
-		INSERT INTO monsters (monster_name, hp, damage, range, attack_speed, move_speed, size, design, points)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO monsters (monster_name, hp, damage, range, attack_speed, move_speed, size, design, points, projectile, projectile_size, projectile_speed)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING monster_id
 	`
 
 	err = db.DB.QueryRow(
 		query,
 		monster.MonsterName, monster.HP, monster.Damage, monster.Range,
-		monster.AttackSpeed, monster.MoveSpeed, monster.Size, monster.Design, monster.Points,
+		monster.AttackSpeed, monster.MoveSpeed, monster.Size, monster.Design, monster.Points, monster.Projectile, monster.ProjectileSize, monster.ProjectileSpeed,
 	).Scan(&monster.MonsterID)
 
 	if err != nil {
@@ -250,14 +271,14 @@ func UpdateMonster(w http.ResponseWriter, r *http.Request) {
 	query := `
 		UPDATE monsters
 		SET monster_name = $1, hp = $2, damage = $3, range = $4, 
-			attack_speed = $5, move_speed = $6, size = $7, design = $8, points = $9
-		WHERE monster_id = $10
+			attack_speed = $5, move_speed = $6, size = $7, design = $8, points = $9, projectile = $10, projectile_size =$11, projectile_speed = $12
+		WHERE monster_id = $13
 	`
 
 	_, err = db.DB.Exec(
 		query,
 		monster.MonsterName, monster.HP, monster.Damage, monster.Range,
-		monster.AttackSpeed, monster.MoveSpeed, monster.Size, monster.Design, monster.Points,
+		monster.AttackSpeed, monster.MoveSpeed, monster.Size, monster.Design, monster.Points, monster.Projectile, monster.ProjectileSize, monster.ProjectileSpeed,
 		monsterID,
 	)
 
