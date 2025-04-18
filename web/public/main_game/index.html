@@ -37,7 +37,6 @@
     let scoreSubmitted = false;
     const zoomFactor = 4; // Facteur de zoom pour agrandir le rendu
 
-    
     // ===== Paramètres du terrain et des tuiles =====
     const gridWidth = 80;
     const gridHeight = 80;
@@ -48,6 +47,8 @@
     const ctx = canvas.getContext("2d");
 
     const monsterImages = {}; 
+    const projectileImages = {}; 
+
 
     const heroImage = new Image();
     heroImage.src = "/assets/images/caracter/caracter_1.png";
@@ -152,42 +153,54 @@
   
   return offset;
 }
-    function preloadMonsterImages() {
-      // Fonction pour charger une image avec gestion d'erreur
-      function loadImage(design) {
-          return new Promise((resolve) => {
-              const img = new Image();
-              img.onload = () => {
-                  monsterImages[design] = img;
-                  resolve(true);
-              };
-              img.onerror = () => {
-                  console.warn(`Image de monstre non trouvée: ${design}`);
-                  resolve(false);
-              };
-              img.src = `/assets/images/monsters/${design}`;
-          });
-      }
-      
-      // Si la configuration du niveau est disponible, précharger les images
-      if (levelConfig && levelConfig.monsters) {
-          const uniqueDesigns = new Set();
-          
-          // Collecter tous les designs uniques
-          levelConfig.monsters.forEach(monster => {
-              if (monster.design) {
-                  uniqueDesigns.add(monster.design);
-              }
-          });
-          
-          // Précharger toutes les images uniques
-          const loadPromises = Array.from(uniqueDesigns).map(design => loadImage(design));
-          return Promise.all(loadPromises);
-      }
-      
-      return Promise.resolve();
-    }
+function preloadMonsterImages() {
+  const promises = [];
+  
+  // Fonction pour charger une image avec gestion d'erreur
+  function loadImage(src, targetObj, key) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        targetObj[key] = img;
+        resolve(true);
+      };
+      img.onerror = () => {
+        console.warn(`Image non trouvée: ${src}`);
+        resolve(false);
+      };
+      img.src = src;
+    });
+  }
+  
+  // Si la configuration du niveau est disponible, précharger les images
+  if (levelConfig && levelConfig.monsters) {
+    const uniqueDesigns = new Set();
+    const uniqueProjectiles = new Set();
     
+    // Collecter tous les designs et projectiles uniques
+    levelConfig.monsters.forEach(monster => {
+      if (monster.design) {
+        uniqueDesigns.add(monster.design);
+      }
+      if (monster.projectile) {
+        uniqueProjectiles.add(monster.projectile);
+      }
+    });
+    
+    // Précharger toutes les images de monstres uniques
+    uniqueDesigns.forEach(design => {
+      promises.push(loadImage(`/assets/images/monsters/${design}`, monsterImages, design));
+    });
+    
+    // Précharger toutes les images de projectiles uniques
+    uniqueProjectiles.forEach(projectile => {
+      promises.push(loadImage(`/assets/images/projectiles/${projectile}`, projectileImages, projectile));
+    });
+  }
+  
+  return Promise.all(promises);
+}
+
     // ===== Définition du héros et des monstres =====
     // Positions en valeurs continues pour un déplacement fluide.
     const hero = {
@@ -458,7 +471,18 @@ function spawnMonsters() {
     const monsterLevel = monster.monsterLevel || 1;
 
     setTimeout(() => {
-      const position = findValidMonsterPosition();
+      // Utiliser les coordonnées spécifiées ou générer une position aléatoire
+      let position;
+      if (monster.coordsX && monster.coordsY) {
+        position = { x: monster.coordsX, y: monster.coordsY };
+        // Si la position définie est invalide, trouver une position alternative
+        if (!isValidMonsterPosition(position.x, position.y)) {
+          position = findValidMonsterPosition();
+        }
+      } else {
+        position = findValidMonsterPosition();
+      }
+
       monsters.push({
         x: position.x,
         y: position.y,
@@ -474,16 +498,19 @@ function spawnMonsters() {
         name: monster.name || "Monstre inconnu",
         design: monster.design || "default",
         points: monster.points || 10,
+        // Nouveaux champs pour les projectiles
+        projectile: monster.projectile || null,
+        projectileSize: monster.projectileSize || 8,
+        projectileSpeed: monster.projectileSpeed || 10,
         previousX: position.x,
         previousY: position.y,
         stuckCounter: 0,
         isMoving: false
       });
-      console.log(`Monstre "${monster.name}" apparu après ${spawnTime / 1000}s`);
     }, spawnTime);
   });
 }
-    // ===== Amélioration du pathfinder (8 directions) =====
+// ===== Amélioration du pathfinder (8 directions) =====
     function findPath(start, goal) {
       let openSet = [];
       let closedSet = new Set();
@@ -552,104 +579,129 @@ function spawnMonsters() {
     let projectiles = [];
     const projectileSpeed = 10; // tuiles par seconde
     function spawnProjectile(source, target, owner) {
-      let dx = target.x - source.x;
-      let dy = target.y - source.y;
-      let dist = Math.hypot(dx, dy);
-      if (dist === 0) return;
-      let vx = dx / dist;
-      let vy = dy / dist;
-      projectiles.push({
-        x: source.x,
-        y: source.y,
-        vx: vx,
-        vy: vy,
-        damage: source.damage,
-        owner: owner, // "hero" ou "monster"
-        targetEntity: target.entity || null
-      });
-    }
-    function updateProjectiles(dt) {
-      for (let i = projectiles.length - 1; i >= 0; i--) {
-        let p = projectiles[i];
-        p.x += p.vx * projectileSpeed * dt;
-        p.y += p.vy * projectileSpeed * dt;
-        if (p.x < 0 || p.x >= gridWidth || p.y < 0 || p.y >= gridHeight) {
-          projectiles.splice(i, 1);
-          continue;
-        }
-        let tileX = Math.floor(p.x);
-        let tileY = Math.floor(p.y);
-        if (isBlocked(tileX, tileY)) {
-          projectiles.splice(i, 1);
-          continue;
-        }
-        if (p.owner === "hero") {
-          for (let j = 0; j < monsters.length; j++) {
-            let m = monsters[j];
-            if (Math.hypot(p.x - m.x, p.y - m.y) < 0.5) {
-              m.hp -= p.damage;
-              if (m.hp <= 0) {
-  score += m.points;
-  monstersKilled++;
+
+  let dx = target.x - source.x;
+  let dy = target.y - source.y;
+  let dist = Math.hypot(dx, dy);
+  if (dist === 0) return;
+  let vx = dx / dist;
+  let vy = dy / dist;
+  
+  projectiles.push({
+    x: source.x,
+    y: source.y,
+    vx: vx,
+    vy: vy,
+    damage: source.damage,
+    owner: owner, // "hero" ou "monster"
+    targetEntity: target.entity || null,
+    // Ajouter les nouveaux champs
+    design: source.projectile || null,
+    size: source.projectileSize || (owner === "hero" ? 24 : 8),
+    speed: source.projectileSpeed || (owner === "hero" ? 10 : 10)
+  });
 }
-              projectiles.splice(i, 1);
-              break;
-            }
+
+
+function updateProjectiles(dt) {
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    let p = projectiles[i];
+    // Utiliser la vitesse personnalisée au lieu de projectileSpeed global
+    const speed = p.speed || projectileSpeed;
+    p.x += p.vx * speed * dt;
+    p.y += p.vy * speed * dt;
+    
+    // Le reste de la fonction reste inchangé...
+    if (p.x < 0 || p.x >= gridWidth || p.y < 0 || p.y >= gridHeight) {
+      projectiles.splice(i, 1);
+      continue;
+    }
+    let tileX = Math.floor(p.x);
+    let tileY = Math.floor(p.y);
+    if (isBlocked(tileX, tileY)) {
+      projectiles.splice(i, 1);
+      continue;
+    }
+    if (p.owner === "hero") {
+      for (let j = 0; j < monsters.length; j++) {
+        let m = monsters[j];
+        if (Math.hypot(p.x - m.x, p.y - m.y) < 0.5) {
+          m.hp -= p.damage;
+          if (m.hp <= 0) {
+            score += m.points;
+            monstersKilled++;
           }
-        } else if (p.owner === "monster") {
-          if (Math.hypot(p.x - hero.x, p.y - hero.y) < 0.5) {
-            hero.hp -= p.damage;
-            projectiles.splice(i, 1);
-          }
+          projectiles.splice(i, 1);
+          break;
         }
       }
+    } else if (p.owner === "monster") {
+      if (Math.hypot(p.x - hero.x, p.y - hero.y) < 0.5) {
+        hero.hp -= p.damage;
+        projectiles.splice(i, 1);
+      }
     }
-    function drawProjectiles(cameraOffset) {
-      projectiles.forEach(p => {
-        let screenPos = gridToScreen(p.x, p.y, cameraOffset);
-        let centerX = screenPos.x + tileWidth/2;
-        let centerY = screenPos.y + tileHeight/2;
-        
-        if (p.owner === "hero") {
-          // Pour les projectiles du héros, utiliser l'image du crayon
-          
-          // Calculer l'angle de rotation
-          // Référence : angle 0 correspond à (vx=1, vy=0) soit un tir vers la droite
-          const angle = Math.atan2(p.vy, p.vx);
-          
-          // Ajouter un ajustement de -45 degrés (-π/4 radians) pour corriger l'orientation
-          const adjustedAngle = angle + Math.PI / 4;
-          
-          // Taille du projectile
-          const projectileWidth = 24;
-          const projectileHeight = 8;
-          
-          // Sauvegarder le contexte pour la rotation
-          ctx.save();
-          ctx.translate(centerX, centerY);
-          ctx.rotate(adjustedAngle);
-          
-          // Dessiner l'image du projectile
-          ctx.drawImage(
-            projectileImage,
-            -projectileWidth / 2,
-            -projectileHeight / 2,
-            projectileWidth,
-            projectileHeight
-          );
-          
-          // Restaurer le contexte
-          ctx.restore();
-        } else {
-          // Pour les projectiles des monstres, conserver le dessin simple
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
-          ctx.fillStyle = "yellow";
-          ctx.fill();
-        }
-      });
+  }
+}
+
+
+function drawProjectiles(cameraOffset) {
+  projectiles.forEach(p => {
+    let screenPos = gridToScreen(p.x, p.y, cameraOffset);
+    let centerX = screenPos.x + tileWidth/2;
+    let centerY = screenPos.y + tileHeight/2;
+    
+    if (p.owner === "hero") {
+      // Pour les projectiles du héros, utiliser l'image du crayon
+      const angle = Math.atan2(p.vy, p.vx);
+      const adjustedAngle = angle + Math.PI / 4;
+      const projectileWidth = p.size || 24;
+      const projectileHeight = projectileWidth / 3; // Ratio pour le crayon
+      
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(adjustedAngle);
+      
+      ctx.drawImage(
+        projectileImage,
+        -projectileWidth / 2,
+        -projectileHeight / 2,
+        projectileWidth,
+        projectileHeight
+      );
+      
+      ctx.restore();
+    } else if (p.owner === "monster" && p.design && projectileImages[p.design]) {
+      // Pour les projectiles des monstres, utiliser l'image personnalisée
+      const angle = Math.atan2(p.vy, p.vx);
+      const adjustedAngle = angle + Math.PI / 4;
+      const projectileWidth = p.size || 8;
+      const projectileHeight = projectileWidth; // Par défaut carré
+      
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(adjustedAngle);
+      
+      ctx.drawImage(
+        projectileImages[p.design],
+        -projectileWidth / 2,
+        -projectileHeight / 2,
+        projectileWidth,
+        projectileHeight
+      );
+      
+      ctx.restore();
+    } else {
+      // Fallback pour les projectiles sans image
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, p.size / 3 || 3, 0, Math.PI * 2);
+      ctx.fillStyle = "yellow";
+      ctx.fill();
     }
-    // ===== Boucle principale =====
+  });
+}
+
+// ===== Boucle principale =====
     let lastTime = performance.now();
     function gameLoop(timestamp) {
       let dt = (timestamp - lastTime) / 1000;
@@ -780,7 +832,6 @@ function spawnMonsters() {
         
         // Si coincé pendant 3 frames consécutives, essayer un mouvement aléatoire
         if (m.stuckCounter >= 3) {
-            console.log("Monstre coincé, tentative de déblocage");
             const randomPos = generateRandomStep(m);
             m.x = randomPos.x;
             m.y = randomPos.y;

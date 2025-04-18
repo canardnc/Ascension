@@ -693,32 +693,44 @@
                 if (response.success) {
                     // Stocker les données du niveau pour le jeu
                     try {
-                        // Combiner les infos de base du niveau avec les détails
-                        const levelData = {
-                            id: level.id,
-                            name: level.name,
-                            // Ne pas inclure tiles et obstacles comme demandé
-                            monsters: currentLevelDetails.monsters || []
-                        };
-                        
-                        // S'assurer que les monstres ont tous les champs requis
-                        if (levelData.monsters && levelData.monsters.length > 0) {
-                            levelData.monsters = levelData.monsters.map(monster => ({
-                                name: monster.name || "Monstre inconnu",
-                                health: monster.health || 50,
-                                damage: monster.damage || 5,
-                                range: monster.range || 100,
-                                speed: monster.speed || 80,
-                                size: monster.size || 30,
-                                design: monster.design || "default",
-                                points: monster.points || 10,
-                                monsterLevel: monster.monsterLevel || 10
-                            }));
-                        }
-                        localStorage.setItem('currentLevelData', JSON.stringify(levelData));
-                    } catch (e) {
-                        console.warn("Impossible de stocker les données dans localStorage:", e);
-                    }
+  // Combiner les infos de base du niveau avec les détails
+  const levelData = {
+    id: level.id,
+    name: level.name,
+    // Ne pas inclure tiles et obstacles comme demandé
+    monsters: currentLevelDetails.monsters || []
+  };
+  
+  // S'assurer que les monstres ont tous les champs requis
+  if (levelData.monsters && levelData.monsters.length > 0) {
+    levelData.monsters = levelData.monsters.map(monster => ({
+      name: monster.name || "Monstre inconnu",
+      health: monster.health || 50,
+      damage: monster.damage || 5,
+      range: monster.range || 100,
+      speed: monster.speed || 80,
+      size: monster.size || 30,
+      design: monster.design || "default",
+      points: monster.points || 10,
+      monsterLevel: monster.monsterLevel || 1,
+      // Nouveaux champs pour les projectiles
+      projectile: monster.projectile || "",
+      projectileSize: monster.projectileSize || 8,
+      projectileSpeed: monster.projectileSpeed || 10,
+      // Champs de coordonnées et spawn
+      coordsX: monster.coordsX || 0,
+      coordsY: monster.coordsY || 0,
+      spawnTime: monster.spawnTime || 0
+    }));
+  }
+  
+  // Ajouter un log pour afficher les données complètes sauvegardées
+  console.log("Données de niveau sauvegardées:", levelData);
+  
+  localStorage.setItem('currentLevelData', JSON.stringify(levelData));
+} catch (e) {
+  console.warn("Impossible de stocker les données dans localStorage:", e);
+}
                     
                     // Rediriger vers le jeu
                     window.location.href = `/main_game/index.html?level=${level.id}`;
