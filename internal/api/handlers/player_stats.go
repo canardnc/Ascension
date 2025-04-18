@@ -101,7 +101,7 @@ func StartBattle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Calculer le coût en énergie (5 + niveau-1)
-	energyCost := 5
+	energyCost := 1
 
 	// Vérifier et consommer l'énergie
 	hasEnough, err := models.UseEnergy(userId, energyCost)

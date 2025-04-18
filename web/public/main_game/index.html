@@ -225,6 +225,9 @@
       // ...etc.
     };
     let monsters = [];
+    let totalMonstersToSpawn = 0;
+    let monstersKilled = 0;
+
     
     // ===== Initialisation du jeu =====
     async function initGame() {
@@ -427,189 +430,59 @@ function generateRandomStep(monster) {
     // Si bloqué, essayer une autre direction (simple récursion)
     return generateRandomStep(monster);
 }
-    function spawnMonsters() {
-      monsters = [];
-      
-      // Fonction pour vérifier si une position est valide pour un monstre
-      function isValidMonsterPosition(x, y) {
-          // Vérifier que la position n'est pas bloquée
-          if (isBlocked(Math.floor(x), Math.floor(y))) {
-              return false;
-          }
-          
-          // Vérifier que le monstre n'est pas trop proche du héros
-          if (Math.hypot(x - hero.x, y - hero.y) < 5) {
-              return false;
-          }
-          
-          // Vérifier qu'il existe un chemin vers le héros
-          const path = findPath(
-              { x: Math.floor(x), y: Math.floor(y) },
-              { x: Math.floor(hero.x), y: Math.floor(hero.y) }
-          );
-          
-          // Retourner vrai si le chemin existe et n'est pas vide
-          return path && path.length > 0;
-      }
-      
+function spawnMonsters() {
+  monsters = [];
+  totalMonstersToSpawn = levelConfig.monsters.length;
 
-      // Fonction pour trouver une position valide pour un monstre
-      function findValidMonsterPosition() {
-          let attempts = 0;
-          const maxAttempts = 100;
-          
-          while (attempts < maxAttempts) {
-              // Générer une position aléatoire
-              const x = Math.random() * gridWidth;
-              const y = Math.random() * gridHeight;
-              
-              // Vérifier la validité de la position
-              if (isValidMonsterPosition(x, y)) {
-                  return { x, y };
-              }
-              
-              attempts++;
-          }
-          
-          // Si aucune position valide n'est trouvée après plusieurs tentatives,
-          // retourner une position près du centre (si possible)
-          const centerX = gridWidth / 2;
-          const centerY = gridHeight / 2;
-          
-          for (let dx = -10; dx <= 10; dx++) {
-              for (let dy = -10; dy <= 10; dy++) {
-                  const x = centerX + dx;
-                  const y = centerY + dy;
-                  if (x >= 0 && x < gridWidth && y >= 0 && y < gridHeight && 
-                      isValidMonsterPosition(x, y)) {
-                      return { x, y };
-                  }
-              }
-          }
-          
-          // En dernier recours, retourner une position au hasard (même si invalide)
-          return { x: gridWidth / 2, y: gridHeight / 2 };
-      }
-      
-      // Si pas de configuration de niveau, utiliser des valeurs par défaut
-      if (!levelConfig || !levelConfig.monsters || levelConfig.monsters.length === 0) {
-          // Spawn par défaut (10 monstres aléatoires)
-          for (let i = 0; i < 10; i++) {
-              const position = findValidMonsterPosition();
-              
-              monsters.push({
-        x: position.x,
-        y: position.y,
-        hp: monster.health * (1+monsterLevel*0.2)|| 50,
-        damage: monster.damage* (1+monsterLevel*0.2) || 5,
-        range: monster.range || 5,
-        attackSpeed: monster.attackSpeed || 1,
-        moveSpeed: monster.speed|| 6,
-        size: monster.size || 30, 
-        attackTimer: 0,
-        lastPathTime: 0,
-        path: [],
-        name: monster.name || "Monstre inconnu",
-        design: monster.design || "default",
-        points: monster.points || 10,
-        // Ajout de ces nouvelles propriétés
-        previousX: position.x,
-        previousY: position.y,
-        stuckCounter: 0,
-        isMoving: false
-    });
-          }
-          return;
-      }
-      
-      // Utiliser la configuration du niveau pour spawn les monstres
-      levelConfig.monsters.forEach(monster => {
+  function isValidMonsterPosition(x, y) {
+    if (isBlocked(Math.floor(x), Math.floor(y))) return false;
+    if (Math.hypot(x - hero.x, y - hero.y) < 5) return false;
+    const path = findPath({ x: Math.floor(x), y: Math.floor(y) }, { x: Math.floor(hero.x), y: Math.floor(hero.y) });
+    return path && path.length > 0;
+  }
 
-        // S'assurer que le monstre a un niveau (utiliser 1 par défaut si non spécifié)
-const monsterLevel = monster.monsterLevel || 1;
-
-          // Vérifier si les coordonnées x et y sont spécifiées dans la config
-          if (monster.x !== undefined && monster.y !== undefined) {
-              // Utiliser les coordonnées spécifiées si elles sont valides
-              if (isValidMonsterPosition(monster.x, monster.y)) {
-                monsters.push({
-        x: position.x,
-        y: position.y,
-        hp: monster.health * (1+monsterLevel*0.2)|| 50,
-        damage: monster.damage* (1+monsterLevel*0.2) || 5,
-        range: monster.range || 5,
-        attackSpeed: monster.attackSpeed || 1,
-        moveSpeed: monster.speed|| 6,
-        size: monster.size || 30, 
-        attackTimer: 0,
-        lastPathTime: 0,
-        path: [],
-        name: monster.name || "Monstre inconnu",
-        design: monster.design || "default",
-        points: monster.points || 10,
-        // Ajout de ces nouvelles propriétés
-        previousX: position.x,
-        previousY: position.y,
-        stuckCounter: 0,
-        isMoving: false
-    });
-              } else {
-                  // Si les coordonnées spécifiées ne sont pas valides, trouver une position valide
-                  const position = findValidMonsterPosition();
-                  
-                  monsters.push({
-        x: position.x,
-        y: position.y,
-        hp: monster.health * (1+monsterLevel*0.2)|| 50,
-        damage: monster.damage* (1+monsterLevel*0.2) || 5,
-        range: monster.range || 5,
-        attackSpeed: monster.attackSpeed || 1,
-        moveSpeed: monster.speed|| 6,
-        size: monster.size || 30, 
-        attackTimer: 0,
-        lastPathTime: 0,
-        path: [],
-        name: monster.name || "Monstre inconnu",
-        design: monster.design || "default",
-        points: monster.points || 10,
-        // Ajout de ces nouvelles propriétés
-        previousX: position.x,
-        previousY: position.y,
-        stuckCounter: 0,
-        isMoving: false
-    });
-              }
-          } else {
-              // Si x et y ne sont pas spécifiés, trouver une position valide
-              const position = findValidMonsterPosition();
-              
-              monsters.push({
-        x: position.x,
-        y: position.y,
-        hp: monster.health * (1+monsterLevel*0.2)|| 50,
-        damage: monster.damage* (1+monsterLevel*0.2) || 5,
-        range: monster.range || 5,
-        attackSpeed: monster.attackSpeed || 1,
-        moveSpeed: monster.speed|| 6,
-        size: monster.size || 30, 
-        attackTimer: 0,
-        lastPathTime: 0,
-        path: [],
-        name: monster.name || "Monstre inconnu",
-        design: monster.design || "default",
-        points: monster.points || 10,
-        // Ajout de ces nouvelles propriétés
-        previousX: position.x,
-        previousY: position.y,
-        stuckCounter: 0,
-        isMoving: false
-    });
-          }
-      });
-      
-      console.log(`${monsters.length} monstres générés pour le niveau ${levelId}`);
+  function findValidMonsterPosition() {
+    const maxAttempts = 100;
+    for (let attempts = 0; attempts < maxAttempts; attempts++) {
+      const x = Math.random() * gridWidth;
+      const y = Math.random() * gridHeight;
+      if (isValidMonsterPosition(x, y)) return { x, y };
     }
-    
+    return { x: gridWidth / 2, y: gridHeight / 2 };
+  }
+
+  if (!levelConfig || !levelConfig.monsters || levelConfig.monsters.length === 0) return;
+
+  levelConfig.monsters.forEach(monster => {
+    const spawnTime = (monster.spawnTime || 0) * 1000;
+    const monsterLevel = monster.monsterLevel || 1;
+
+    setTimeout(() => {
+      const position = findValidMonsterPosition();
+      monsters.push({
+        x: position.x,
+        y: position.y,
+        hp: monster.health * (1 + monsterLevel * 0.2) || 50,
+        damage: monster.damage * (1 + monsterLevel * 0.2) || 5,
+        range: monster.range || 5,
+        attackSpeed: monster.attackSpeed || 1,
+        moveSpeed: monster.speed || 6,
+        size: monster.size || 30,
+        attackTimer: 0,
+        lastPathTime: 0,
+        path: [],
+        name: monster.name || "Monstre inconnu",
+        design: monster.design || "default",
+        points: monster.points || 10,
+        previousX: position.x,
+        previousY: position.y,
+        stuckCounter: 0,
+        isMoving: false
+      });
+      console.log(`Monstre "${monster.name}" apparu après ${spawnTime / 1000}s`);
+    }, spawnTime);
+  });
+}
     // ===== Amélioration du pathfinder (8 directions) =====
     function findPath(start, goal) {
       let openSet = [];
@@ -716,8 +589,9 @@ const monsterLevel = monster.monsterLevel || 1;
             if (Math.hypot(p.x - m.x, p.y - m.y) < 0.5) {
               m.hp -= p.damage;
               if (m.hp <= 0) {
-                score += m.points; // Gain de score à chaque monstre tué
-              }
+  score += m.points;
+  monstersKilled++;
+}
               projectiles.splice(i, 1);
               break;
             }
@@ -935,7 +809,7 @@ const monsterLevel = monster.monsterLevel || 1;
       // Vérifier les conditions de fin de jeu
       if (hero.hp <= 0) {
         endGame(false);
-      } else if (monsters.length === 0) {
+      } else if (monstersKilled >= totalMonstersToSpawn) {
         endGame(true);
       }
     }

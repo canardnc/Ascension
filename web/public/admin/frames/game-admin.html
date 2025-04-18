@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administration du jeu principal</title>
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Administration du jeu principal</title>
+<style>
         body {
             font-family: 'Montserrat', sans-serif;
             padding: 0;
@@ -487,291 +488,272 @@ select option {
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="page-header">
-            <h1 class="page-title">Administration du jeu principal</h1>
-            <ul class="breadcrumb">
-                <li class="breadcrumb-item"><a href="#">Administration</a></li>
-                <li class="breadcrumb-item">Jeu principal</li>
-            </ul>
-        </div>
-        
-        <div class="content-section">
-            <!-- Tabs navigation -->
-            <div class="tabs">
-                <button class="tab active" id="tab-monsters" onclick="switchTab('monsters')">Gestion des monstres</button>
-                <button class="tab" id="tab-levels" onclick="switchTab('levels')">Gestion des niveaux</button>
-            </div>
-            
-            <!-- Tab content: Monsters -->
-            <div class="tab-content active" id="content-monsters">
-                <div class="section-header">
-                    <h2 class="section-title">Liste des monstres</h2>
-                    <button class="btn btn-primary" onclick="showAddMonsterModal()">
-                        <span class="btn-icon">+</span> Ajouter un monstre
+<div class="container">
+<div class="page-header">
+<h1 class="page-title">Administration du jeu principal</h1>
+<ul class="breadcrumb">
+<li class="breadcrumb-item"><a href="#">Administration</a></li>
+<li class="breadcrumb-item">Jeu principal</li>
+</ul>
+</div>
+<div class="content-section">
+<!-- Tabs navigation -->
+<div class="tabs">
+<button class="tab active" id="tab-monsters" onclick="switchTab('monsters')">Gestion des monstres</button>
+<button class="tab" id="tab-levels" onclick="switchTab('levels')">Gestion des niveaux</button>
+</div>
+<!-- Tab content: Monsters -->
+<div class="tab-content active" id="content-monsters">
+<div class="section-header">
+<h2 class="section-title">Liste des monstres</h2>
+<button class="btn btn-primary" onclick="showAddMonsterModal()">
+<span class="btn-icon">+</span> Ajouter un monstre
                     </button>
-                </div>
-                
-                <div id="monsters-table-container">
-                    <div class="loading-container">
-                        <div class="loading-spinner"></div>
-                        <div class="loading-text">Chargement des monstres...</div>
-                    </div>
-                </div>
-                
-                <!-- Monster details form -->
-                <div class="form-container" id="monster-form" style="display: none;">
-                    <h3>Détails du monstre: <span id="monster-name-display">-</span></h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="monster-id">ID</label>
-                            <input type="text" id="monster-id" disabled>
-                        </div>
-                        <div class="form-group">
-                            <div class="monster-preview" id="monster-preview">
-                                <img id="monster-image-preview" src="" alt="Aperçu du monstre">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="monster-name">Nom</label>
-                            <input type="text" id="monster-name" placeholder="Nom du monstre">
-                        </div>
-                        <div class="form-group">
-                            <label for="monster-design">Design (nom de l'image)</label>
-                            <input type="text" id="monster-design" placeholder="ex: book_default">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="monster-hp">Points de vie</label>
-                            <input type="number" id="monster-hp" min="1" step="1">
-                        </div>
-                        <div class="form-group">
-                            <label for="monster-damage">Dégâts</label>
-                            <input type="number" id="monster-damage" min="1" step="1">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="monster-range">Portée</label>
-                            <input type="number" id="monster-range" min="1" step="1">
-                        </div>
-                        <div class="form-group">
-                            <label for="monster-attack-speed">Vitesse d'attaque</label>
-                            <input type="number" id="monster-attack-speed" min="0.1" step="0.1">
-                        </div>
-                        <div class="form-group">
-                            <label for="monster-move-speed">Vitesse de déplacement</label>
-                            <input type="number" id="monster-move-speed" min="0.1" step="0.1">
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="monster-size">Taille</label>
-                            <input type="number" id="monster-size" min="1" step="1">
-                        </div>
-                        <div class="form-group">
-                            <label for="monster-points">Points (score)</label>
-                            <input type="number" id="monster-points" min="1" step="1">
-                        </div>
-                    </div>
-                    
-                    <div class="btn-container">
-                        <div class="btn-actions">
-                            <button class="btn btn-secondary" onclick="cancelMonsterEdit()">Annuler</button>
-                            <button class="btn btn-danger" onclick="confirmDeleteMonster()">Supprimer</button>
-                        </div>
-                        <button class="btn btn-success" onclick="saveMonster()">Enregistrer</button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Tab content: Levels -->
-            <div class="tab-content" id="content-levels">
-                <div class="section-header">
-                    <h2 class="section-title">Liste des niveaux</h2>
-                    <button class="btn btn-primary" onclick="openAddLevelModal()()">
-                        <span class="btn-icon">+</span> Ajouter un niveau
+</div>
+<div id="monsters-table-container">
+<div class="loading-container">
+<div class="loading-spinner"></div>
+<div class="loading-text">Chargement des monstres...</div>
+</div>
+</div>
+<!-- Monster details form -->
+<div class="form-container" id="monster-form" style="display: none;">
+<h3>Détails du monstre: <span id="monster-name-display">-</span></h3>
+<div class="form-row">
+<div class="form-group">
+<label for="monster-id">ID</label>
+<input disabled="" id="monster-id" type="text"/>
+</div>
+<div class="form-group">
+<div class="monster-preview" id="monster-preview">
+<img alt="Aperçu du monstre" id="monster-image-preview" src=""/>
+</div>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="monster-name">Nom</label>
+<input id="monster-name" placeholder="Nom du monstre" type="text"/>
+</div>
+<div class="form-group">
+<label for="monster-design">Design (nom de l'image)</label>
+<input id="monster-design" placeholder="ex: book_default" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="monster-hp">Points de vie</label>
+<input id="monster-hp" min="1" step="1" type="number"/>
+</div>
+<div class="form-group">
+<label for="monster-damage">Dégâts</label>
+<input id="monster-damage" min="1" step="1" type="number"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="monster-range">Portée</label>
+<input id="monster-range" min="1" step="1" type="number"/>
+</div>
+<div class="form-group">
+<label for="monster-attack-speed">Vitesse d'attaque</label>
+<input id="monster-attack-speed" min="0.1" step="0.1" type="number"/>
+</div>
+<div class="form-group">
+<label for="monster-move-speed">Vitesse de déplacement</label>
+<input id="monster-move-speed" min="0.1" step="0.1" type="number"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="monster-size">Taille</label>
+<input id="monster-size" min="1" step="1" type="number"/>
+</div>
+<div class="form-group">
+<label for="monster-points">Points (score)</label>
+<input id="monster-points" min="1" step="1" type="number"/>
+</div>
+</div>
+<div class="btn-container">
+<div class="btn-actions">
+<button class="btn btn-secondary" onclick="cancelMonsterEdit()">Annuler</button>
+<button class="btn btn-danger" onclick="confirmDeleteMonster()">Supprimer</button>
+</div>
+<button class="btn btn-success" onclick="saveMonster()">Enregistrer</button>
+</div>
+</div>
+</div>
+<!-- Tab content: Levels -->
+<div class="tab-content" id="content-levels">
+<div class="section-header">
+<h2 class="section-title">Liste des niveaux</h2>
+<button class="btn btn-primary" onclick="openAddLevelModal()()">
+<span class="btn-icon">+</span> Ajouter un niveau
                     </button>
-                </div>
-                
-                <div id="levels-table-container">
-                    <div class="loading-container">
-                        <div class="loading-spinner"></div>
-                        <div class="loading-text">Chargement des niveaux...</div>
-                    </div>
-                </div>
-                
-                <!-- Level details form -->
-                <div class="form-container" id="level-form" style="display: none;">
-                    <h3>Configuration du niveau: <span id="level-number-display">-</span></h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="level-id">ID</label>
-                            <input type="text" id="level-id" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="level-number">Numéro du niveau</label>
-                            <input type="number" id="level-number" min="1" step="1">
-                        </div>
-                    </div>
-                    
-                    <h4>Monstres du niveau</h4>
-                    <table class="data-table" id="level-monsters-table">
-                        <thead>
-                            <tr>
-                                <th>Monstre</th>
-                                <th>Image</th>
-                                <th>Niveau</th>
-                                <th>Quantité</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="level-monsters-body">
-                            <tr>
-                                <td colspan="5" class="loading-container">
-                                    <div class="loading-spinner"></div>
-                                    <div style="margin-top: 10px;">Chargement des monstres du niveau...</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    
-                    <div class="btn-container">
-                        <button class="btn btn-primary" onclick="showAddLevelMonsterModal()">
-                            <span class="btn-icon">+</span> Ajouter un monstre
+</div>
+<div id="levels-table-container">
+<div class="loading-container">
+<div class="loading-spinner"></div>
+<div class="loading-text">Chargement des niveaux...</div>
+</div>
+</div>
+<!-- Level details form -->
+<div class="form-container" id="level-form" style="display: none;">
+<h3>Configuration du niveau: <span id="level-number-display">-</span></h3>
+<div class="form-row">
+<div class="form-group">
+<label for="level-id">ID</label>
+<input disabled="" id="level-id" type="text"/>
+</div>
+<div class="form-group">
+<label for="level-number">Numéro du niveau</label>
+<input id="level-number" min="1" step="1" type="number"/>
+</div>
+</div>
+<h4>Monstres du niveau</h4>
+<table class="data-table" id="level-monsters-table">
+<thead>
+<tr>
+<th>Monstre</th>
+<th>Image</th>
+<th>Niveau</th>
+<th>Quantité</th>
+<th>Temps</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="level-monsters-body">
+<tr>
+<td class="loading-container" colspan="5">
+<div class="loading-spinner"></div>
+<div style="margin-top: 10px;">Chargement des monstres du niveau...</div>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="btn-container">
+<button class="btn btn-primary" onclick="showAddLevelMonsterModal()">
+<span class="btn-icon">+</span> Ajouter un monstre
                         </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Add Monster Modal -->
-    <div class="modal-overlay" id="add-monster-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Ajouter un nouveau monstre</h3>
-                <button class="modal-close" onclick="closeModal('add-monster-modal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="new-monster-name">Nom</label>
-                        <input type="text" id="new-monster-name" placeholder="Nom du monstre">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-monster-design">Design (nom de l'image)</label>
-                        <input type="text" id="new-monster-design" placeholder="ex: book_default">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="new-monster-hp">Points de vie</label>
-                        <input type="number" id="new-monster-hp" min="1" step="1" value="20">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-monster-damage">Dégâts</label>
-                        <input type="number" id="new-monster-damage" min="1" step="1" value="5">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="new-monster-range">Portée</label>
-                        <input type="number" id="new-monster-range" min="1" step="1" value="100">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-monster-attack-speed">Vitesse d'attaque</label>
-                        <input type="number" id="new-monster-attack-speed" min="0.1" step="0.1" value="1.0">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-monster-move-speed">Vitesse de déplacement</label>
-                        <input type="number" id="new-monster-move-speed" min="0.1" step="0.1" value="1.0">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="new-monster-size">Taille</label>
-                        <input type="number" id="new-monster-size" min="1" step="1" value="30">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-monster-points">Points (score)</label>
-                        <input type="number" id="new-monster-points" min="1" step="1" value="10">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('add-monster-modal')">Annuler</button>
-                <button class="btn btn-primary" onclick="addNewMonster()">Ajouter</button>
-            </div>
-        </div>
-    </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Monster Modal -->
+<div class="modal-overlay" id="add-monster-modal">
+<div class="modal-content">
+<div class="modal-header">
+<h3 class="modal-title">Ajouter un nouveau monstre</h3>
+<button class="modal-close" onclick="closeModal('add-monster-modal')">×</button>
+</div>
+<div class="modal-body">
+<div class="form-row">
+<div class="form-group">
+<label for="new-monster-name">Nom</label>
+<input id="new-monster-name" placeholder="Nom du monstre" type="text"/>
+</div>
+<div class="form-group">
+<label for="new-monster-design">Design (nom de l'image)</label>
+<input id="new-monster-design" placeholder="ex: book_default" type="text"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="new-monster-hp">Points de vie</label>
+<input id="new-monster-hp" min="1" step="1" type="number" value="20"/>
+</div>
+<div class="form-group">
+<label for="new-monster-damage">Dégâts</label>
+<input id="new-monster-damage" min="1" step="1" type="number" value="5"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="new-monster-range">Portée</label>
+<input id="new-monster-range" min="1" step="1" type="number" value="100"/>
+</div>
+<div class="form-group">
+<label for="new-monster-attack-speed">Vitesse d'attaque</label>
+<input id="new-monster-attack-speed" min="0.1" step="0.1" type="number" value="1.0"/>
+</div>
+<div class="form-group">
+<label for="new-monster-move-speed">Vitesse de déplacement</label>
+<input id="new-monster-move-speed" min="0.1" step="0.1" type="number" value="1.0"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="new-monster-size">Taille</label>
+<input id="new-monster-size" min="1" step="1" type="number" value="30"/>
+</div>
+<div class="form-group">
+<label for="new-monster-points">Points (score)</label>
+<input id="new-monster-points" min="1" step="1" type="number" value="10"/>
+</div>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('add-monster-modal')">Annuler</button>
+<button class="btn btn-primary" onclick="addNewMonster()">Ajouter</button>
+</div>
+</div>
+</div>
+<!-- Add Level Modal -->
+<div class="modal-overlay" id="add-level-modal">
+<div class="modal-content">
+<div class="modal-header">
+<h3 class="modal-title">Ajouter un nouveau niveau</h3>
+<button class="modal-close" id="level-modal-close">×</button>
+</div>
+<div class="modal-body">
+<div class="form-group">
+<label for="new-level-number">Numéro du niveau</label>
+<input id="new-level-number" min="1" type="number" value="1"/>
+</div>
+<div class="form-group">
+<label for="new-level-monster">Monstre</label>
+<select id="new-level-monster">
+<!-- Options chargées dynamiquement depuis la liste des monstres -->
+<option value="">Chargement des monstres...</option>
+</select>
+</div>
+<div class="form-group">
+<label for="new-level-monster-level">Niveau du monstre</label>
+<input id="new-level-monster-level" min="1" type="number" value="1"/>
+</div>
+<div class="form-row">
+<div class="form-group" style="flex: 1;">
+<label for="new-level-coords-x">Position X</label>
+<input id="new-level-coords-x" type="number" value="0"/>
+</div>
+<div class="form-group" style="flex: 1;">
+<label for="new-level-coords-y">Position Y</label>
+<input id="new-level-coords-y" type="number" value="0"/>
+</div>
+</div>
+<div class="form-group">
+<label for="new-level-spawn-time">Temps d'apparition (en secondes)</label>
+<input id="new-level-spawn-time" min="0" type="number" value="0"/>
+</div>
+<div class="form-group">
+<label for="new-level-amount">Quantité</label>
+<input id="new-level-amount" min="1" type="number" value="1"/>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" id="level-modal-cancel">Annuler</button>
+<button class="btn btn-primary" id="level-modal-confirm">
+<span id="level-confirm-text">Ajouter</span>
+<span class="loading-spinner" id="level-spinner" style="display: none;"></span>
+</button>
+</div>
+</div>
+</div>
+<script>
 
-    
-    
-    <!-- Add Level Modal -->
-    <div class="modal-overlay" id="add-level-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Ajouter un nouveau niveau</h3>
-                <button class="modal-close" id="level-modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="new-level-number">Numéro du niveau</label>
-                    <input type="number" id="new-level-number" min="1" value="1">
-                </div>
-                <div class="form-group">
-                    <label for="new-level-monster">Monstre</label>
-                    <select id="new-level-monster">
-                        <!-- Options chargées dynamiquement depuis la liste des monstres -->
-                        <option value="">Chargement des monstres...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="new-level-monster-level">Niveau du monstre</label>
-                    <input type="number" id="new-level-monster-level" min="1" value="1">
-                </div>
-                <div class="form-row">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="new-level-coords-x">Position X</label>
-                        <input type="number" id="new-level-coords-x" value="0">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="new-level-coords-y">Position Y</label>
-                        <input type="number" id="new-level-coords-y" value="0">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="new-level-spawn-time">Temps d'apparition (en secondes)</label>
-                    <input type="number" id="new-level-spawn-time" min="0" value="0">
-                </div>
-                <div class="form-group">
-                    <label for="new-level-amount">Quantité</label>
-                    <input type="number" id="new-level-amount" min="1" value="1">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" id="level-modal-cancel">Annuler</button>
-                <button class="btn btn-primary" id="level-modal-confirm">
-                    <span id="level-confirm-text">Ajouter</span>
-                    <span id="level-spinner" class="loading-spinner" style="display: none;"></span>
-                </button>
-            </div>
-        </div>
-    </div>
-    <script>
+let editingLevelMonsterId = null;
+
         // Cette fonction devrait être appelée lors de l'ouverture du modal
         // Fonction améliorée pour charger les monstres
 // Fonction pour charger les monstres dans le formulaire d'ajout de niveau
@@ -931,77 +913,71 @@ function loadMonstersForLevelForm() {
             }, 3000);
         }
         </script>
-    <!-- Add Level Monster Modal -->
-    <div class="modal-overlay" id="add-level-monster-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Ajouter un monstre au niveau</h3>
-                <button class="modal-close" onclick="closeModal('add-level-monster-modal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="new-level-monster-id">Monstre</label>
-                    <select id="new-level-monster-id">
-                        <option value="">Sélectionnez un monstre</option>
-                        <!-- Options will be populated dynamically -->
-                    </select>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="new-level-monster-level-input">Niveau du monstre</label>
-                        <input type="number" id="new-level-monster-level-input" min="1" step="1" value="1">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-level-monster-amount">Quantité</label>
-                        <input type="number" id="new-level-monster-amount" min="1" step="1" value="5">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="new-level-monster-x">Position X</label>
-                        <input type="number" id="new-level-monster-x" value="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="new-level-monster-y">Position Y</label>
-                        <input type="number" id="new-level-monster-y" value="0">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="new-level-monster-spawn-time">Temps avant apparition (secondes)</label>
-                    <input type="number" id="new-level-monster-spawn-time" min="0" step="1" value="0">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('add-level-monster-modal')">Annuler</button>
-                <button class="btn btn-primary" onclick="addLevelMonster()">Ajouter</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Delete Confirmation Modal -->
-    <div class="modal-overlay" id="delete-confirmation-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Confirmer la suppression</h3>
-                <button class="modal-close" onclick="closeModal('delete-confirmation-modal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <p id="delete-confirmation-message">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('delete-confirmation-modal')">Annuler</button>
-                <button class="btn btn-danger" id="confirm-delete-btn">Supprimer</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Notification -->
-    <div class="notification" id="notification"></div>
-    
-    <script>
+<!-- Add Level Monster Modal -->
+<div class="modal-overlay" id="add-level-monster-modal">
+<div class="modal-content">
+<div class="modal-header">
+<h3 class="modal-title">Ajouter un monstre au niveau</h3>
+<button class="modal-close" onclick="closeModal('add-level-monster-modal')">×</button>
+</div>
+<div class="modal-body">
+<div class="form-group">
+<label for="new-level-monster-id">Monstre</label>
+<select id="new-level-monster-id">
+<option value="">Sélectionnez un monstre</option>
+<!-- Options will be populated dynamically -->
+</select>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="new-level-monster-level-input">Niveau du monstre</label>
+<input id="new-level-monster-level-input" min="1" step="1" type="number" value="1"/>
+</div>
+<div class="form-group">
+<label for="new-level-monster-amount">Quantité</label>
+<input id="new-level-monster-amount" min="1" step="1" type="number" value="5"/>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="new-level-monster-x">Position X</label>
+<input id="new-level-monster-x" type="number" value="0"/>
+</div>
+<div class="form-group">
+<label for="new-level-monster-y">Position Y</label>
+<input id="new-level-monster-y" type="number" value="0"/>
+</div>
+</div>
+<div class="form-group">
+<label for="new-level-monster-spawn-time">Temps avant apparition (secondes)</label>
+<input id="new-level-monster-spawn-time" min="0" step="1" type="number" value="0"/>
+</div>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('add-level-monster-modal')">Annuler</button>
+<button class="btn btn-primary" id="add-level-monster-confirm">Ajouter</button>
+</div>
+</div>
+</div>
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="delete-confirmation-modal">
+<div class="modal-content">
+<div class="modal-header">
+<h3 class="modal-title">Confirmer la suppression</h3>
+<button class="modal-close" onclick="closeModal('delete-confirmation-modal')">×</button>
+</div>
+<div class="modal-body">
+<p id="delete-confirmation-message">Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+</div>
+<div class="modal-footer">
+<button class="btn btn-secondary" onclick="closeModal('delete-confirmation-modal')">Annuler</button>
+<button class="btn btn-danger" id="confirm-delete-btn">Supprimer</button>
+</div>
+</div>
+</div>
+<!-- Notification -->
+<div class="notification" id="notification"></div>
+<script>
         // State variables
         let monsters = [];
         let levels = [];
@@ -1020,6 +996,12 @@ function loadMonstersForLevelForm() {
         
         // Load data on page load
         document.addEventListener('DOMContentLoaded', function() {
+
+    const confirmBtn = document.getElementById('add-level-monster-confirm');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', addLevelMonster);
+    }
+    
             loadMonsters();
             loadLevels();
         });
@@ -1558,6 +1540,7 @@ function loadMonstersForLevelForm() {
                         </td>
                         <td>${entry.monster_level}</td>
                         <td>${entry.amount}</td>
+                        <td>${entry.spawn_time}s</td>
                         <td>
                             <button class="btn btn-secondary" onclick="editLevelMonster(${entry.id})">
                                 Modifier
@@ -1659,56 +1642,89 @@ function loadMonstersForLevelForm() {
             
             // Show modal
             document.getElementById('add-level-monster-modal').classList.add('active');
+
+            editingLevelMonsterId = null;
+document.querySelector('#add-level-monster-modal .btn.btn-primary').textContent = 'Ajouter';
         }
         
         // Add level monster
         async function addLevelMonster() {
-            if (!selectedLevelId) return;
-            
-            const monsterId = parseInt(document.getElementById('new-level-monster-id').value);
-            
-            // Validation
-            if (isNaN(monsterId) || monsterId <= 0) {
-                showNotification("Veuillez sélectionner un monstre", 'error');
-                return;
-            }
-            
-            const newLevelMonster = {
-                level: selectedLevelId,
-                monster_id: monsterId,
-                monster_level: parseInt(document.getElementById('new-level-monster-level-input').value),
-                amount: parseInt(document.getElementById('new-level-monster-amount').value),
-                coords_x: parseInt(document.getElementById('new-level-monster-x').value),
-                coords_y: parseInt(document.getElementById('new-level-monster-y').value),
-                spawn_time: parseInt(document.getElementById('new-level-monster-spawn-time').value)
-            };
-            
-            // API call to add monster to level
-            const response = await fetchWithAuth(`/api/game/levels/${selectedLevelId}/monsters`, {
-                method: 'POST',
-                body: JSON.stringify(newLevelMonster)
+    if (!selectedLevelId) return;
+
+    const monsterId = parseInt(document.getElementById('new-level-monster-id').value);
+    const monsterLevel = parseInt(document.getElementById('new-level-monster-level-input').value);
+    const amount = parseInt(document.getElementById('new-level-monster-amount').value);
+    const coordsX = parseInt(document.getElementById('new-level-monster-x').value);
+    const coordsY = parseInt(document.getElementById('new-level-monster-y').value);
+    const spawnTime = parseInt(document.getElementById('new-level-monster-spawn-time').value);
+
+    if (isNaN(monsterId) || monsterId <= 0) {
+        showNotification("Veuillez sélectionner un monstre", 'error');
+        return;
+    }
+
+    const monsterData = {
+        level: selectedLevelId,
+        monster_id: monsterId,
+        monster_level: monsterLevel,
+        amount: amount,
+        coords_x: coordsX,
+        coords_y: coordsY,
+        spawn_time: spawnTime
+    };
+
+    try {
+        let response;
+        if (editingLevelMonsterId) {
+            response = await fetchWithAuth(`/api/game/levels/entries/${editingLevelMonsterId}`, {
+                method: 'PUT',
+                body: JSON.stringify(monsterData)
             });
-            
-            if (response) {
-                closeModal('add-level-monster-modal');
-                
-                // Reload level data
-                loadLevels();
-                
-                // Reload level details after a short delay
-                setTimeout(() => {
-                    selectLevel(selectedLevelId);
-                }, 500);
-                
-                showNotification("Monstre ajouté au niveau", 'success');
-            }
+        } else {
+            response = await fetchWithAuth(`/api/game/levels/${selectedLevelId}/monsters`, {
+                method: 'POST',
+                body: JSON.stringify(monsterData)
+            });
         }
-        
+
+        if (response) {
+            closeModal('add-level-monster-modal');
+            loadLevels();
+            setTimeout(() => selectLevel(selectedLevelId), 500);
+            showNotification(editingLevelMonsterId ? "Monstre mis à jour" : "Monstre ajouté", 'success');
+        }
+    } catch (err) {
+        showNotification("Erreur lors de la sauvegarde", 'error');
+        console.error(err);
+    } finally {
+        editingLevelMonsterId = null;
+        document.querySelector('#add-level-monster-modal .btn.btn-primary').textContent = 'Ajouter';
+    }
+}
+
+
         // Edit level monster
         function editLevelMonster(entryId) {
-            // TODO: Implement edit level monster
-            showNotification("Fonctionnalité à implémenter", 'warning');
-        }
+    const entry = levelMonsters.find(e => e.id === entryId);
+    if (!entry) return;
+
+    // Remplir les champs du formulaire avec les valeurs de l'entrée
+    document.getElementById('new-level-monster-id').value = entry.monster_id;
+    document.getElementById('new-level-monster-level-input').value = entry.monster_level;
+    document.getElementById('new-level-monster-amount').value = entry.amount;
+    document.getElementById('new-level-monster-x').value = entry.coords_x;
+    document.getElementById('new-level-monster-y').value = entry.coords_y;
+    document.getElementById('new-level-monster-spawn-time').value = entry.spawn_time;
+
+    // Afficher le modal
+    openModal('add-level-monster-modal');
+
+    // Indiquer qu'on est en mode édition
+    editingLevelMonsterId = entryId;
+
+    // Changer le texte du bouton
+    document.querySelector('#add-level-monster-modal .btn.btn-primary').textContent = 'Enregistrer';
+}
         
         // Confirm delete level monster
         function confirmDeleteLevelMonster(entryId) {
