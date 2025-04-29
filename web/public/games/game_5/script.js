@@ -1,5 +1,3 @@
-// --- Début script.js corrigé ---
-
 // Variables du jeu
 let gameState = {
     score: 0,
@@ -15,10 +13,12 @@ let gameState = {
     difficulty: 1
 };
 
+// Nouvelle variable pour le système de clic-clic
+let selectedGemValue = null;
+
 // Éléments DOM
 let rowsContainer;
 let draggableGemsContainer;
-let progressBar;
 
 // Constantes
 const POINTS_BY_LEVEL = { 1: 10, 2: 20, 3: 30 };
@@ -29,7 +29,7 @@ function initGame() {
     console.log('Initialisation du jeu d\'addition');
     rowsContainer = document.querySelector('.rows-container');
     draggableGemsContainer = document.getElementById('draggable-gems');
-    progressBar = document.getElementById('progress');
+    
     if (window.GameTemplate && window.GameTemplate.gameState) {
         gameState.difficulty = window.GameTemplate.gameState.difficulty || 1;
     }
@@ -44,7 +44,6 @@ function startGame() {
     gameState.score = 0;
     updatetopbar_score(0);
     gameState.currentProblem = 0;
-    progressBar.style.width = '0%';
     gameState.startTime = Date.now();
     setupProblem();
 }
@@ -102,20 +101,27 @@ function computeCarries(numbers, answer) {
     const maxLen = Math.max(...numbers.map(n => n.length));
     const paddedNumbers = numbers.map(n => Array(maxLen - n.length).fill(0).concat(n));
 
-    const carries = new Array(maxLen).fill(0); // une retenue par colonne
+    // On aura maxLen-1 retenues car la colonne des unités ne produit pas de retenue visible
+    const carries = new Array(maxLen - 1).fill(0);
 
     let carry = 0;
     for (let i = maxLen - 1; i >= 0; i--) {
+        // Somme des chiffres de la colonne actuelle + la retenue précédente
         const columnSum = paddedNumbers.reduce((acc, num) => acc + num[i], 0) + carry;
+        
+        // La retenue est le nombre divisé par 10 et arrondi à l'entier inférieur
         carry = Math.floor(columnSum / 10);
+        
+        // On stocke la retenue pour la colonne à gauche
+        // Mais pas pour la dernière itération (i=0) car il n'y a pas de colonne plus à gauche
         if (i > 0) {
-            carries[i - 1] = carry;
+            // i-1 correspond à la position de la colonne qui recevra cette retenue
+            carries[i-1] = carry;
         }
     }
 
     return carries;
 }
-
 
 function createProblemLayout(problem) {
     rowsContainer.innerHTML = '';
@@ -127,24 +133,32 @@ function createProblemLayout(problem) {
     if (difficultyLevel > 1) {
         const carryRow = document.createElement('div');
         carryRow.className = 'row carries-row';
-        const firstCarrySlot = document.createElement('div');
-firstCarrySlot.className = 'gem-slot carry-slot';
-firstCarrySlot.dataset.position = -1;
-firstCarrySlot.dataset.row = 0;
-firstCarrySlot.dataset.droppable = 'true';
-firstCarrySlot.addEventListener('dragover', handleDragOver);
-firstCarrySlot.addEventListener('drop', handleDrop);
-carryRow.appendChild(firstCarrySlot);
-for (let i = 0; i < maxWidth-1; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'gem-slot carry-slot';
-    slot.dataset.position = i - 1; // Position -1 pour le plus à gauche
-    slot.dataset.row = 0;
-    slot.dataset.droppable = 'true';
-    slot.addEventListener('dragover', handleDragOver);
-    slot.addEventListener('drop', handleDrop);
-    carryRow.appendChild(slot);
-}
+        
+        // Ajouter un slot vide pour s'aligner avec la première colonne (qui contient un slot vide)
+        const emptySlot = document.createElement('div');
+        emptySlot.className = 'gem-slot empty-slot';
+        emptySlot.style.visibility = 'hidden';
+        carryRow.appendChild(emptySlot);
+        
+        // Créer les slots de retenue alignés avec les colonnes de chiffres SAUF la dernière colonne (unités)
+        for (let i = 0; i < maxWidth - 1; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'gem-slot carry-slot';
+            // Les retenues sont décalées d'une position vers la gauche par rapport aux chiffres
+            // Car la retenue de la colonne i+1 affecte la colonne i
+            slot.dataset.position = i;
+            slot.dataset.row = 0;
+            slot.dataset.droppable = 'true';
+            carryRow.appendChild(slot);
+        }
+        
+        // Ajouter un slot vide à la place de la dernière position (unités)
+        // car il n'y a jamais de retenue pour les unités
+        const lastEmptySlot = document.createElement('div');
+        lastEmptySlot.className = 'gem-slot empty-slot';
+        lastEmptySlot.style.visibility = 'hidden';
+        carryRow.appendChild(lastEmptySlot);
+        
         rowsContainer.appendChild(carryRow);
     }
 
@@ -191,8 +205,6 @@ for (let i = 0; i < maxWidth-1; i++) {
     firstSlot.dataset.position = 0;
     firstSlot.dataset.row = numRows - 1;
     firstSlot.dataset.droppable = 'true';
-    firstSlot.addEventListener('dragover', handleDragOver);
-    firstSlot.addEventListener('drop', handleDrop);
     answerRow.appendChild(firstSlot);
 
     for (let i = 0; i < maxWidth; i++) {
@@ -201,8 +213,6 @@ for (let i = 0; i < maxWidth-1; i++) {
         slot.dataset.position = i + 1;
         slot.dataset.row = numRows - 1;
         slot.dataset.droppable = 'true';
-        slot.addEventListener('dragover', handleDragOver);
-        slot.addEventListener('drop', handleDrop);
         answerRow.appendChild(slot);
     }
     rowsContainer.appendChild(answerRow);
@@ -210,6 +220,98 @@ for (let i = 0; i < maxWidth-1; i++) {
     gameState.currentAnswers = Array(maxWidth + 1).fill(null);
 }
 
+// Nouvelle fonction pour gérer la sélection des gemmes par clic
+function handleGemSelection(e) {
+    // Désélectionne toutes les gemmes
+    document.querySelectorAll('.draggable-gem').forEach(gem => {
+        gem.classList.remove('selected');
+    });
+    
+    // Sélectionne cette gemme
+    selectedGemValue = parseInt(e.currentTarget.dataset.value);
+    e.currentTarget.classList.add('selected');
+    
+    console.log("🔄 Gemme sélectionnée avec valeur:", selectedGemValue);
+}
+
+// Nouvelle fonction pour gérer le clic sur un emplacement
+function handleSlotClick(e) {
+    if (selectedGemValue === null) {
+        return; // Aucune gemme sélectionnée
+    }
+    
+    let targetSlot = e.target;
+    if (!targetSlot.classList.contains('gem-slot')) {
+        targetSlot = e.target.closest('.gem-slot');
+    }
+    
+    if (!targetSlot || targetSlot.dataset.droppable !== 'true') {
+        console.log("❌ Pas de slot valide pour le clic");
+        return;
+    }
+    
+    const position = parseInt(targetSlot.dataset.position);
+    const row = parseInt(targetSlot.dataset.row);
+    console.log("🎯 Slot cible position:", position, "row:", row);
+    
+    // Nettoyer uniquement l'ancienne gemme
+    const existingGem = targetSlot.querySelector('.gem');
+    if (existingGem) {
+        existingGem.remove();
+    }
+    
+    // Ajouter la nouvelle gemme
+    const gem = document.createElement('div');
+    gem.className = 'gem';
+    gem.style.backgroundImage = `url('/assets/images/gem_${selectedGemValue}.webp')`;
+    gem.dataset.value = selectedGemValue;
+    
+    const gemNumber = document.createElement('div');
+    gemNumber.className = 'gem-number';
+    gemNumber.textContent = selectedGemValue;
+    gem.appendChild(gemNumber);
+    
+    targetSlot.appendChild(gem);
+    
+    // Mise à jour des réponses uniquement pour les réponses finales
+    if (targetSlot.classList.contains('answer-slot')) {
+        gameState.currentAnswers[position] = selectedGemValue;
+        
+        const isCorrect = isAnswerCorrect(position, selectedGemValue);
+        
+        if (isCorrect) {
+            targetSlot.style.backgroundImage = `url('/assets/images/good_gem_slot.webp')`;
+        } else {
+            targetSlot.style.backgroundImage = `url('/assets/images/bad_gem_slot.webp')`;
+            
+            gameState.errors++;
+            gameState.errorsByProblem++;
+            gameState.score = Math.max(0, gameState.score - ERROR_PENALTY);
+            updatetopbar_score(gameState.score);
+        }
+    }
+    
+    // Vérifier les retenues aussi
+    if (targetSlot.classList.contains('carry-slot')) {
+        const isCorrectCarry = isCarryCorrect(position, selectedGemValue);
+        
+        if (isCorrectCarry) {
+            targetSlot.style.backgroundImage = `url('/assets/images/good_gem_slot.webp')`;
+        } else {
+            targetSlot.style.backgroundImage = `url('/assets/images/bad_gem_slot.webp')`;
+        }
+    }
+    
+    // Réinitialiser la sélection
+    selectedGemValue = null;
+    document.querySelectorAll('.draggable-gem').forEach(gem => {
+        gem.classList.remove('selected');
+    });
+    
+    checkCompletion();
+}
+
+// Création des gemmes cliquables au lieu de glissables
 function createDraggableGems() {
     draggableGemsContainer.innerHTML = '';
     for (let i = 0; i <= 9; i++) {
@@ -217,100 +319,24 @@ function createDraggableGems() {
         gem.className = 'draggable-gem';
         gem.style.backgroundImage = `url('/assets/images/gem_${i}.webp')`;
         gem.dataset.value = i;
-        gem.draggable = true;
+        
         const gemNumber = document.createElement('div');
         gemNumber.className = 'gem-number';
         gemNumber.textContent = i;
         gem.appendChild(gemNumber);
-        gem.addEventListener('dragstart', handleDragStart);
+        
+        // Utiliser un clic au lieu du glisser-déposer
+        gem.addEventListener('click', handleGemSelection);
         draggableGemsContainer.appendChild(gem);
     }
 }
 
-function handleDragStart(e) {
-    e.dataTransfer.setData('text/plain', e.target.dataset.value);
-    e.dataTransfer.effectAllowed = 'move';
+// Ajouter les écouteurs de clic sur les emplacements
+function setupSlotListeners() {
+    document.querySelectorAll('.gem-slot[data-droppable="true"]').forEach(slot => {
+        slot.addEventListener('click', handleSlotClick);
+    });
 }
-
-function handleDragOver(e) {
-    if (e.target.dataset.droppable === 'true') {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-    }
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    const value = parseInt(e.dataTransfer.getData('text/plain'));
-    console.log("===> Drop d'une gemme avec valeur:", value);
-
-    let targetSlot = e.target;
-    if (!targetSlot.classList.contains('gem-slot')) {
-        targetSlot = e.target.closest('.gem-slot');
-    }
-    if (!targetSlot || targetSlot.dataset.droppable !== 'true') {
-        console.log("❌ Pas de slot valide pour le drop");
-        return;
-    }
-
-    const position = parseInt(targetSlot.dataset.position);
-    const row = parseInt(targetSlot.dataset.row);
-    console.log("🎯 Slot cible position:", position, "row:", row);
-
-    // Nettoyer uniquement l'ancienne gemme
-    const existingGem = targetSlot.querySelector('.gem');
-    if (existingGem) {
-        existingGem.remove();
-    }
-
-    // Ajouter la nouvelle gemme
-    const gem = document.createElement('div');
-    gem.className = 'gem';
-    gem.style.backgroundImage = `url('/assets/images/gem_${value}.webp')`;
-    gem.dataset.value = value;
-    gem.draggable = false;
-
-    const gemNumber = document.createElement('div');
-    gemNumber.className = 'gem-number';
-    gemNumber.textContent = value;
-    gem.appendChild(gemNumber);
-
-    targetSlot.appendChild(gem);
-
-    // Mise à jour des réponses uniquement pour les réponses finales
-    if (targetSlot.classList.contains('answer-slot')) {
-        gameState.currentAnswers[position] = value;
-
-        const isCorrect = isAnswerCorrect(position, value);
-
-        if (isCorrect) {
-            targetSlot.style.backgroundImage = `url('/assets/images/good_gem_slot.webp')`;
-        } else {
-            targetSlot.style.backgroundImage = `url('/assets/images/bad_gem_slot.webp')`;
-
-            gameState.errors++;
-            gameState.errorsByProblem++;
-            gameState.score = Math.max(0, gameState.score - ERROR_PENALTY);
-            updatetopbar_score(gameState.score);
-        }
-    }
-
-    // ✅ Nouvelle gestion : vérifier les retenues aussi
-    if (targetSlot.classList.contains('carry-slot')) {
-        const isCorrectCarry = isCarryCorrect(position, value);
-
-        if (isCorrectCarry) {
-            targetSlot.style.backgroundImage = `url('/assets/images/good_gem_slot.webp')`;
-        } else {
-            targetSlot.style.backgroundImage = `url('/assets/images/bad_gem_slot.webp')`;
-        }
-        // ➔ PAS de pénalité ici, car facultatif
-    }
-
-    checkCompletion();
-}
-
-
 
 function isCarryCorrect(position, value) {
     const currentProblem = gameState.problems[gameState.currentProblem];
@@ -320,12 +346,9 @@ function isCarryCorrect(position, value) {
     if (position >= 0 && position < carries.length) {
         return carries[position] === value;
     }
-    // Si pas de donnée, considérer que ce n'est pas nécessaire
-    return true;
+    // Si pas de donnée, considérer que la retenue devrait être 0
+    return value === 0;
 }
-
-
-
 
 function isAnswerCorrect(position, value) {
     const currentProblem = gameState.problems[gameState.currentProblem];
@@ -344,7 +367,6 @@ function isAnswerCorrect(position, value) {
     }
     return value === correctAnswer[answerIndex];
 }
-
 
 function checkCompletion() {
     const answerSlots = document.querySelectorAll('.answer-slot');
@@ -385,8 +407,6 @@ function nextProblem() {
 
     gameState.errorsByProblem = 0; // reset pour prochain problème
     gameState.currentProblem++;
-    const progressPercentage = (gameState.currentProblem / gameState.totalProblems) * 100;
-    progressBar.style.width = `${progressPercentage}%`;
 
     if (gameState.currentProblem >= gameState.totalProblems) {
         endGameWithResults();
@@ -395,12 +415,11 @@ function nextProblem() {
     setupProblem();
 }
 
-
-
 function setupProblem() {
     const currentProblem = gameState.problems[gameState.currentProblem];
     createProblemLayout(currentProblem);
     createDraggableGems();
+    setupSlotListeners();
 }
 
 function endGameWithResults() {
@@ -423,9 +442,6 @@ function resetGame() {
     gameState.currentAnswers = [];
     rowsContainer.innerHTML = '';
     draggableGemsContainer.innerHTML = '';
-    progressBar.style.width = '0%';
+    selectedGemValue = null; // Réinitialiser la valeur de gemme sélectionnée
     gameState.problems = generateProblems(gameState.difficulty);
 }
-
-// --- Fin script.js corrigé ---
-

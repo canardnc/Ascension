@@ -7,81 +7,90 @@
     <style>
         /* Styles spécifiques au mini-jeu */
         .gems-game-container {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    padding: 2px 0; /* Réduit le padding vertical */
+    box-sizing: border-box;
+}
         
-        .gem-box {
-            position: relative;
-            background-image: url('/assets/images/gem_box.webp');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            width: 95%;
-            height: 95%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 5px;
-        }
-
-        .carry-slot {
-    transform: scale(0.7);
+.gem-box {
+    position: relative;
+    background-image: url('/assets/images/gem_box.webp');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 100%; /* Déjà maximisé horizontalement */
+    height: 100%; /* Augmenté de 85% à 90% */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 0px; /* Réduit de 10px à 5px */
+}
+        
+.carry-slot {
+    transform: scale(0.65); /* Réduit de 0.7 à 0.65 */
     transform-origin: center;
+}
+
+.carries-row {
+    margin-bottom: -5px; /* Rapproche les retenues de la ligne suivante */
 }
         
         .rows-container {
-            width: 90%;
-            height: 80%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+    width: 98%;
+    height: 98%; /* Augmenté de 95% à 98% */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
         
-        .row {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 20%;
-            gap: 10px;
-        }
+.row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 10%; /* Légèrement réduit de 20% à 19% pour permettre plus de rangées */
+    gap: 0;
+    margin: 0; /* Assure qu'il n'y a pas de marge entre les rangées */
+}
         
         .gem-slot {
             width: 60px;
             height: 60px;
             background-image: url('/assets/images/empty_gem_slot.webp');
-            background-size: contain;
+            background-size: 100% 100%; /* Permet la déformation pour éliminer les espaces */
             background-repeat: no-repeat;
             background-position: center;
             position: relative;
+            cursor: pointer; /* Ajouté curseur pour indiquer la cliquabilité */
+            margin: 0; /* Élimine les marges */
+            padding: 0; /* Élimine le padding */
         }
         
         .gem {
-            width: 50px;
-            height: 50px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: none;
-
-        }
+    width: 90%;
+    height: 90%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
         
         .gem-number {
             font-family: Arial, sans-serif;
@@ -98,36 +107,81 @@
         }
         
         .draggable-gems {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            gap: 10px;
-            margin-top: 20px;
-        }
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    width: 90%;
+    gap: 5px; /* Réduit l'espacement entre les gemmes */
+    height: 10%; /* Réduit de 15% à 10% */
+    min-height: 50px; /* Hauteur minimale pour s'assurer que les gemmes sont visibles */
+}
         
         .draggable-gem {
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
-            cursor: grab;
+            cursor: pointer; /* Changé de grab à pointer */
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
-        .progress-bar {
-            width: 80%;
-            height: 20px;
-            background-color: #ddd;
-            border-radius: 10px;
-            margin: 10px 0;
+        .draggable-gem.selected {
+            border: 2px solid yellow;
+            box-shadow: 0 0 10px gold;
+            transform: scale(1.1);
         }
         
-        .progress {
-            height: 100%;
-            background-color: #4CAF50;
-            border-radius: 10px;
-            width: 0%;
+        /* Pour les écrans plus petits */
+        @media (max-width: 600px) {
+            .gem-slot {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .gem {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .draggable-gems {
+                max-width: 350px;
+            }
+            
+            .draggable-gem {
+                width: 48px;
+                height: 48px;
+            }
+            
+            .gem-number {
+                font-size: 20px;
+            }
+        }
+        
+        /* Pour les écrans très petits */
+        @media (max-width: 400px) {
+            .gem-slot {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .gem {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .draggable-gem {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .gem-number {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -138,11 +192,8 @@
                 <!-- Les rangées seront créées dynamiquement via JavaScript -->
             </div>
         </div>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
-        </div>
         <div class="draggable-gems" id="draggable-gems">
-            <!-- Les gemmes glissables seront créées dynamiquement via JavaScript -->
+            <!-- Les gemmes cliquables seront créées dynamiquement via JavaScript -->
         </div>
     </div>
 </body>
