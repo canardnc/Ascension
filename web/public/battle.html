@@ -413,7 +413,7 @@
         // Fonction pour charger les niveaux depuis le fichier JSON
         async function loadLevels() {
             try {
-                const response = await fetch('/configs/levels.json');
+                const response = await fetch('levels.json');
                 if (!response.ok) throw new Error('Erreur lors du chargement des niveaux');
                 
                 const data = await response.json();
