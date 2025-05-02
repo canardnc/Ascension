@@ -84,7 +84,79 @@
       "id": 11,
       "name": "La Bibliothèque Hantée",
       "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
-      "image": "level2.jpg",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 12,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 13,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 14,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 15,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 16,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 17,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 18,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 19,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
+      "background": "bg2.jpg",
+      "energyCost": 5
+    },
+    {
+      "id": 20,
+      "name": "La Bibliothèque Hantée",
+      "description": "Des livres plus avancés vous attendent dans cette bibliothèque mystérieuse. Les connaissances se sont regroupées pour vous mettre à l'épreuve.",
+      "image": "/assets/images/levels/level2.jpg",
       "background": "bg2.jpg",
       "energyCost": 5
     },
