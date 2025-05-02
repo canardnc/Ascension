@@ -1756,7 +1756,29 @@ document.querySelector('#add-level-monster-modal .btn.btn-primary').textContent 
     const entry = levelMonsters.find(e => e.id === entryId);
     if (!entry) return;
 
-    // Remplir les champs du formulaire avec les valeurs de l'entrée
+    // S'assurer que les monstres sont chargés
+    if (!monsters || monsters.length === 0) {
+        loadMonsters().then(() => {
+            fillEditLevelMonsterForm(entry);
+        });
+    } else {
+        fillEditLevelMonsterForm(entry);
+    }
+}
+
+function fillEditLevelMonsterForm(entry) {
+    // Re-remplir le select
+    const monsterSelect = document.getElementById('new-level-monster-id');
+    monsterSelect.innerHTML = '<option value="">Sélectionnez un monstre</option>';
+
+    monsters.forEach(monster => {
+        const option = document.createElement('option');
+        option.value = monster.monster_id;
+        option.textContent = monster.monster_name;
+        monsterSelect.appendChild(option);
+    });
+
+    // Remplir les champs avec les valeurs de l'entrée
     document.getElementById('new-level-monster-id').value = entry.monster_id;
     document.getElementById('new-level-monster-level-input').value = entry.monster_level;
     document.getElementById('new-level-monster-amount').value = entry.amount;
@@ -1767,13 +1789,11 @@ document.querySelector('#add-level-monster-modal .btn.btn-primary').textContent 
     // Afficher le modal
     openModal('add-level-monster-modal');
 
-    // Indiquer qu'on est en mode édition
-    editingLevelMonsterId = entryId;
-
-    // Changer le texte du bouton
+    // Mode édition
+    editingLevelMonsterId = entry.id;
     document.querySelector('#add-level-monster-modal .btn.btn-primary').textContent = 'Enregistrer';
 }
-        
+
         // Confirm delete level monster
         function confirmDeleteLevelMonster(entryId) {
             const entry = levelMonsters.find(e => e.id === entryId);
