@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masculin-Féminin</title>
+    <style>
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        .phrase-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            min-height: 80px;
+        }
+        
+        .word-slot {
+            width: 120px;
+            height: 50px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #f5f5f5;
+            transition: all 0.3s ease;
+        }
+        
+        .word-slot.filled {
+            background-color: #e0e0e0;
+        }
+        
+        .word-slot.correct {
+            border-color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+        
+        .word-slot.incorrect {
+            border-color: #F44336;
+            background-color: rgba(244, 67, 54, 0.2);
+        }
+        
+        .words-bank {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .word-item {
+            padding: 8px 16px;
+            border: 2px solid #3F51B5;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #E8EAF6;
+            transition: all 0.3s ease;
+        }
+        
+        .word-item:hover {
+            background-color: #C5CAE9;
+        }
+        
+        .check-button {
+            padding: 10px 20px;
+            background-color: #3F51B5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .check-button:hover {
+            background-color: #303F9F;
+        }
+        
+        .check-button:disabled {
+            background-color: #9E9E9E;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="phrase-container" id="phrase-container">
+            <!-- Les cases vides pour les mots seront générées ici -->
+        </div>
+        
+        <div class="words-bank" id="words-bank">
+            <!-- Les mots mélangés seront générés ici -->
+        </div>
+        
+        <button class="check-button" id="check-button">Vérifier</button>
+    </div>
+</body>
+</html>

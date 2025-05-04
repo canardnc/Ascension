@@ -336,28 +336,44 @@ function handleChoice(side) {
 
 // Fonction pour afficher le résultat
 function showResult(side, isCorrect) {
-    // Révéler ce qui se cache derrière les nuages
+    // Cacher les nuages
     leftCloudElement.style.display = 'none';
     rightCloudElement.style.display = 'none';
-    
-    // Afficher le symbole de résultat
+
+    // Afficher les rochers uniquement après disparition du nuage
     if (side === 'left') {
+        leftRocksElement.style.display = 'block';
         leftResultElement.textContent = isCorrect ? '✅' : '❌';
         leftResultElement.style.display = 'block';
     } else {
+        rightRocksElement.style.display = 'block';
         rightResultElement.textContent = isCorrect ? '✅' : '❌';
         rightResultElement.style.display = 'block';
     }
+
+    // Ajouter un effet visuel temporaire de clic
+    const flash = document.createElement('div');
+    flash.classList.add('click-flash');
+    flash.classList.add(side === 'left' ? 'click-flash-left' : 'click-flash-right');
+    document.querySelector('.fork-wrapper').appendChild(flash);
+
+    // Supprimer après animation
+    setTimeout(() => {
+        flash.remove();
+    }, 300);
 }
+
 
 // Fonction pour réinitialiser l'affichage pour le prochain tour
 function resetDisplay() {
-    // Réinitialiser les nuages et les résultats
     leftCloudElement.style.display = 'block';
     rightCloudElement.style.display = 'block';
     leftResultElement.style.display = 'none';
     rightResultElement.style.display = 'none';
+    leftRocksElement.style.display = 'none';
+    rightRocksElement.style.display = 'none';
 }
+
 
 // Fonction pour obtenir un index aléatoire non utilisé
 function getRandomUnusedIndex() {

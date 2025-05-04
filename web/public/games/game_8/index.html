@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Singulier ou Pluriel</title>
     <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
         .singplur-container {
             width: 100%;
             height: 100%;
@@ -14,7 +20,7 @@
             align-items: center;
             position: relative;
         }
-        
+
         .game-area {
             position: relative;
             width: 100%;
@@ -23,13 +29,79 @@
             justify-content: center;
             align-items: center;
         }
-        
+
+        .fork-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
         .fork-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
-        
+
+        /* Clouds */
+        .cloud-top-left,
+        .cloud-top-right {
+            position: absolute;
+            width: 35%;
+            bottom: 50%;
+            z-index: 3;
+        }
+
+        .cloud-top-left {
+            left: 25%;
+            transform: translateX(-50%);
+        }
+
+        .cloud-top-right {
+            right: 25%;
+            transform: translateX(50%);
+        }
+
+        /* Rocks */
+        .rock-left,
+        .rock-right {
+            position: absolute;
+            width: 10%;
+            bottom: 50%;
+            display: none;
+            z-index: 2;
+        }
+
+        .rock-left {
+            left: 25%;
+            transform: translateX(-50%);
+        }
+
+        .rock-right {
+            right: 25%;
+            transform: translateX(50%);
+        }
+
+        /* Results */
+        .result-left,
+        .result-right {
+            position: absolute;
+            font-size: 72px;
+            z-index: 4;
+            display: none;
+            bottom: 55%;
+        }
+
+        .result-left {
+            left: 0;
+            transform: translateX(50%);
+        }
+
+        .result-right {
+            right: 0;
+            transform: translateX(-50%);
+        }
+
         .phrases {
             position: absolute;
             width: 100%;
@@ -39,7 +111,7 @@
             padding: 0 10%;
             z-index: 5;
         }
-        
+
         .phrase {
             background-color: rgba(255, 255, 255, 0.9);
             padding: 10px;
@@ -48,86 +120,7 @@
             font-weight: bold;
             text-align: center;
         }
-        
-        .clouds-container {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            pointer-events: none;
-        }
-        
-        .cloud-left, .cloud-right {
-            position: absolute;
-            width: 35%;
-            top: 35%;
-            z-index: 3;
-        }
-        
-        .cloud-left {
-            left: 15%;
-        }
-        
-        .cloud-right {
-            right: 15%;
-        }
-        
-        .rock-left, .rock-right {
-            position: absolute;
-            width: 20%;
-            top: 45%;
-            z-index: 2;
-        }
-        
-        .rock-left {
-            left: 20%;
-        }
-        
-        .rock-right {
-            right: 20%;
-        }
-        
-        .result-left, .result-right {
-            position: absolute;
-            font-size: 72px;
-            z-index: 4;
-            display: none;
-            top: 40%;
-        }
-        
-        .result-left {
-            left: 23%;
-        }
-        
-        .result-right {
-            right: 23%;
-        }
-        
-        .choice-areas {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-        }
-        
-        .choice-left, .choice-right {
-            position: absolute;
-            width: 50%;
-            height: 100%;
-            top: 0;
-            cursor: pointer;
-        }
-        
-        .choice-left {
-            left: 0;
-        }
-        
-        .choice-right {
-            right: 0;
-        }
-        
+
         .word-container {
             padding: 15px;
             background-color: rgba(255, 255, 255, 0.9);
@@ -139,39 +132,92 @@
             z-index: 10;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
+
+        /* Clickable areas */
+        .choice-areas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .choice-left,
+        .choice-right {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            top: 0;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .choice-left {
+            left: 0;
+        }
+
+        .choice-right {
+            right: 0;
+        }
+
+        /* Click feedback animation */
+        .click-flash {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            top: 0;
+            background: rgba(255, 255, 255, 0.4);
+            z-index: 9;
+            pointer-events: none;
+            animation: flash 0.3s ease-out;
+        }
+
+        .click-flash-left {
+            left: 0;
+        }
+
+        .click-flash-right {
+            right: 0;
+        }
+
+        @keyframes flash {
+            from { opacity: 0.6; }
+            to   { opacity: 0; }
+        }
     </style>
 </head>
 <body>
     <div class="singplur-container">
         <div class="game-area" id="game-content">
-            <!-- Image de fond -->
-            <img src="/assets/images/road_fork.webp" alt="Carrefour" class="fork-image">
-            
-            <!-- Phrases à trou -->
+            <div class="fork-wrapper">
+                <img src="/assets/images/road_fork.webp" alt="Carrefour" class="fork-image">
+
+                <img src="/assets/images/cloud.webp" alt="Nuage gauche" class="cloud-top-left" id="left-cloud">
+                <img src="/assets/images/cloud.webp" alt="Nuage droit" class="cloud-top-right" id="right-cloud">
+
+                <img src="/assets/images/rocks.webp" alt="Rochers gauche" class="rock-left" id="left-rocks">
+                <img src="/assets/images/rocks.webp" alt="Rochers droit" class="rock-right" id="right-rocks">
+
+                <div class="result-left" id="left-result">❌</div>
+                <div class="result-right" id="right-result">✅</div>
+
+                <div class="choice-areas">
+                    <div class="choice-left" id="left-choice"></div>
+                    <div class="choice-right" id="right-choice"></div>
+                </div>
+            </div>
+
             <div class="phrases">
                 <div class="phrase" id="left-text"></div>
                 <div class="phrase" id="right-text"></div>
             </div>
-            
-            <!-- Nuages et rochers -->
-            <div class="clouds-container">
-                <img src="/assets/images/cloud.webp" alt="Nuage gauche" class="cloud-left" id="left-cloud">
-                <img src="/assets/images/rocks.webp" alt="Rochers gauche" class="rock-left" id="left-rocks">
-                <div class="result-left" id="left-result">❌</div>
-                
-                <img src="/assets/images/cloud.webp" alt="Nuage droit" class="cloud-right" id="right-cloud">
-                <img src="/assets/images/rocks.webp" alt="Rochers droit" class="rock-right" id="right-rocks">
-                <div class="result-right" id="right-result">✅</div>
-            </div>
-            
-            <!-- Zones cliquables -->
-            <div class="choice-areas">
-                <div class="choice-left" id="left-choice"></div>
-                <div class="choice-right" id="right-choice"></div>
-            </div>
         </div>
-        
+
         <div class="word-container" id="word-display"></div>
     </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
