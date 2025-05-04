@@ -8,6 +8,7 @@ const MAX_ROUNDS = 10;
 let gameStartTime = 0;
 let combinations = [];
 let usedCombinationsIndices = [];
+let correctSide = ''; // Variable pour stocker le côté correct
 
 // Éléments DOM
 let wordDisplayElement;
@@ -283,7 +284,7 @@ function nextRound() {
     wordDisplayElement.textContent = currentWord;
     
     // Décider aléatoirement si la bonne réponse est à gauche ou à droite
-    const correctSide = Math.random() >= 0.5 ? 'left' : 'right';
+    correctSide = Math.random() >= 0.5 ? 'left' : 'right';
     
     // Phrase à trou correspondant à l'autre option (pas la bonne)
     let wrongPhrase;
@@ -296,23 +297,17 @@ function nextRound() {
     if (correctSide === 'left') {
         leftTextElement.textContent = currentPhrase;
         rightTextElement.textContent = wrongPhrase;
-        
-        // Configurer les éléments visuels
-        leftRocksElement.style.display = 'none';
-        rightRocksElement.style.display = 'block';
     } else {
         rightTextElement.textContent = currentPhrase;
         leftTextElement.textContent = wrongPhrase;
-        
-        // Configurer les éléments visuels
-        leftRocksElement.style.display = 'block';
-        rightRocksElement.style.display = 'none';
     }
+    
+    // Ne pas afficher les roches au début du jeu
+    // Correction du bug #1 - suppression du code qui affichait les roches dès le début
 }
 
 // Fonction pour gérer le choix du joueur
 function handleChoice(side) {
-    const correctSide = leftRocksElement.style.display === 'none' ? 'left' : 'right';
     const isCorrect = side === correctSide;
     
     // Mettre à jour le score
@@ -340,13 +335,21 @@ function showResult(side, isCorrect) {
     leftCloudElement.style.display = 'none';
     rightCloudElement.style.display = 'none';
 
-    // Afficher les rochers uniquement après disparition du nuage
-    if (side === 'left') {
+    // Afficher les rochers du côté correct (pas du côté cliqué)
+    // Correction du bug #2 - afficher les roches du bon côté
+    if (correctSide === 'left') {
+        leftRocksElement.style.display = 'none';
+        rightRocksElement.style.display = 'block';
+    } else {
         leftRocksElement.style.display = 'block';
+        rightRocksElement.style.display = 'none';
+    }
+
+    // Afficher l'icône de résultat du côté où l'utilisateur a cliqué
+    if (side === 'left') {
         leftResultElement.textContent = isCorrect ? '✅' : '❌';
         leftResultElement.style.display = 'block';
     } else {
-        rightRocksElement.style.display = 'block';
         rightResultElement.textContent = isCorrect ? '✅' : '❌';
         rightResultElement.style.display = 'block';
     }
@@ -363,7 +366,6 @@ function showResult(side, isCorrect) {
     }, 300);
 }
 
-
 // Fonction pour réinitialiser l'affichage pour le prochain tour
 function resetDisplay() {
     leftCloudElement.style.display = 'block';
@@ -373,7 +375,6 @@ function resetDisplay() {
     leftRocksElement.style.display = 'none';
     rightRocksElement.style.display = 'none';
 }
-
 
 // Fonction pour obtenir un index aléatoire non utilisé
 function getRandomUnusedIndex() {
