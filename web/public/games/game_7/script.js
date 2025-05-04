@@ -31,8 +31,8 @@ function adjustTextSize() {
         effectiveWidth = phraseContainer.offsetHeight * backgroundRatio;
     }
     
-    // Estimer la zone de texte utilisable (typiquement environ 60-70% de l'image du parchemin)
-    const usableRatio = 0.65;
+    // Estimer la zone de texte utilisable (augmenté de 65% à 75%)
+    const usableRatio = 0.75;
     const usableWidth = effectiveWidth * usableRatio;
     const usableHeight = effectiveHeight * usableRatio;
     
@@ -43,7 +43,7 @@ function adjustTextSize() {
     // Adapter la taille du texte pour qu'il tienne correctement
     // On utilise une technique d'essais successifs
     let fontSize = parseInt(window.getComputedStyle(phraseContentElement).fontSize);
-    let maxFontSize = 32; // Taille maximale en pixels
+    let maxFontSize = 28; // Taille maximale en pixels (réduite de 32 à 28)
     let minFontSize = 12; // Taille minimale en pixels
     
     // Réinitialiser à une taille raisonnable pour commencer
@@ -58,6 +58,10 @@ function adjustTextSize() {
         fontSize -= 1;
         phraseContentElement.style.fontSize = `${fontSize}px`;
     }
+    
+    // Ajouter un facteur de réduction supplémentaire pour garantir qu'il reste de l'espace
+    fontSize = Math.max(minFontSize, fontSize - 2);
+    phraseContentElement.style.fontSize = `${fontSize}px`;
     
     // Ajuster également la taille des trous pour correspondre à la taille du texte
     const holes = document.querySelectorAll('.hole, .wrong-hole');
@@ -179,6 +183,8 @@ function generatePhrases() {
         "Je tape sur mon tambour silencieux et ma trompette à bulles pour réveiller mes voisins endormis.",
         "Je transforme ma chambre en désordre et mon bureau en chaos avec mes tours de magie ratés.",
         "J'ai avalé ma pilule de croissance et mon bonbon rapetissant pendant mes expériences dangereuses.",
+        
+        // Nouvelles phrases supplémentaires
         "Je mélange ma morve d'éléphant et mon jus de chaussette pour préparer mes potions puantes.",
         "J'ai caché ma brosse à dents volante et mon savon sauteur dans mes tiroirs secrets.",
         "Je verse mon sirop de pizza et ma sauce au chocolat sur mes céréales multicolores.",
@@ -387,6 +393,7 @@ function displayPhrase() {
     // Ajuster la taille du texte après avoir affiché la phrase
     setTimeout(adjustTextSize, 50);
 }
+
 
 // Fonction pour sélectionner une option
 function selectOption(option) {
